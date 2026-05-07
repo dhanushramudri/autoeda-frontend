@@ -102,6 +102,66 @@ export const datasetsApi = {
   transform: (datasetId: string, ops: unknown[]) =>
     api.post(`/datasets/${datasetId}/transform`, { operations: ops }),
   export: (datasetId: string) => api.get(`/datasets/${datasetId}/export`, { responseType: "blob" }),
+  // NL Query
+  nlQuery: (datasetId: string, query: string) =>
+    api.post(`/datasets/${datasetId}/nl-query`, { query }),
+  // Filter Preview
+  filterPreview: (datasetId: string, filters: unknown[], limit = 100) =>
+    api.post(`/datasets/${datasetId}/filter-preview`, { filters, limit }),
+  // Pipeline
+  getPipeline: (datasetId: string) => api.get(`/datasets/${datasetId}/pipeline`),
+  savePipeline: (datasetId: string, steps: unknown[]) =>
+    api.post(`/datasets/${datasetId}/pipeline`, { steps }),
+  clearPipeline: (datasetId: string) => api.delete(`/datasets/${datasetId}/pipeline`),
+  // Column Metadata
+  getAllColumnMetadata: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/columns/metadata`),
+  upsertColumnMetadata: (datasetId: string, column: string, data: { tags: string[]; notes?: string }) =>
+    api.put(`/datasets/${datasetId}/columns/${encodeURIComponent(column)}/metadata`, data),
+  // Column Detail
+  getColumnDetail: (datasetId: string, column: string) =>
+    api.get(`/datasets/${datasetId}/columns/${encodeURIComponent(column)}/detail`),
+  // Rules
+  saveRules: (datasetId: string, rules: unknown[]) =>
+    api.post(`/datasets/${datasetId}/rules`, { rules }),
+  getRuleResults: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/rules/results`),
+  // Pivot
+  getPivot: (datasetId: string, params: { row_col: string; col_col: string; value_col: string; agg_func?: string }) =>
+    api.get(`/datasets/${datasetId}/pivot`, { params }),
+  // Saved Charts
+  getSavedCharts: (datasetId: string) => api.get(`/datasets/${datasetId}/charts/saved`),
+  saveChart: (datasetId: string, data: { name: string; chart_type: string; config: unknown }) =>
+    api.post(`/datasets/${datasetId}/charts/saved`, data),
+  deleteSavedChart: (datasetId: string, chartId: number) =>
+    api.delete(`/datasets/${datasetId}/charts/saved/${chartId}`),
+  // Segments
+  getSegments: (datasetId: string) => api.get(`/datasets/${datasetId}/segments`),
+  createSegment: (datasetId: string, data: { name: string; filters: unknown[] }) =>
+    api.post(`/datasets/${datasetId}/segments`, data),
+  deleteSegment: (datasetId: string, segmentId: number) =>
+    api.delete(`/datasets/${datasetId}/segments/${segmentId}`),
+  // History
+  getHistory: (datasetId: string) => api.get(`/datasets/${datasetId}/history`),
+  recordEDArun: (datasetId: string) => api.post(`/datasets/${datasetId}/history/record`),
+  // Report
+  getReport: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/report`, { responseType: "text", headers: { Accept: "text/html" } }),
+  // SQL Editor
+  sqlExecute: (datasetId: string, sql: string, limit = 1000) =>
+    api.post(`/datasets/${datasetId}/sql/execute`, { sql, limit }),
+  sqlExplain: (datasetId: string, sql: string) =>
+    api.post(`/datasets/${datasetId}/sql/explain`, { sql }),
+  sqlSchema: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/sql/schema`),
+};
+
+// Workspaces extra
+export const workspacesExtraApi = {
+  joinDatasets: (workspaceId: string, data: unknown) =>
+    api.post(`/workspaces/${workspaceId}/datasets/join`, data),
+  getAnalytics: (workspaceId: string) =>
+    api.get(`/workspaces/${workspaceId}/analytics`),
 };
 
 // Jobs

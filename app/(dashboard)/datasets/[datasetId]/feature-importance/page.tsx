@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
-import { SubNav } from "@/components/layout/SubNav";import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { SubNav } from "@/components/layout/SubNav";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { TrendingUp } from "lucide-react";
 import {
@@ -48,9 +49,12 @@ export default function FeatureImportancePage() {
     router.replace(`/datasets/${datasetId}/feature-importance?target=${encodeURIComponent(col)}`);
   };
 
-  const chartData = data?.importances
-    ? Object.entries(data.importances)
-        .map(([col, score]) => ({ column: col, score: Number(score) }))
+  const chartData = Array.isArray(data?.importances)
+    ? [...data!.importances]
+        .map((item: { feature: string; importance: number }) => ({
+          column: item.feature,
+          score: item.importance,
+        }))
         .sort((a, b) => b.score - a.score)
     : [];
 
@@ -103,7 +107,7 @@ export default function FeatureImportancePage() {
                 <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-mono">
                   {data.target}
                 </span>
-                <span className="text-xs text-gray-400 ml-2">{data.method}</span>
+                <span className="text-xs text-gray-400 ml-2">{data.problem_type}</span>
               </div>
               <ResponsiveContainer width="100%" height={Math.max(240, chartData.length * 28)}>
                 <BarChart

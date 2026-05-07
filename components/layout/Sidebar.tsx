@@ -45,6 +45,10 @@ const datasetSections: NavItem[] = [
   { label: "Text Analysis", href: "/text", icon: Type },
   { label: "Relationship Graph", href: "/graph", icon: Network },
   { label: "Transform Studio", href: "/transform", icon: Wand2 },
+  { label: "Pivot Table", href: "/pivot", icon: Layers },
+  { label: "Chart Builder", href: "/charts", icon: BarChart2 },
+  { label: "Quality Rules", href: "/rules", icon: AlertTriangle },
+  { label: "History", href: "/history", icon: GitBranch },
 ];
 
 interface SidebarProps {
@@ -198,6 +202,18 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
               >
                 <Users className="w-3.5 h-3.5" />
                 Members
+              </Link>
+              <Link
+                href={`/workspaces/${workspaceId}/analytics`}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition",
+                  pathname.includes("/analytics")
+                    ? "text-white bg-sidebar-active"
+                    : "text-slate-400 hover:text-white hover:bg-sidebar-hover"
+                )}
+              >
+                <BarChart2 className="w-3.5 h-3.5" />
+                Analytics
               </Link>
             </div>
           </>

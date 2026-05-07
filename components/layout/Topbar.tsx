@@ -5,10 +5,12 @@ import { useWorkspaceStore } from "@/store/workspaceStore";
 import { workspacesApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import type { Workspace } from "@/types";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Bell, User, Check } from "lucide-react";
+import { ChevronDown, Bell, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NLQueryBar } from "@/components/shared/NLQueryBar";
 
 export function Topbar() {
   const router = useRouter();
@@ -26,7 +28,7 @@ export function Topbar() {
     queryFn: () => workspacesApi.list().then((r) => r.data),
   });
 
-  const currentWs = workspaces?.find((w) => w.id === currentWorkspaceId);
+  const currentWs = workspaces?.find((w: Workspace) => w.id === currentWorkspaceId);
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -67,7 +69,7 @@ export function Topbar() {
             <p className="px-4 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
               Workspaces
             </p>
-            {(workspaces ?? []).map((ws) => (
+            {(workspaces ?? []).map((ws: Workspace) => (
               <button
                 key={ws.id}
                 onClick={() => handleSwitchWorkspace(ws.id)}
@@ -91,7 +93,9 @@ export function Topbar() {
         )}
       </div>
 
-      <div className="flex-1" />
+      <div className="flex-1 flex justify-center">
+        <NLQueryBar />
+      </div>
 
       {/* Notification bell (placeholder) */}
       <button className="relative p-2 rounded-lg hover:bg-gray-100 transition text-gray-500">

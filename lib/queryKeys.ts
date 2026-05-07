@@ -36,4 +36,32 @@ export const queryKeys = {
     get: (jobId: string) => ["jobs", jobId] as const,
     list: ["jobs"] as const,
   },
+  pipeline: {
+    get: (datasetId: string) => ["pipeline", datasetId] as const,
+  },
+  columnMeta: {
+    all: (datasetId: string) => ["columnMeta", datasetId] as const,
+    one: (datasetId: string, column: string) => ["columnMeta", datasetId, column] as const,
+  },
+  columnDetail: {
+    get: (datasetId: string, column: string) => ["columnDetail", datasetId, column] as const,
+  },
+  rules: {
+    results: (datasetId: string) => ["rules", "results", datasetId] as const,
+  },
+  pivot: {
+    get: (datasetId: string, params: string) => ["pivot", datasetId, params] as const,
+  },
+  charts: {
+    saved: (datasetId: string) => ["charts", "saved", datasetId] as const,
+  },
+  segments: {
+    list: (datasetId: string) => ["segments", datasetId] as const,
+  },
+  history: {
+    list: (datasetId: string) => ["history", datasetId] as const,
+  },
+  analytics: {
+    workspace: (workspaceId: string) => ["analytics", "workspace", workspaceId] as const,
+  },
 };

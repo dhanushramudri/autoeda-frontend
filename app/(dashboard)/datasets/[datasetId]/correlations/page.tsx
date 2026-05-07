@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
-import { SubNav } from "@/components/layout/SubNav";import { CorrelationHeatmap } from "@/components/charts/CorrelationHeatmap";
+import { SubNav } from "@/components/layout/SubNav";
+import { CorrelationHeatmap } from "@/components/charts/CorrelationHeatmap";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { InsightList } from "@/components/shared/InsightCard";
 

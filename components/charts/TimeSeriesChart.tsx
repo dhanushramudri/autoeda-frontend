@@ -19,11 +19,18 @@ interface Props {
 }
 
 export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
-  const chartData = data.values.map((v, i) => ({
-    t: data.index[i],
-    value: v,
-    isAnomaly: data.anomalies?.includes(i),
+  const dates = data.line_data?.dates ?? [];
+  const values = data.line_data?.values ?? [];
+  const anomalyIndices = new Set((data.anomalies ?? []).map((a) => a.index));
+
+  const chartData = dates.map((t, i) => ({
+    t,
+    value: values[i] ?? null,
+    isAnomaly: anomalyIndices.has(i),
   }));
+
+  const rollingMean = data.rolling?.mean ?? [];
+  const rollingDates = dates.slice(data.rolling?.window ?? 7);
 
   return (
     <div className="space-y-6">
@@ -49,14 +56,13 @@ export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
               dot={false}
               strokeWidth={1.5}
             />
-            {/* Anomaly dots */}
             {chartData
               .filter((d) => d.isAnomaly)
               .map((d, i) => (
                 <ReferenceDot
                   key={i}
                   x={d.t}
-                  y={d.value}
+                  y={d.value ?? undefined}
                   r={4}
                   fill="#ef4444"
                   stroke="white"
@@ -72,13 +78,15 @@ export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
         )}
       </div>
 
-      {/* Rolling stats */}
-      {data.rolling_mean && data.rolling_mean.length > 0 && (
+      {/* Rolling mean */}
+      {rollingMean.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Rolling Mean (window=7)</h4>
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+            Rolling Mean (window={data.rolling?.window ?? 7})
+          </h4>
           <ResponsiveContainer width="100%" height={180}>
             <LineChart
-              data={data.rolling_mean.map((v, i) => ({ t: data.index[i + 6], value: v }))}
+              data={rollingMean.map((v, i) => ({ t: rollingDates[i] ?? "", value: v }))}
               margin={{ top: 4, right: 16, bottom: 4, left: 0 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -91,24 +99,24 @@ export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
         </div>
       )}
 
-      {/* ADF test */}
-      {data.stationarity && (
+      {/* ADF stationarity test */}
+      {data.adf_statistic != null && (
         <div className="bg-gray-50 rounded-lg p-3 text-xs flex items-center gap-6">
           <span className="text-gray-500">ADF Stationarity:</span>
           <span className="font-mono text-gray-700">
-            stat = {data.stationarity.adf_statistic?.toFixed(4) ?? "—"}
+            stat = {data.adf_statistic?.toFixed(4) ?? "—"}
           </span>
           <span className="font-mono text-gray-700">
-            p = {data.stationarity.p_value?.toFixed(4) ?? "—"}
+            p = {data.adf_pvalue?.toFixed(4) ?? "—"}
           </span>
           <span
             className={
-              data.stationarity.is_stationary
+              data.is_stationary
                 ? "text-emerald-600 font-medium"
                 : "text-amber-600 font-medium"
             }
           >
-            {data.stationarity.is_stationary ? "Stationary" : "Non-stationary"}
+            {data.is_stationary ? "Stationary" : "Non-stationary"}
           </span>
         </div>
       )}

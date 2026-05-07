@@ -1,26 +1,105 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { edaApi, datasetsApi } from "@/lib/api";
+import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { QualityGauge } from "@/components/charts/QualityGauge";
-import { InsightCard } from "@/components/shared/InsightCard";
+import { InsightList } from "@/components/shared/InsightCard";
 import { StatCard } from "@/components/shared/StatCard";
-import { LoadingBar } from "@/components/shared/LoadingBar";
+import { PageSpinner } from "@/components/shared/LoadingBar";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { SubNav } from "@/components/layout/SubNav";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { ColumnDetailPanel } from "@/components/shared/ColumnDetailPanel";
 import {
-  BarChart3,
-  Columns3,
-  HardDrive,
-  AlertTriangle,
-  Copy,
-  Zap,
+  AlertTriangle, Zap, Download, RefreshCw,
+  BarChart2, Hash, Percent, ChevronRight,
+  CheckCircle, AlertCircle, Clock, Tag
 } from "lucide-react";
+import type { ColumnProfile, QualityScore, InsightCard } from "@/types";
+
+const TYPE_COLORS: Record<string, string> = {
+  numeric: "bg-blue-100 text-blue-700",
+  categorical: "bg-purple-100 text-purple-700",
+  datetime: "bg-green-100 text-green-700",
+  boolean: "bg-amber-100 text-amber-700",
+  text: "bg-pink-100 text-pink-700",
+  id_like: "bg-gray-100 text-gray-600",
+  constant: "bg-red-100 text-red-600",
+};
+
+function MiniBar({ pct, color = "bg-blue-400" }: { pct: number; color?: string }) {
+  return (
+    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      <div className={`h-full ${color} rounded-full`} style={{ width: `${Math.min(pct, 100)}%` }} />
+    </div>
+  );
+}
+
+function ColumnCard({ col, datasetId, onClick }: { col: ColumnProfile; datasetId: string; onClick: () => void }) {
+  const missingColor = col.missing_pct > 50 ? "text-red-600" : col.missing_pct > 20 ? "text-amber-600" : "text-emerald-600";
+  const missingBarColor = col.missing_pct > 50 ? "bg-red-400" : col.missing_pct > 20 ? "bg-amber-400" : "bg-emerald-400";
+
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md cursor-pointer transition group"
+    >
+      <div className="flex items-start justify-between mb-2">
+        <h4 className="text-xs font-semibold text-gray-900 truncate mr-2 flex-1">{col.name}</h4>
+        <span className={`text-xs px-1.5 py-0.5 rounded-md font-medium flex-shrink-0 ${TYPE_COLORS[col.semantic_type] ?? "bg-gray-100 text-gray-600"}`}>
+          {col.semantic_type}
+        </span>
+      </div>
+
+      <p className="text-xs text-gray-400 mb-2 font-mono">{col.dtype}</p>
+
+      {/* Missing bar */}
+      <div className="mb-2">
+        <div className="flex justify-between text-xs mb-0.5">
+          <span className="text-gray-400">Missing</span>
+          <span className={`font-medium ${missingColor}`}>{col.missing_pct.toFixed(1)}%</span>
+        </div>
+        <MiniBar pct={col.missing_pct} color={missingBarColor} />
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-2 gap-1 text-xs text-gray-500 mt-2">
+        <span>{col.unique_count.toLocaleString()} unique</span>
+        {col.mean != null && <span>μ={col.mean.toFixed(2)}</span>}
+        {col.skewness != null && Math.abs(col.skewness) > 1 && (
+          <span className="text-amber-600 col-span-2">Skew: {col.skewness.toFixed(2)}</span>
+        )}
+      </div>
+
+      {/* Top value */}
+      {col.top_values?.[0] && (
+        <div className="mt-2 pt-2 border-t border-gray-50">
+          <p className="text-xs text-gray-400 truncate">
+            Top: <span className="text-gray-600 font-medium">{col.top_values[0].value}</span>
+            <span className="ml-1 text-gray-300">({col.top_values[0].pct?.toFixed(1)}%)</span>
+          </p>
+        </div>
+      )}
+
+      <div className="mt-2 flex items-center justify-end opacity-0 group-hover:opacity-100 transition">
+        <span className="text-xs text-blue-500 flex items-center gap-0.5">
+          Details <ChevronRight className="w-3 h-3" />
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export default function DatasetOverviewPage() {
   const params = useParams();
+  const router = useRouter();
   const datasetId = params.datasetId as string;
+  const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
+  const [searchCol, setSearchCol] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   const { data: dataset, isLoading: datasetLoading } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
@@ -29,182 +108,210 @@ export default function DatasetOverviewPage() {
   });
 
   const { data: quality, isLoading: qualityLoading } = useQuery({
-    queryKey: queryKeys.eda.qualityScore(datasetId),
-    queryFn: () => edaApi.qualityScore(datasetId).then((r) => r.data),
-    enabled: !!datasetId,
+    queryKey: queryKeys.eda.quality(datasetId),
+    queryFn: () => datasetsApi.getQualityScore(datasetId).then((r) => r.data as QualityScore),
+    enabled: !!datasetId && dataset?.status === "ready",
   });
 
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: queryKeys.eda.profile(datasetId),
-    queryFn: () => edaApi.profile(datasetId).then((r) => r.data),
-    enabled: !!datasetId,
+    queryFn: () => datasetsApi.getProfile(datasetId).then((r) => r.data),
+    enabled: !!datasetId && dataset?.status === "ready",
   });
 
-  const { data: insights, isLoading: insightsLoading } = useQuery({
+  const { data: insights } = useQuery({
     queryKey: queryKeys.eda.insights(datasetId),
-    queryFn: () => edaApi.insights(datasetId).then((r) => r.data),
-    enabled: !!datasetId,
+    queryFn: () => datasetsApi.getInsights(datasetId).then((r) => r.data as InsightCard[]),
+    enabled: !!datasetId && dataset?.status === "ready",
   });
 
-  const isLoading =
-    datasetLoading || qualityLoading || profileLoading || insightsLoading;
+  const isLoading = datasetLoading || qualityLoading || profileLoading;
+  if (isLoading) return <><SubNav datasetId={datasetId} /><PageSpinner /></>;
+  if (!dataset) return <EmptyState title="No data" description="Could not load dataset overview" />;
 
-  if (isLoading) return <LoadingBar />;
-  if (!dataset || !quality || !profile)
-    return <EmptyState title="No data" description="Could not load dataset overview" />;
+  const memoryMb = profile?.memory_mb ?? 0;
+  const duplicatePct = profile?.duplicate_pct ?? 0;
+  const columns: ColumnProfile[] = profile?.columns ?? [];
 
-  const memoryMb = profile.memory_mb || 0;
-  const duplicatePct = profile.duplicate_pct || 0;
-  const totalMissing = profile.columns.reduce(
-    (sum: number, col: any) => sum + (col.missing_count || 0),
-    0
-  );
-  const totalCells = (profile.total_rows || 0) * (profile.total_columns || 0);
-  const missingPct =
-    totalCells > 0
-      ? ((totalMissing / totalCells) * 100).toFixed(2)
-      : "0";
+  const totalMissing = columns.reduce((s, c) => s + (c.missing_count ?? 0), 0);
+  const totalCells = (profile?.total_rows ?? 0) * (profile?.total_columns ?? 0);
+  const missingPct = totalCells > 0 ? ((totalMissing / totalCells) * 100).toFixed(2) : "0";
+
+  const filteredCols = columns.filter((c) => {
+    const matchSearch = c.name.toLowerCase().includes(searchCol.toLowerCase());
+    const matchType = typeFilter === "all" || c.semantic_type === typeFilter;
+    return matchSearch && matchType;
+  });
+
+  const semanticTypes = [...new Set(columns.map((c) => c.semantic_type))];
+
+  const handleReport = async () => {
+    const res = await datasetsApi.getReport(datasetId);
+    const blob = new Blob([res.data as string], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${dataset.name}-report.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{dataset.name}</h1>
-          <p className="text-gray-600 mt-1">{dataset.description}</p>
-        </div>
+    <>
+      <SubNav datasetId={datasetId} />
+      <div className="p-6 max-w-7xl mx-auto">
+        <Breadcrumb
+          items={[
+            { label: "Workspaces", href: "/workspaces" },
+            { label: dataset.workspace_name ?? "Workspace", href: `/workspaces/${dataset.workspace_id}/datasets` },
+            { label: dataset.name },
+          ]}
+        />
 
-        {/* Quality Score */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex items-center gap-6">
-            <div className="flex-shrink-0" style={{ width: "200px", height: "200px" }}>
-              <QualityGauge score={quality.overall || 75} />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Data Quality Assessment
-              </h2>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Completeness</span>
-                  <span className="text-lg font-semibold">
-                    {quality.completeness || 100}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Consistency</span>
-                  <span className="text-lg font-semibold">
-                    {quality.consistency || 100}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Uniqueness</span>
-                  <span className="text-lg font-semibold">
-                    {quality.uniqueness || 100}%
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Validity</span>
-                  <span className="text-lg font-semibold">
-                    {quality.validity || 100}%
-                  </span>
-                </div>
-              </div>
-            </div>
+        <div className="flex items-start justify-between mt-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{dataset.name}</h1>
+            {dataset.description && <p className="text-gray-500 mt-0.5 text-sm">{dataset.description}</p>}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={handleReport}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 transition"
+            >
+              <Download className="w-4 h-4" /> Export Report
+            </button>
+            <button
+              onClick={() => router.push(`/datasets/${datasetId}/history`)}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 transition"
+            >
+              <RefreshCw className="w-4 h-4" /> History
+            </button>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <StatCard label="Rows" value={profile?.total_rows?.toLocaleString() ?? dataset.row_count?.toLocaleString() ?? "—"} color="blue" />
+          <StatCard label="Columns" value={profile?.total_columns ?? dataset.column_count ?? "—"} color="green" />
+          <StatCard label="Memory" value={`${memoryMb.toFixed(2)} MB`} />
           <StatCard
-            title="Rows"
-            value={profile.total_rows?.toLocaleString() || "0"}
-            icon={BarChart3}
-            color="blue"
-          />
-          <StatCard
-            title="Columns"
-            value={profile.total_columns?.toString() || "0"}
-            icon={Columns3}
-            color="green"
-          />
-          <StatCard
-            title="Memory"
-            value={`${memoryMb.toFixed(2)} MB`}
-            icon={HardDrive}
-            color="purple"
-          />
-          <StatCard
-            title="Missing %"
+            label="Missing %"
             value={`${missingPct}%`}
-            icon={AlertTriangle}
-            color="orange"
+            color={Number(missingPct) > 20 ? "red" : Number(missingPct) > 5 ? "amber" : "green"}
           />
         </div>
 
-        {/* Issues & Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Top Issues */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-red-500" />
-              Top Data Quality Issues
+        {/* Quality + Issues */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {quality && (
+            <div className="bg-white rounded-xl border border-gray-200 p-5">
+              <h2 className="text-sm font-semibold text-gray-700 mb-3">Data Quality Score</h2>
+              <QualityGauge data={quality} />
+            </div>
+          )}
+
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-amber-500" /> Issues
             </h2>
-            {quality.issues && quality.issues.length > 0 ? (
-              <div className="space-y-3">
-                {quality.issues.slice(0, 5).map((issue: any, idx: number) => (
-                  <div
-                    key={idx}
-                    className="p-3 rounded-lg border-l-4 border-red-500 bg-red-50"
-                  >
-                    <p className="text-sm text-gray-800">
-                      {issue.description}
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">
-                      Column: {issue.column}
-                    </p>
+            {quality?.issues?.length ? (
+              <div className="space-y-2">
+                {quality.issues.slice(0, 4).map((issue, idx) => (
+                  <div key={idx} className={`text-xs p-2.5 rounded-lg border-l-3 ${
+                    issue.severity === "danger" ? "border-l-red-500 bg-red-50 text-red-800"
+                    : issue.severity === "warning" ? "border-l-amber-500 bg-amber-50 text-amber-800"
+                    : "border-l-blue-500 bg-blue-50 text-blue-800"
+                  }`} style={{ borderLeftWidth: "3px" }}>
+                    {issue.description}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-600">No issues detected</p>
+              <p className="text-xs text-emerald-600 flex items-center gap-1">
+                <CheckCircle className="w-3.5 h-3.5" /> No issues detected
+              </p>
             )}
           </div>
 
-          {/* Suggestions */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-blue-500" />
-              Recommendations
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-blue-500" /> Recommendations
             </h2>
-            {quality.suggestions && quality.suggestions.length > 0 ? (
-              <div className="space-y-2">
-                {quality.suggestions.slice(0, 5).map((suggestion: string, idx: number) => (
-                  <div key={idx} className="p-2 rounded text-sm text-gray-700 bg-blue-50">
-                    {suggestion}
-                  </div>
+            {quality?.suggestions?.length ? (
+              <div className="space-y-1.5">
+                {quality.suggestions.slice(0, 4).map((s, idx) => (
+                  <div key={idx} className="text-xs p-2 bg-blue-50 rounded-lg text-blue-800">{s}</div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-600">No recommendations</p>
+              <p className="text-xs text-gray-400">No recommendations</p>
             )}
           </div>
         </div>
 
         {/* Insights */}
         {insights && insights.length > 0 && (
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Key Insights
-            </h2>
-            <div className="grid grid-cols-1 gap-4">
-              {insights.map((insight: any, idx: number) => (
-                <InsightCard key={idx} insight={insight} />
-              ))}
-            </div>
+          <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">Smart Insights</h2>
+            <InsightList insights={insights} />
           </div>
         )}
+
+        {/* Column Summary Cards */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-gray-700">
+              Column Summary <span className="text-gray-400 font-normal">({columns.length} columns)</span>
+            </h2>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search columns…"
+                value={searchCol}
+                onChange={(e) => setSearchCol(e.target.value)}
+                className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-40 outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white"
+              >
+                <option value="all">All types</option>
+                {semanticTypes.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {filteredCols.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">No columns match the filter.</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              {filteredCols.map((col) => (
+                <ColumnCard
+                  key={col.name}
+                  col={col}
+                  datasetId={datasetId}
+                  onClick={() => setSelectedColumn(col.name)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Column Detail Panel */}
+      {selectedColumn && (
+        <ColumnDetailPanel
+          datasetId={datasetId}
+          columnName={selectedColumn}
+          onClose={() => setSelectedColumn(null)}
+          onQuickAction={(op, col) => {
+            router.push(`/datasets/${datasetId}/transform?op=${op}&col=${encodeURIComponent(col)}`);
+          }}
+        />
+      )}
+    </>
   );
 }

@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { datasetsApi, workspacesApi } from "@/lib/api";
+import { datasetsApi, workspacesApi, workspacesExtraApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { useJobPoller } from "@/hooks/useJobPoller";
 import { PageSpinner, AnalysisLoader } from "@/components/shared/LoadingBar";
@@ -22,6 +22,7 @@ import {
   Loader2,
   X,
   Plus,
+  GitMerge,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Dataset } from "@/types";
@@ -249,9 +250,101 @@ function DatasetCard({ dataset, workspaceId }: { dataset: Dataset; workspaceId: 
   );
 }
 
+function JoinModal({ workspaceId, datasets, onClose }: { workspaceId: string; datasets: Dataset[]; onClose: () => void }) {
+  const qc = useQueryClient();
+  const readyDatasets = datasets.filter((d) => d.status === "ready");
+  const [dsA, setDsA] = useState("");
+  const [dsB, setDsB] = useState("");
+  const [joinType, setJoinType] = useState("inner");
+  const [keyA, setKeyA] = useState("");
+  const [keyB, setKeyB] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      workspacesExtraApi.joinDatasets(workspaceId, {
+        dataset_a_id: Number(dsA),
+        dataset_b_id: Number(dsB),
+        join_type: joinType,
+        keys_a: [keyA],
+        keys_b: [keyB],
+        name: name || undefined,
+      }).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.datasets.list(workspaceId) });
+      onClose();
+    },
+    onError: (err: { response?: { data?: { detail?: string } } }) => {
+      setError(err.response?.data?.detail ?? "Join failed");
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-semibold text-gray-900">Join Datasets</h2>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition">
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+        {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Dataset A</label>
+            <select value={dsA} onChange={(e) => setDsA(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">Select…</option>
+              {readyDatasets.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Dataset B</label>
+            <select value={dsB} onChange={(e) => setDsB(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">Select…</option>
+              {readyDatasets.filter((d) => d.id !== dsA).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Join Type</label>
+            <select value={joinType} onChange={(e) => setJoinType(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+              {["inner", "left", "right", "outer"].map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Key (A)</label>
+              <input value={keyA} onChange={(e) => setKeyA(e.target.value)} placeholder="column name" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Key (B)</label>
+              <input value={keyB} onChange={(e) => setKeyB(e.target.value)} placeholder="column name" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Result Name (optional)</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Joined_Sales_Users" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button onClick={onClose} className="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+          <button
+            onClick={() => mutation.mutate()}
+            disabled={!dsA || !dsB || !keyA || !keyB || mutation.isPending}
+            className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition"
+          >
+            {mutation.isPending ? "Joining…" : "Join & Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DatasetsPage() {
   const { id: workspaceId } = useParams<{ id: string }>();
   const [showUpload, setShowUpload] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
 
   const { data: workspace } = useQuery({
     queryKey: queryKeys.workspaces.detail(workspaceId),
@@ -287,13 +380,22 @@ export default function DatasetsPage() {
             {datasets?.length ?? 0} dataset{datasets?.length !== 1 ? "s" : ""}
           </p>
         </div>
-        <button
-          onClick={() => setShowUpload(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Add Dataset
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowJoin(true)}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition"
+          >
+            <GitMerge className="w-4 h-4" />
+            Join
+          </button>
+          <button
+            onClick={() => setShowUpload(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add Dataset
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -314,7 +416,7 @@ export default function DatasetsPage() {
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {datasets.map((ds) => (
+          {(datasets as Dataset[]).map((ds) => (
             <DatasetCard key={ds.id} dataset={ds} workspaceId={workspaceId} />
           ))}
         </div>
@@ -322,6 +424,9 @@ export default function DatasetsPage() {
 
       {showUpload && (
         <UploadModal workspaceId={workspaceId} onClose={() => setShowUpload(false)} />
+      )}
+      {showJoin && datasets && (
+        <JoinModal workspaceId={workspaceId} datasets={datasets as Dataset[]} onClose={() => setShowJoin(false)} />
       )}
     </div>
   );

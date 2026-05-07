@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
-import { SubNav } from "@/components/layout/SubNav";import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { SubNav } from "@/components/layout/SubNav";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { InsightList } from "@/components/shared/InsightCard";
 import { StatCard } from "@/components/shared/StatCard";
 import { DataTable } from "@/components/shared/DataTable";
@@ -117,25 +118,36 @@ export default function OutliersPage() {
           <PageSpinner />
         ) : data ? (
           <div className="space-y-6">
-            <div className="grid grid-cols-3 gap-4">
-              <StatCard
-                label="Total Outliers"
-                value={data.total_outliers?.toLocaleString() ?? "0"}
-                color={data.total_outliers > 0 ? "amber" : "green"}
-              />
-              <StatCard
-                label="Outlier %"
-                value={`${(data.outlier_pct ?? 0).toFixed(2)}%`}
-                color={data.outlier_pct > 5 ? "red" : "default"}
-              />
-              <StatCard
-                label="Method"
-                value={method.toUpperCase().replace("_", " ")}
-              />
-            </div>
+            {(() => {
+              const avgPct =
+                data.columns.length > 0
+                  ? data.columns.reduce(
+                      (sum: number, c: { outlier_pct: number }) => sum + c.outlier_pct,
+                      0
+                    ) / data.columns.length
+                  : 0;
+              return (
+                <div className="grid grid-cols-3 gap-4">
+                  <StatCard
+                    label="Total Outliers"
+                    value={data.total_outliers?.toLocaleString() ?? "0"}
+                    color={data.total_outliers > 0 ? "amber" : "green"}
+                  />
+                  <StatCard
+                    label="Avg Outlier %"
+                    value={`${avgPct.toFixed(2)}%`}
+                    color={avgPct > 5 ? "red" : "default"}
+                  />
+                  <StatCard
+                    label="Method"
+                    value={method.toUpperCase().replace("_", " ")}
+                  />
+                </div>
+              );
+            })()}
 
             {/* Per-column breakdown */}
-            {data.by_column && Object.keys(data.by_column).length > 0 && (
+            {data.columns && data.columns.length > 0 && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="px-5 py-3 border-b border-gray-100">
                   <h3 className="text-sm font-semibold text-gray-800">By Column</h3>
@@ -158,9 +170,12 @@ export default function OutliersPage() {
                     { key: "lower_bound", label: "Lower Bound", align: "right", render: (v) => v != null ? Number(v).toFixed(3) : "—" },
                     { key: "upper_bound", label: "Upper Bound", align: "right", render: (v) => v != null ? Number(v).toFixed(3) : "—" },
                   ]}
-                  data={Object.entries(data.by_column).map(([col, stats]: [string, unknown]) => ({
-                    column: col,
-                    ...(stats as Record<string, unknown>),
+                  data={data.columns.map((col: { name: string; outlier_count: number; outlier_pct: number; bounds: Record<string, number | null> }) => ({
+                    column: col.name,
+                    count: col.outlier_count,
+                    pct: col.outlier_pct,
+                    lower_bound: col.bounds?.lower ?? col.bounds?.lower_bound ?? null,
+                    upper_bound: col.bounds?.upper ?? col.bounds?.upper_bound ?? null,
                   }))}
                   rowKey={(r) => String(r.column)}
                 />

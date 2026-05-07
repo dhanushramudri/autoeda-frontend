@@ -20,6 +20,10 @@ const NAV_ITEMS = [
   { label: "Text", href: "/text", id: "text" },
   { label: "Graph", href: "/graph", id: "graph" },
   { label: "Transform", href: "/transform", id: "transform" },
+  { label: "Pivot", href: "/pivot", id: "pivot" },
+  { label: "Charts", href: "/charts", id: "charts" },
+  { label: "Rules", href: "/rules", id: "rules" },
+  { label: "History", href: "/history", id: "history" },
 ];
 
 export function SubNav({ datasetId }: SubNavProps) {
@@ -29,12 +33,12 @@ export function SubNav({ datasetId }: SubNavProps) {
     if (itemId === "overview") {
       return pathname === `/datasets/${datasetId}`;
     }
-    return pathname.includes(itemId);
+    return pathname.endsWith(`/${itemId}`) || pathname.includes(`/${itemId}/`);
   };
 
   return (
     <nav className="sticky top-0 z-40 border-b border-gray-200 bg-white">
-      <div className="flex overflow-x-auto">
+      <div className="flex overflow-x-auto scrollbar-hide">
         {NAV_ITEMS.map((item) => (
           <Link
             key={item.id}

@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { datasetsApi, edaApi, workspacesApi } from "@/lib/api";
+import { datasetsApi, workspacesApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
@@ -24,42 +24,42 @@ export default function CompareDatasets() {
 
   const { data: datasets } = useQuery({
     queryKey: queryKeys.datasets.list(workspaceId),
-    queryFn: () => datasetsApi.list(workspaceId).then((r) => r.data.filter((d: { status: string }) => d.status === "ready")),
+    queryFn: () => datasetsApi.list(workspaceId).then((r) => (r.data as Array<{ id: string; name: string; status: string; row_count: number | null; column_count: number | null }>).filter((d) => d.status === "ready")),
   });
 
   const { data: leftQuality } = useQuery({
     queryKey: queryKeys.eda.quality(leftId),
-    queryFn: () => edaApi.qualityScore(leftId).then((r) => r.data),
+    queryFn: () => datasetsApi.getQualityScore(leftId).then((r) => r.data),
     enabled: !!leftId,
   });
 
   const { data: rightQuality } = useQuery({
     queryKey: queryKeys.eda.quality(rightId),
-    queryFn: () => edaApi.qualityScore(rightId).then((r) => r.data),
+    queryFn: () => datasetsApi.getQualityScore(rightId).then((r) => r.data),
     enabled: !!rightId,
   });
 
   const { data: leftMissing } = useQuery({
     queryKey: queryKeys.eda.missing(leftId),
-    queryFn: () => edaApi.missing(leftId).then((r) => r.data),
+    queryFn: () => datasetsApi.getMissing(leftId).then((r) => r.data),
     enabled: !!leftId,
   });
 
   const { data: rightMissing } = useQuery({
     queryKey: queryKeys.eda.missing(rightId),
-    queryFn: () => edaApi.missing(rightId).then((r) => r.data),
+    queryFn: () => datasetsApi.getMissing(rightId).then((r) => r.data),
     enabled: !!rightId,
   });
 
   const { data: leftProfile } = useQuery({
     queryKey: queryKeys.eda.profile(leftId),
-    queryFn: () => edaApi.profile(leftId).then((r) => r.data),
+    queryFn: () => datasetsApi.getProfile(leftId).then((r) => r.data),
     enabled: !!leftId,
   });
 
   const { data: rightProfile } = useQuery({
     queryKey: queryKeys.eda.profile(rightId),
-    queryFn: () => edaApi.profile(rightId).then((r) => r.data),
+    queryFn: () => datasetsApi.getProfile(rightId).then((r) => r.data),
     enabled: !!rightId,
   });
 

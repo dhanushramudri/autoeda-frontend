@@ -74,22 +74,29 @@ export interface ColumnProfile {
   name: string;
   dtype: string;
   semantic_type: "numeric" | "categorical" | "datetime" | "boolean" | "text" | "id_like" | "constant";
-  nunique: number;
+  unique_count: number;
+  unique_pct: number;
   missing_count: number;
   missing_pct: number;
-  min: number | string | null;
-  max: number | string | null;
+  min: number | null;
+  max: number | null;
   mean: number | null;
+  median: number | null;
   std: number | null;
   skewness: number | null;
   kurtosis: number | null;
-  top_values: Array<[string, number]> | null;
+  top_values: Array<{ value: string; count: number; pct: number }>;
 }
 
 export interface ProfileResult {
-  row_count: number;
-  column_count: number;
+  total_rows: number;
+  total_columns: number;
+  memory_mb: number;
+  file_size_bytes: number | null;
+  duplicate_count: number;
+  duplicate_pct: number;
   sampled: boolean;
+  sample_size: number;
   columns: ColumnProfile[];
   insights?: InsightCard[];
 }
@@ -235,4 +242,147 @@ export interface JobStatus {
 export interface ApiError {
   detail: string;
   code?: string;
+}
+
+// ── NL Query ──────────────────────────────────────────────────────────────────
+export interface NLQueryResult {
+  action: "navigate" | "transform" | "filter" | "unknown";
+  params: Record<string, string | number | boolean>;
+  message: string;
+}
+
+// ── Pipeline ──────────────────────────────────────────────────────────────────
+export interface PipelineStep {
+  id?: number;
+  step_order: number;
+  operation: string;
+  column: string | null;
+  params: Record<string, unknown>;
+}
+
+// ── Column Metadata ───────────────────────────────────────────────────────────
+export interface ColumnMeta {
+  column: string;
+  tags: string[];
+  notes: string | null;
+}
+
+// ── Column Detail ─────────────────────────────────────────────────────────────
+export interface ColumnDetail {
+  stats: {
+    name: string;
+    dtype: string;
+    total: number;
+    missing_count: number;
+    missing_pct: number;
+    unique_count: number;
+    mean?: number;
+    median?: number;
+    std?: number;
+    min?: number;
+    max?: number;
+    q1?: number;
+    q3?: number;
+    outlier_count?: number;
+    skewness?: number;
+    kurtosis?: number;
+  };
+  histogram: { bins: number[]; counts: number[] } | null;
+  top_values: Array<{ value: string; count: number; pct: number }>;
+  suggested_dtype: string | null;
+  tags: string[];
+  notes: string | null;
+}
+
+// ── Filter ────────────────────────────────────────────────────────────────────
+export type FilterOperator =
+  | "equals" | "not_equals" | "gt" | "gte" | "lt" | "lte"
+  | "contains" | "starts_with" | "is_null" | "is_not_null";
+
+export interface FilterConfig {
+  id: string;
+  column: string;
+  operator: FilterOperator;
+  value: string;
+  logic?: "AND" | "OR";
+}
+
+// ── Rules ─────────────────────────────────────────────────────────────────────
+export type RuleType = "not_null" | "range" | "regex" | "unique" | "allowed_values";
+
+export interface QualityRule {
+  id?: number;
+  column_name: string | null;
+  rule_type: RuleType;
+  params: Record<string, unknown>;
+}
+
+export interface RuleResult extends QualityRule {
+  label: string;
+  pass_pct: number;
+  fail_count: number;
+  fail_pct: number;
+  sample_failing_rows: Record<string, unknown>[];
+}
+
+// ── Pivot ─────────────────────────────────────────────────────────────────────
+export interface PivotResult {
+  index: string[];
+  columns: string[];
+  data: number[][];
+}
+
+// ── Saved Chart ───────────────────────────────────────────────────────────────
+export interface SavedChart {
+  id: number;
+  name: string;
+  chart_type: string;
+  config: Record<string, unknown>;
+  created_at: string;
+}
+
+// ── Segment ───────────────────────────────────────────────────────────────────
+export interface NamedSegment {
+  id: number;
+  name: string;
+  filters: FilterConfig[];
+  created_at: string;
+}
+
+// ── EDA History ───────────────────────────────────────────────────────────────
+export interface EDARunRecord {
+  id: number;
+  run_at: string;
+  row_count: number | null;
+  col_count: number | null;
+  quality_score: number | null;
+  missing_pct: number | null;
+  triggered_by: string;
+}
+
+// ── Workspace Analytics ───────────────────────────────────────────────────────
+export interface DatasetSummary {
+  id: number;
+  name: string;
+  row_count: number | null;
+  column_count: number | null;
+  quality_score: number | null;
+  missing_pct: number | null;
+  status: string;
+  created_at: string;
+  last_eda_run: string | null;
+}
+
+export interface TrendPoint {
+  dataset_id: number;
+  dataset_name: string;
+  run_at: string;
+  quality_score: number;
+}
+
+export interface WorkspaceAnalytics {
+  datasets: DatasetSummary[];
+  trends: TrendPoint[];
+  worst_quality: DatasetSummary | null;
+  most_missing: DatasetSummary | null;
 }

@@ -8,13 +8,13 @@ interface Props {
 }
 
 export function MissingHeatmap({ data }: Props) {
-  const chartData = Object.entries(data.by_column)
-    .map(([col, stats]) => ({
-      column: col,
-      pct: stats.missing_pct,
-      count: stats.missing_count,
+  const chartData = (data.columns ?? [])
+    .filter((col: { name: string; count: number; pct: number }) => col.count > 0)
+    .map((col: { name: string; count: number; pct: number }) => ({
+      column: col.name,
+      pct: col.pct,
+      count: col.count,
     }))
-    .filter((d) => d.count > 0)
     .sort((a, b) => b.pct - a.pct);
 
   if (chartData.length === 0) {
@@ -50,7 +50,7 @@ export function MissingHeatmap({ data }: Props) {
           />
           <Tooltip
             formatter={(v: number, _: string, entry) => [
-              `${v.toFixed(1)}% (${entry.payload.count} rows)`,
+              `${v.toFixed(1)}% (${(entry.payload as { count: number }).count} rows)`,
               "Missing",
             ]}
             contentStyle={{ fontSize: 12, borderRadius: 8 }}

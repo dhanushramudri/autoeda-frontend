@@ -16,9 +16,10 @@ function interpolate(value: number): string {
 }
 
 export function CorrelationHeatmap({ data }: Props) {
-  const { matrix, columns } = data;
+  const { matrix } = data;
+  const columns = Object.keys(matrix ?? {});
 
-  if (!matrix || !columns || columns.length === 0) {
+  if (!matrix || columns.length === 0) {
     return <p className="text-sm text-gray-400 py-4">No correlation data available.</p>;
   }
 
@@ -46,7 +47,7 @@ export function CorrelationHeatmap({ data }: Props) {
           ))}
         </div>
         {/* Rows */}
-        {columns.map((rowCol, ri) => (
+        {columns.map((rowCol) => (
           <div key={rowCol} className="flex items-center">
             <div
               className="text-[9px] text-gray-500 text-right pr-2 truncate"
@@ -55,7 +56,7 @@ export function CorrelationHeatmap({ data }: Props) {
             >
               {rowCol}
             </div>
-            {columns.map((colCol, ci) => {
+            {columns.map((colCol) => {
               const val = matrix[rowCol]?.[colCol];
               const display = val !== null && val !== undefined ? val.toFixed(2) : "—";
               const bg = val !== null && val !== undefined ? interpolate(val) : "#f3f4f6";
