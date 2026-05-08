@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
+import type { Layout, Config, Data, Shape } from "plotly.js";
 import { SubNav } from "@/components/layout/SubNav";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { ChartCard, SectionHeader } from "@/components/analysis/ChartCard";
@@ -51,8 +52,8 @@ const PALETTE = [
 ];
 
 // ─── Plotly base config ───────────────────────────────────────────────────────
-const BASE_LAYOUT: Partial<Plotly.Layout> = {
-  margin: { l: 50, r: 20, t: 24, b: 50 },
+const BASE_LAYOUT: Partial<Layout> = {
+    margin: { l: 50, r: 20, t: 24, b: 50 },
   font: { size: 11, family: "'DM Sans', sans-serif" },
   paper_bgcolor: "transparent",
   plot_bgcolor:  "transparent",
@@ -62,8 +63,7 @@ const BASE_LAYOUT: Partial<Plotly.Layout> = {
   yaxis: { gridcolor: "#F1F5F9", zerolinecolor: "#E2E8F0" },
 };
 
-const PLOT_CFG: Partial<Plotly.Config> = {
-  displayModeBar: true,
+const PLOT_CFG: Partial<Config> = {  displayModeBar: true,
   displaylogo: false,
   modeBarButtonsToRemove: ["lasso2d", "select2d", "autoScale2d", "toImage"],
   responsive: true,
@@ -114,7 +114,7 @@ function Insight({ text, level = "warning" }: { text: string; level?: "warning" 
 
 function HistKDE({ data, col }: { data: NumericCharts["histogram_kde"]; col: string }) {
   if (!data?.bins?.length) return <Empty />;
-  const traces: Plotly.Data[] = [
+  const traces: Data[] = [
     { x: data.bins, y: data.counts, type: "bar", name: "Frequency",
       marker: { color: C.primary, opacity: 0.75 } },
   ];
@@ -122,7 +122,7 @@ function HistKDE({ data, col }: { data: NumericCharts["histogram_kde"]; col: str
     traces.push({ x: data.kde_x, y: data.kde_y, type: "scatter", mode: "lines",
       name: "KDE", line: { color: C.danger, width: 2.5 }, yaxis: "y2" });
   }
-  const shapes: Partial<Plotly.Shape>[] = [];
+  const shapes: Partial<Shape>[] = [];
   if (data.mean != null) shapes.push({
     type: "line", x0: data.mean, x1: data.mean, y0: 0, y1: 1, yref: "paper",
     line: { color: C.warning, width: 1.5, dash: "dash" },
@@ -152,7 +152,7 @@ function BoxPlot({ data, col }: { data: NumericCharts["box"]; col: string }) {
         mean: [data.mean ?? data.median!], name: col,
         marker: { color: C.primary, outliercolor: C.danger, size: 4 },
         line: { color: C.primary }, boxpoints: "outliers", jitter: 0.4,
-      } as Plotly.Data]}
+      } as Data]}
       layout={{ ...BASE_LAYOUT, yaxis: { title: col } }}
       config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
   );
@@ -167,7 +167,7 @@ function ViolinPlot({ data, col }: { data: NumericCharts["violin"]; col: string 
         box: { visible: true }, meanline: { visible: true },
         line: { color: C.secondary }, fillcolor: C.secondary, opacity: 0.55,
         points: "outliers",
-      } as Plotly.Data]}
+      } as Data]}
       layout={{ ...BASE_LAYOUT, yaxis: { title: col } }}
       config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
   );
@@ -348,7 +348,7 @@ function SeasonalityGrid({ data }: { data: DatetimeCharts["seasonality"] }) {
 
 function ScatterPair({ pair }: { pair: FullAnalysisResult["multi_column"]["scatter_pairs"][0] }) {
   if (!pair?.x?.length) return <Empty />;
-  const traces: Plotly.Data[] = [
+  const traces: Data[] = [
     { x: pair.x, y: pair.y, mode: "markers", type: "scatter", name: "Data",
       marker: { color: C.primary, size: 5, opacity: 0.5 } },
   ];
@@ -374,14 +374,14 @@ function ScatterPair({ pair }: { pair: FullAnalysisResult["multi_column"]["scatt
 
 function GroupedBox({ data }: { data: FullAnalysisResult["multi_column"]["grouped_box"] }) {
   if (!data?.groups || !Object.keys(data.groups).length) return <Empty />;
-  const traces: Plotly.Data[] = Object.entries(data.groups).map(([grp, stats], i) => ({
+  const traces: Data[] = Object.entries(data.groups).map(([grp, stats], i) => ({
     type: "box",
     y: [stats.min!, stats.q1!, stats.median!, stats.q3!, stats.max!, ...(stats.outliers as number[] ?? [])],
     q1: [stats.q1!], median: [stats.median!], q3: [stats.q3!],
     lowerfence: [stats.min!], upperfence: [stats.max!],
     name: grp, marker: { color: PALETTE[i % PALETTE.length] },
     boxpoints: "outliers",
-  } as Plotly.Data));
+  } as Data));
   return (
     <Plot data={traces}
       layout={{ ...BASE_LAYOUT, yaxis: { title: data.numeric_col },
@@ -404,11 +404,11 @@ function CorrelationHeatmap({ data }: { data: FullAnalysisResult["multi_column"]
         colorscale: [[0, C.danger], [0.5, "#ffffff"], [1, C.primary]],
         zmin: -1, zmax: 1,
         text: (data.z as number[][]).map((row) =>
-          row.map((v) => (v != null ? v.toFixed(2) : ""))) as Plotly.Data["text"],
+          row.map((v) => (v != null ? v.toFixed(2) : ""))) as Data["text"],
         texttemplate: "%{text}",
         hovertemplate: "%{x} × %{y}: %{z:.3f}<extra></extra>",
         colorbar: { thickness: 12, len: 0.8, tickfont: { size: 10 } },
-      } as Plotly.Data]}
+      } as Data]}
       layout={{ ...BASE_LAYOUT, xaxis: { tickangle: -35 }, yaxis: { tickangle: 0 } }}
       config={PLOT_CFG} style={{ width: "100%", height: "360px" }} useResizeHandler />
   );
