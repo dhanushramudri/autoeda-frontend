@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useParams, usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useWorkspaceStore } from "@/store/workspaceStore";
@@ -13,15 +13,23 @@ import { Topbar } from "@/components/layout/Topbar";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [isHydrated, setIsHydrated] = useState(false);
+  
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const { currentWorkspaceId } = useWorkspaceStore();
 
+  // Rehydrate on mount
   useEffect(() => {
-    if (!token) {
+    useAuthStore.persist.rehydrate();
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (isHydrated && !token) {
       router.replace("/login");
     }
-  }, [token, router]);
+  }, [token, router, isHydrated]);
 
   // Derive workspaceId from URL or fall back to store
   const workspaceIdFromPath = pathname.match(/\/workspaces\/([^/]+)/)?.[1];
@@ -36,7 +44,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     enabled: !!activeWorkspaceId,
   });
 
-  if (!token) return null;
+  if (!isHydrated || !token) return null;
 
   return (
     <div className="flex h-screen overflow-hidden">
