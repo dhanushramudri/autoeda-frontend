@@ -143,16 +143,6 @@ function TableNode({ slug, label, columns, rowCount, isLoadingCols, onExpand, on
             <span className="font-mono text-[9px] text-gray-400 truncate block">{slug}</span>
           )}
         </div>
-        {rowCount != null && (
-          <span className="text-[9px] text-gray-400 flex-shrink-0">{rowCount.toLocaleString()}</span>
-        )}
-        <span
-          onClick={(e) => { e.stopPropagation(); onInsertSelect(); }}
-          className="text-[9px] text-brand font-medium px-1 opacity-0 group-hover:opacity-100 transition hover:text-brand"
-          title="Insert SELECT"
-        >
-          SELECT
-        </span>
         {open ? <ChevronDown className="w-3 h-3 text-gray-400 flex-shrink-0" /> : <ChevronRight className="w-3 h-3 text-gray-400 flex-shrink-0" />}
       </button>
 
@@ -184,7 +174,7 @@ interface SectionProps {
 }
 
 function CatalogSectionBlock({ section, search, workspaceId, onInsertSelect, onInsertCol }: SectionProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [colsCache, setColsCache] = useState<Record<string, CatalogColumn[]>>({});
   const [loadingCols, setLoadingCols] = useState<Set<string>>(new Set());
 
@@ -424,14 +414,8 @@ export default function WarehousePage() {
           )}
           <span className="text-sm font-bold text-gray-800">Warehouse</span>
           <span className="text-gray-200 text-xs">|</span>
-          <span className="text-xs text-gray-400">
-            {totalTables} table{totalTables !== 1 ? "s" : ""} across {sections.length} source{sections.length !== 1 ? "s" : ""}
-          </span>
-          {result?.registered_tables && (
-            <span className="text-[10px] text-brand bg-blue-50 px-2 py-0.5 rounded-full">
-              {result.registered_tables.length} loaded
-            </span>
-          )}
+
+
 
           <div className="flex-1" />
 

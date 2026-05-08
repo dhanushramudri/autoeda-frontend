@@ -1,15 +1,14 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Layout, Config, Data, Shape } from "plotly.js";
+import type { Data, Layout, Config, Shape } from "plotly.js";
 import { SubNav } from "@/components/layout/SubNav";
 import { PageSpinner } from "@/components/shared/LoadingBar";
-import { ChartCard, SectionHeader } from "@/components/analysis/ChartCard";
 import type {
   FullAnalysisResult,
   NumericCharts,
@@ -19,18 +18,16 @@ import type {
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend,
-  ScatterChart, Scatter, ZAxis, RadarChart, Radar, PolarGrid,
-  PolarAngleAxis, PolarRadiusAxis,
 } from "recharts";
 import {
-  BarChart2, BoxSelect, Activity, TrendingUp, GitMerge,
-  Layers, Calendar, Table2, AlertTriangle, ChevronRight,
-  Eye, EyeOff, Filter, Download, RefreshCw, Info,
-  Hash, Type, Clock, Sigma, Maximize2,
+  BarChart2, GitMerge, Layers, Table2, AlertTriangle,
+  Eye, EyeOff, RefreshCw, Info,
+  Hash, Type, Clock, Sigma,
 } from "lucide-react";
 
 // ─── Plotly (SSR-safe) ────────────────────────────────────────────────────────
-const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Plot = dynamic(() => import("react-plotly.js"), { ssr: false }) as any;
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
@@ -158,53 +155,6 @@ function BoxPlot({ data, col }: { data: NumericCharts["box"]; col: string }) {
   );
 }
 
-function ViolinPlot({ data, col }: { data: NumericCharts["violin"]; col: string }) {
-  if (!data?.y?.length) return <Empty />;
-  return (
-    <Plot
-      data={[{
-        type: "violin", y: data.y, name: col,
-        box: { visible: true }, meanline: { visible: true },
-        line: { color: C.secondary }, fillcolor: C.secondary, opacity: 0.55,
-        points: "outliers",
-      } as Data]}
-      layout={{ ...BASE_LAYOUT, yaxis: { title: col } }}
-      config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
-  );
-}
-
-function QQPlot({ data }: { data: NumericCharts["qq"] }) {
-  if (!data?.theoretical?.length) return <Empty />;
-  return (
-    <Plot
-      data={[
-        { x: data.theoretical, y: data.sample, mode: "markers", type: "scatter",
-          name: "Sample", marker: { color: C.primary, size: 4, opacity: 0.55 } },
-        { x: data.line_x, y: data.line_y, mode: "lines", type: "scatter",
-          name: "Normal line", line: { color: C.danger, width: 2 } },
-      ]}
-      layout={{ ...BASE_LAYOUT,
-        xaxis: { title: "Theoretical quantiles" }, yaxis: { title: "Sample quantiles" },
-        legend: { orientation: "h", y: -0.25 } }}
-      config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
-  );
-}
-
-function ECDFPlot({ data, col }: { data: NumericCharts["ecdf"]; col: string }) {
-  if (!data?.x?.length) return <Empty />;
-  return (
-    <Plot
-      data={[{
-        x: data.x, y: data.y, mode: "lines", type: "scatter", name: "ECDF",
-        line: { color: C.accent, width: 2.5, shape: "hv" },
-        fill: "tozeroy", fillcolor: `${C.accent}18`,
-      }]}
-      layout={{ ...BASE_LAYOUT, xaxis: { title: col },
-        yaxis: { title: "Cumulative probability", range: [0, 1] } }}
-      config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
-  );
-}
-
 // Numeric stats summary row
 function NumericStatRow({ data, col }: { data: NumericCharts; col: string }) {
   const stats = [
@@ -271,30 +221,6 @@ function CatPie({ data }: { data: CategoricalCharts["pie"] }) {
   );
 }
 
-function ParetoPlot({ data }: { data: CategoricalCharts["pareto"] }) {
-  if (!data?.labels?.length) return <Empty />;
-  const rows = data.labels.map((l, i) => ({
-    label: l.length > 14 ? l.slice(0, 12) + "…" : l,
-    value: data.values[i],
-    cumPct: data.cumulative_pct[i],
-  }));
-  return (
-    <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={rows} margin={{ bottom: 44, right: 40 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
-        <XAxis dataKey="label" tick={{ fontSize: 9 }} angle={-35} textAnchor="end" />
-        <YAxis yAxisId="l" tick={{ fontSize: 10 }} />
-        <YAxis yAxisId="r" orientation="right" domain={[0, 100]}
-          tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
-        <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
-        <Bar yAxisId="l" dataKey="value" fill={C.primary} opacity={0.85} radius={[4, 4, 0, 0]} />
-        <Line yAxisId="r" type="monotone" dataKey="cumPct"
-          stroke={C.danger} strokeWidth={2} dot={false} />
-      </BarChart>
-    </ResponsiveContainer>
-  );
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // UNIVARIATE — DATETIME
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -343,42 +269,67 @@ function SeasonalityGrid({ data }: { data: DatetimeCharts["seasonality"] }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BIVARIATE
+// ON-DEMAND BIVARIATE CHARTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function ScatterPair({ pair }: { pair: FullAnalysisResult["multi_column"]["scatter_pairs"][0] }) {
-  if (!pair?.x?.length) return <Empty />;
+function BivNumNum({ data, col1, col2 }: { data: any; col1: string; col2: string }) {
+  if (data?.error) return <Empty msg={data.error} />;
   const traces: Data[] = [
-    { x: pair.x, y: pair.y, mode: "markers", type: "scatter", name: "Data",
-      marker: { color: C.primary, size: 5, opacity: 0.5 } },
+    { x: data.x, y: data.y, mode: "markers", type: "scatter", name: "Data",
+      marker: { color: C.primary, size: 5, opacity: 0.45 } },
   ];
-  if (pair.line_x?.length) {
-    traces.push({ x: pair.line_x, y: pair.line_y, mode: "lines", type: "scatter",
-      name: `Trend (R²=${pair.r2?.toFixed(2) ?? "?"})`,
+  if (data.line_x?.length) {
+    traces.push({ x: data.line_x, y: data.line_y, mode: "lines", type: "scatter",
+      name: `Trend (R²=${data.r2?.toFixed(2) ?? "?"})`,
       line: { color: C.danger, width: 2, dash: "dash" } });
   }
   return (
     <>
-      <div className="flex gap-2 px-1 mb-2">
-        <Pill label="Pearson r" value={pair.pearson_r?.toFixed(3) ?? "--"}
-          color={Math.abs(pair.pearson_r ?? 0) > 0.7 ? C.danger : Math.abs(pair.pearson_r ?? 0) > 0.4 ? C.warning : C.muted} />
-        <Pill label="R²" value={pair.r2?.toFixed(3) ?? "--"} />
+      <div className="flex gap-2 mb-3 flex-wrap">
+        <Pill label="Pearson r" value={data.pearson_r?.toFixed(3) ?? "--"}
+          color={Math.abs(data.pearson_r ?? 0) > 0.7 ? C.danger : Math.abs(data.pearson_r ?? 0) > 0.4 ? C.warning : C.muted} />
+        <Pill label="R²" value={data.r2?.toFixed(3) ?? "--"} />
+        <Pill label="p-value"
+          value={data.p_value != null ? (data.p_value < 0.001 ? "<0.001" : data.p_value.toFixed(3)) : "--"} />
       </div>
       <Plot data={traces}
-        layout={{ ...BASE_LAYOUT, xaxis: { title: pair.col1 }, yaxis: { title: pair.col2 },
+        layout={{ ...BASE_LAYOUT, xaxis: { title: col1 }, yaxis: { title: col2 },
           legend: { orientation: "h", y: -0.25 } }}
         config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
     </>
   );
 }
 
-function GroupedBox({ data }: { data: FullAnalysisResult["multi_column"]["grouped_box"] }) {
-  if (!data?.groups || !Object.keys(data.groups).length) return <Empty />;
-  const traces: Data[] = Object.entries(data.groups).map(([grp, stats], i) => ({
+function BivCatCat({ data }: { data: any }) {
+  if (data?.error) return <Empty msg={data.error} />;
+  const rows = (data.cat1_labels as string[])?.map((l: string, i: number) => {
+    const row: Record<string, any> = { label: l.length > 18 ? l.slice(0, 16) + "…" : l };
+    (data.series as any[])?.forEach((s: any) => { row[s.name] = s.values[i]; });
+    return row;
+  }) ?? [];
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={rows} margin={{ bottom: 44, left: 10, right: 20 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+        <XAxis dataKey="label" tick={{ fontSize: 10 }} angle={-30} textAnchor="end" />
+        <YAxis tick={{ fontSize: 10 }} />
+        <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+        <Legend wrapperStyle={{ fontSize: 10 }} />
+        {(data.cat2_labels as string[])?.map((name: string, i: number) => (
+          <Bar key={name} dataKey={name} fill={PALETTE[i % PALETTE.length]} opacity={0.85} radius={[3, 3, 0, 0]} />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function BivNumCat({ data }: { data: any }) {
+  if (data?.error || !data?.groups) return <Empty msg={data?.error ?? "No data"} />;
+  const traces: Data[] = Object.entries(data.groups as Record<string, any>).map(([grp, stats], i) => ({
     type: "box",
-    y: [stats.min!, stats.q1!, stats.median!, stats.q3!, stats.max!, ...(stats.outliers as number[] ?? [])],
-    q1: [stats.q1!], median: [stats.median!], q3: [stats.q3!],
-    lowerfence: [stats.min!], upperfence: [stats.max!],
+    y: [stats.min, stats.q1, stats.median, stats.q3, stats.max, ...(stats.outliers ?? [])],
+    q1: [stats.q1], median: [stats.median], q3: [stats.q3],
+    lowerfence: [stats.min], upperfence: [stats.max],
     name: grp, marker: { color: PALETTE[i % PALETTE.length] },
     boxpoints: "outliers",
   } as Data));
@@ -391,8 +342,100 @@ function GroupedBox({ data }: { data: FullAnalysisResult["multi_column"]["groupe
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MULTIVARIATE
+// MULTIVARIATE CHARTS
 // ═══════════════════════════════════════════════════════════════════════════════
+
+function PairPlot({ pairs }: { pairs: FullAnalysisResult["multi_column"]["scatter_pairs"] }) {
+  if (!pairs.length) return <Empty msg="Need at least 2 numeric columns for pair plot" />;
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+      {pairs.map((pair) => (
+        <div key={`${pair.col1}-${pair.col2}`} className="border border-slate-100 rounded-lg overflow-hidden">
+          <div className="px-2 py-1 bg-slate-50 text-[10px] font-semibold text-slate-500 flex items-center justify-between">
+            <span className="truncate">{pair.col1} × {pair.col2}</span>
+            <span className="text-slate-400 ml-1 flex-shrink-0">r={pair.pearson_r?.toFixed(2)}</span>
+          </div>
+          <Plot
+            data={[
+              { x: pair.x, y: pair.y, mode: "markers", type: "scatter",
+                marker: { color: C.primary, size: 3, opacity: 0.4 }, showlegend: false },
+              ...(pair.line_x?.length ? [{
+                x: pair.line_x, y: pair.line_y, mode: "lines" as const, type: "scatter" as const,
+                line: { color: C.danger, width: 1.5, dash: "dash" as const }, showlegend: false,
+              }] : []),
+            ]}
+            layout={{ ...BASE_LAYOUT, showlegend: false, margin: { l: 28, r: 8, t: 6, b: 28 },
+              xaxis: { showticklabels: false, gridcolor: "#F1F5F9", zeroline: false },
+              yaxis: { showticklabels: false, gridcolor: "#F1F5F9", zeroline: false } }}
+            config={{ ...PLOT_CFG, displayModeBar: false }}
+            style={{ width: "100%", height: "160px" }}
+            useResizeHandler />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Scatter3DPlot({ data }: { data: any }) {
+  if (data?.error) return <Empty msg={data.error} />;
+  return (
+    <Plot
+      data={[{
+        x: data.x, y: data.y, z: data.z,
+        mode: "markers", type: "scatter3d",
+        marker: { size: 3, color: data.z, colorscale: "Viridis", opacity: 0.65,
+          colorbar: { thickness: 10, len: 0.6, tickfont: { size: 9 } } },
+      } as Data]}
+      layout={{ ...BASE_LAYOUT, margin: { l: 0, r: 0, t: 10, b: 10 },
+        scene: { xaxis: { title: data.x_col }, yaxis: { title: data.y_col }, zaxis: { title: data.z_col } } }}
+      config={PLOT_CFG} style={{ width: "100%", height: "420px" }} useResizeHandler />
+  );
+}
+
+function PCAPlot({ data }: { data: any }) {
+  if (data?.error) return <Empty msg={data.error} />;
+  const ev = (data.explained_variance_ratio as number[]) ?? [];
+  const loadingRows = (data.columns as string[])?.map((col: string, i: number) => ({
+    col: col.length > 14 ? col.slice(0, 12) + "…" : col,
+    pc1: (data.loadings_pc1 as number[])[i] ?? 0,
+    pc2: (data.loadings_pc2 as number[])?.[i] ?? 0,
+  })) ?? [];
+  return (
+    <>
+      <div className="flex gap-2 mb-4 flex-wrap">
+        {ev.map((v, i) => (
+          <Pill key={i} label={`PC${i + 1}`} value={`${(v * 100).toFixed(1)}%`} color={PALETTE[i]} />
+        ))}
+        <Pill label="Cumulative" value={`${(ev.reduce((a, b) => a + b, 0) * 100).toFixed(1)}%`} color={C.muted} />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-[10px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Score Plot (PC1 vs PC2)</p>
+          <Plot
+            data={[{ x: data.scores_pc1, y: data.scores_pc2, mode: "markers", type: "scatter",
+              marker: { color: C.primary, size: 4, opacity: 0.45 }, showlegend: false } as Data]}
+            layout={{ ...BASE_LAYOUT, showlegend: false,
+              xaxis: { title: `PC1 (${(ev[0] * 100).toFixed(1)}%)` },
+              yaxis: { title: `PC2 (${(ev[1] * 100)?.toFixed(1)}%)` } }}
+            config={PLOT_CFG} style={{ width: "100%", height: "280px" }} useResizeHandler />
+        </div>
+        <div>
+          <p className="text-[10px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Variable Loadings</p>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={loadingRows} layout="vertical" margin={{ left: 90, right: 20 }}>
+              <XAxis type="number" tick={{ fontSize: 10 }} domain={[-1, 1]} />
+              <YAxis dataKey="col" type="category" tick={{ fontSize: 10 }} width={90} />
+              <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <Bar dataKey="pc1" fill={C.primary} opacity={0.85} name="PC1" />
+              <Bar dataKey="pc2" fill={C.secondary} opacity={0.85} name="PC2" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </>
+  );
+}
 
 function CorrelationHeatmap({ data }: { data: FullAnalysisResult["multi_column"]["correlation"] }) {
   if (!data?.labels?.length) return <Empty msg="Need 2+ numeric columns" />;
@@ -411,46 +454,6 @@ function CorrelationHeatmap({ data }: { data: FullAnalysisResult["multi_column"]
       } as Data]}
       layout={{ ...BASE_LAYOUT, xaxis: { tickangle: -35 }, yaxis: { tickangle: 0 } }}
       config={PLOT_CFG} style={{ width: "100%", height: "360px" }} useResizeHandler />
-  );
-}
-
-// Radar chart for column-level stats overview
-function ColumnRadar({ data }: { data: FullAnalysisResult }) {
-  const rows = data.stat_cards?.normality_table?.map((r) => ({
-    col: r.column.length > 12 ? r.column.slice(0, 10) + "…" : r.column,
-    skewness: Math.abs(r.skewness ?? 0),
-    kurtosis: Math.min(Math.abs((r.kurtosis ?? 3) - 3) / 5, 1),
-    outlierPct: (data.stat_cards.outlier_summary.find((o) => o.column === r.column)?.outlier_pct ?? 0) / 100,
-    missingPct: (data.missing_charts?.bar?.find((m) => m.column === r.column)?.missing_pct ?? 0) / 100,
-    normality: r.is_normal ? 1 : 0,
-  })) ?? [];
-
-  if (!rows.length) return <Empty msg="No numeric columns for radar" />;
-
-  // Build one radar per column -- cap at 6 columns
-  const cols = rows.slice(0, 6);
-  return (
-    <div className="grid grid-cols-3 gap-3">
-      {cols.map((r) => (
-        <div key={r.col} className="flex flex-col items-center">
-          <p className="text-[10px] font-semibold text-slate-500 mb-1">{r.col}</p>
-          <RadarChart width={160} height={130}
-            data={[
-              { dim: "Skew",    v: Math.min(r.skewness, 1) },
-              { dim: "Kurt",    v: r.kurtosis },
-              { dim: "Outlier", v: r.outlierPct },
-              { dim: "Missing", v: r.missingPct },
-              { dim: "Normal",  v: r.normality },
-            ]}>
-            <PolarGrid stroke="#E2E8F0" />
-            <PolarAngleAxis dataKey="dim" tick={{ fontSize: 8, fill: C.muted }} />
-            <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
-            <Radar name={r.col} dataKey="v" stroke={C.primary}
-              fill={C.primary} fillOpacity={0.25} />
-          </RadarChart>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -678,9 +681,9 @@ function Sidebar({
 
   // Charts relevant per tab
   const tabCharts: Record<AnalysisTab, ChartKey[]> = {
-    univariate:   ["histogram", "box", "violin", "qq", "ecdf", "bar", "pie", "pareto", "timeseries", "seasonality"],
-    bivariate:    ["scatter", "grouped_box"],
-    multivariate: ["correlation", "radar"],
+    univariate:   ["histogram", "box", "bar", "pie"],
+    bivariate:    [],
+    multivariate: [],
     quality:      [],
   };
   const chartsForTab = tabCharts[activeTab];
@@ -789,45 +792,6 @@ function TabHeader({ label, count }: { label: string; count?: number }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SUMMARY BANNER
-// ═══════════════════════════════════════════════════════════════════════════════
-function SummaryBanner({ data }: { data: FullAnalysisResult }) {
-  const numericCount  = data.numeric_cols.length;
-  const catCount      = data.categorical_cols.length;
-  const dtCount       = data.datetime_cols.length;
-  const missingCols   = data.missing_charts?.bar?.filter((r) => (r.missing_pct ?? 0) > 0).length ?? 0;
-  const highOutlier   = data.stat_cards?.outlier_summary?.filter((r) => (r.outlier_pct ?? 0) > 10).length ?? 0;
-  const nonNormal     = data.stat_cards?.normality_table?.filter((r) => r.is_normal === false).length ?? 0;
-
-  const stats = [
-    { label: "Rows",         value: data.total_rows?.toLocaleString() ?? "--",  color: C.primary },
-    { label: "Columns",      value: (numericCount + catCount + dtCount).toString(), color: C.primary },
-    { label: "Numeric",      value: numericCount.toString(),  color: C.accent },
-    { label: "Categorical",  value: catCount.toString(),      color: C.secondary },
-    { label: "Datetime",     value: dtCount.toString(),       color: "#0891B2" },
-    { label: "Missing Cols", value: missingCols.toString(),   color: missingCols > 0 ? C.warning : C.success },
-    { label: "High Outlier", value: highOutlier.toString(),   color: highOutlier > 0 ? C.danger : C.success },
-    { label: "Non-Normal",   value: nonNormal.toString(),     color: nonNormal > 3 ? C.warning : C.muted },
-  ];
-
-  return (
-    <div className="flex flex-wrap gap-2 mb-4 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-      {stats.map((s) => (
-        <div key={s.label} className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-100">
-          <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">{s.label}</span>
-          <span className="text-sm font-bold" style={{ color: s.color }}>{s.value}</span>
-        </div>
-      ))}
-      {data.sampled && (
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 rounded-lg border border-amber-200 text-amber-700 text-[10px] font-medium">
-          <Info className="w-3 h-3" />
-          Sample: {data.sample_size?.toLocaleString()} / {data.total_rows?.toLocaleString()} rows
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN PAGE
@@ -865,6 +829,39 @@ export default function AnalysisPage() {
 
   const show = (k: ChartKey) => visibleCharts.has(k);
   const colOn = (c: string) => visibleCols.has(c);
+
+  // ── Bivariate state ──────────────────────────────────────────────────────────
+  const [bivType, setBivType] = useState<"num_num" | "cat_cat" | "num_cat">("num_num");
+  const [bivCol1, setBivCol1] = useState("");
+  const [bivCol2, setBivCol2] = useState("");
+
+  const bivEnabled = !!bivCol1 && !!bivCol2 && bivCol1 !== bivCol2;
+  const { data: bivData, isFetching: bivLoading } = useQuery({
+    queryKey: ["eda", "bivariate", datasetId, bivCol1, bivCol2, bivType],
+    queryFn: () => datasetsApi.getBivariate(datasetId, bivCol1, bivCol2, bivType).then((r) => r.data),
+    enabled: bivEnabled,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  // ── Multivariate state ───────────────────────────────────────────────────────
+  const [s3x, setS3x] = useState("");
+  const [s3y, setS3y] = useState("");
+  const [s3z, setS3z] = useState("");
+
+  const { data: pcaData, isFetching: pcaLoading } = useQuery({
+    queryKey: ["eda", "pca", datasetId],
+    queryFn: () => datasetsApi.getPCA(datasetId).then((r) => r.data),
+    enabled: (data?.numeric_cols?.length ?? 0) >= 2,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const s3Enabled = !!s3x && !!s3y && !!s3z && new Set([s3x, s3y, s3z]).size === 3;
+  const { data: s3Data, isFetching: s3Loading } = useQuery({
+    queryKey: ["eda", "scatter3d", datasetId, s3x, s3y, s3z],
+    queryFn: () => datasetsApi.getScatter3d(datasetId, s3x, s3y, s3z).then((r) => r.data),
+    enabled: s3Enabled,
+    staleTime: 1000 * 60 * 10,
+  });
 
   // ─────────────────────────────────────────────────────────────────────────────
   if (isLoading) return (
@@ -910,78 +907,75 @@ export default function AnalysisPage() {
 
           {/* ── Main content ── */}
           <main className="flex-1 overflow-y-auto p-5">
-            <SummaryBanner data={data} />
 
             {/* ══════════ UNIVARIATE TAB ══════════ */}
             {activeTab === "univariate" && (
               <div className="grid grid-cols-2 gap-4">
 
-                {/* Numeric columns */}
+                {/* Section header */}
+                <div className="col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-1">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <BarChart2 className="w-4 h-4 text-blue-600" />
+                    <h2 className="text-sm font-bold text-slate-800">Univariate Analysis</h2>
+                  </div>
+                  <p className="text-xs text-slate-500">Analyzing individual variables to understand their distributions and characteristics</p>
+                </div>
+
+                {/* Numerical Variables Distribution */}
+                {data.numeric_cols.filter(colOn).length > 0 && (
+                  <div className="col-span-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 mt-1">
+                    Numerical Variables Distribution
+                  </div>
+                )}
+
                 {data.numeric_cols.filter(colOn).map((col) => {
                   const charts = data.numeric_charts[col];
                   if (!charts) return null;
                   const highSkew = Math.abs(charts.skewness ?? 0) > 1;
                   return (
                     <div key={col} className="contents">
-                      <TabHeader label={`${col} — numeric`} />
+                      <TabHeader label={col} />
 
-                      {/* Stats row always visible */}
                       <div className="col-span-2">
                         <NumericStatRow data={charts} col={col} />
                       </div>
 
                       {show("histogram") && (
-                        <Card title={`Histogram + KDE — ${col}`}
-                          desc="Frequency distribution with kernel density estimate, mean (dashed) & median (dotted)"
-                          insight={highSkew ? `Skewness ${charts.skewness?.toFixed(2)} — distribution is ${(charts.skewness ?? 0) > 0 ? "right" : "left"}-skewed` : undefined}
+                        <Card title={`Distribution — ${col}`}
+                          desc="Histogram with KDE overlay, mean (dashed) and median (dotted)"
+                          insight={highSkew ? `Skewness ${charts.skewness?.toFixed(2)} — ${(charts.skewness ?? 0) > 0 ? "right" : "left"}-skewed` : undefined}
                           insightLevel={Math.abs(charts.skewness ?? 0) > 2 ? "danger" : "warning"}>
                           <HistKDE data={charts.histogram_kde} col={col} />
                         </Card>
                       )}
 
                       {show("box") && (
-                        <Card title={`Box Plot — ${col}`} desc="IQR box with whiskers and outlier dots">
+                        <Card title={`Box Plot — ${col}`} desc="IQR box with whiskers and outlier points">
                           <BoxPlot data={charts.box} col={col} />
-                        </Card>
-                      )}
-
-                      {show("violin") && (
-                        <Card title={`Violin Plot — ${col}`} desc="Full KDE distribution shape">
-                          <ViolinPlot data={charts.violin} col={col} />
-                        </Card>
-                      )}
-
-                      {show("qq") && (
-                        <Card title={`QQ Plot — ${col}`}
-                          desc="Sample vs. theoretical normal quantiles"
-                          insight={charts.normality?.is_normal === false
-                            ? `Not normally distributed (p = ${charts.normality.p_value?.toFixed(4)})` : undefined}
-                          insightLevel="warning">
-                          <QQPlot data={charts.qq} />
-                        </Card>
-                      )}
-
-                      {show("ecdf") && (
-                        <Card title={`ECDF — ${col}`} desc="Empirical cumulative distribution function">
-                          <ECDFPlot data={charts.ecdf} col={col} />
                         </Card>
                       )}
                     </div>
                   );
                 })}
 
-                {/* Categorical columns */}
+                {/* Categorical Variables */}
+                {data.categorical_cols.filter(colOn).length > 0 && (
+                  <div className="col-span-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 mt-2">
+                    Categorical Variables
+                  </div>
+                )}
+
                 {data.categorical_cols.filter(colOn).map((col) => {
                   const charts = data.categorical_charts[col];
                   if (!charts) return null;
                   const total = charts.bar.total_categories;
                   return (
                     <div key={col} className="contents">
-                      <TabHeader label={`${col} — categorical`} />
+                      <TabHeader label={col} />
 
                       {show("bar") && (
-                        <Card title={`Bar Chart — ${col}`}
-                          desc={`Top ${Math.min(total, 20)} of ${total} categories by frequency`}
+                        <Card title={`Frequency — ${col}`}
+                          desc={`Top ${Math.min(total, 20)} of ${total} categories by count`}
                           insight={total > 50 ? `High cardinality: ${total} unique values` : undefined}
                           insightLevel="warning">
                           <CatBar data={charts.bar} col={col} />
@@ -989,14 +983,8 @@ export default function AnalysisPage() {
                       )}
 
                       {show("pie") && charts.pie && (
-                        <Card title={`Pie / Donut — ${col}`} desc="Proportional share by category">
+                        <Card title={`Share — ${col}`} desc="Proportional breakdown by category">
                           <CatPie data={charts.pie} />
-                        </Card>
-                      )}
-
-                      {show("pareto") && (
-                        <Card title={`Pareto — ${col}`} desc="Frequency bars + cumulative % line (80/20 analysis)" wide>
-                          <ParetoPlot data={charts.pareto} />
                         </Card>
                       )}
                     </div>
@@ -1004,65 +992,126 @@ export default function AnalysisPage() {
                 })}
 
                 {/* Datetime columns */}
+                {data.datetime_cols.filter(colOn).length > 0 && (
+                  <div className="col-span-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 mt-2">
+                    Datetime Variables
+                  </div>
+                )}
+
                 {data.datetime_cols.filter(colOn).map((col) => {
                   const charts = data.datetime_charts[col];
                   if (!charts) return null;
                   return (
                     <div key={col} className="contents">
-                      <TabHeader label={`${col} — datetime`} />
-
-                      {show("timeseries") && (
-                        <Card title={`Time Series — ${col}`}
-                          desc="Event count over time (auto-aggregated by frequency)" wide>
-                          <TimeSeriesLine data={charts.timeseries} />
-                        </Card>
-                      )}
-
-                      {show("seasonality") && (
-                        <Card title={`Seasonality — ${col}`}
-                          desc="Count distribution by hour of day, day of week, and month" wide>
-                          <SeasonalityGrid data={charts.seasonality} />
-                        </Card>
-                      )}
+                      <TabHeader label={col} />
+                      <Card title={`Time Series — ${col}`}
+                        desc="Event count over time (auto-aggregated)" wide>
+                        <TimeSeriesLine data={charts.timeseries} />
+                      </Card>
+                      <Card title={`Seasonality — ${col}`}
+                        desc="Count by hour of day, day of week, and month" wide>
+                        <SeasonalityGrid data={charts.seasonality} />
+                      </Card>
                     </div>
                   );
                 })}
+
+                {allCols.filter(colOn).length === 0 && (
+                  <div className="col-span-2">
+                    <Empty msg="All columns are hidden — toggle them on in the sidebar" />
+                  </div>
+                )}
               </div>
             )}
 
             {/* ══════════ BIVARIATE TAB ══════════ */}
             {activeTab === "bivariate" && (
-              <div className="grid grid-cols-2 gap-4">
-                {show("scatter") && data.multi_column.scatter_pairs.length > 0 && (
-                  <>
-                    <TabHeader label="Scatter Plots + Trend Lines" count={data.multi_column.scatter_pairs.length} />
-                    {data.multi_column.scatter_pairs.map((pair) => (
-                      <Card key={`${pair.col1}-${pair.col2}`}
-                        title={`${pair.col1} × ${pair.col2}`}
-                        desc={`Scatter with linear trend. Pearson r = ${pair.pearson_r?.toFixed(3) ?? "?"}`}
-                        insight={Math.abs(pair.pearson_r ?? 0) > 0.8
-                          ? `Strong correlation (r = ${pair.pearson_r?.toFixed(3)})` : undefined}
-                        insightLevel={Math.abs(pair.pearson_r ?? 0) > 0.9 ? "danger" : "warning"}>
-                        <ScatterPair pair={pair} />
-                      </Card>
+              <div className="max-w-3xl space-y-5">
+                {/* Header + type selector + column pickers */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <GitMerge className="w-4 h-4 text-blue-600" />
+                    <h2 className="text-sm font-bold text-slate-800">Bivariate Analysis</h2>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-4">Analyzing relationships between pairs of variables</p>
+
+                  <p className="text-xs font-semibold text-slate-600 mb-2">Select Analysis Type</p>
+                  <div className="flex gap-2 flex-wrap mb-5">
+                    {([
+                      { key: "num_num" as const,  label: "Numerical vs Numerical" },
+                      { key: "cat_cat" as const,  label: "Categorical vs Categorical" },
+                      { key: "num_cat" as const,  label: "Numerical vs Categorical" },
+                    ]).map((t) => (
+                      <button key={t.key}
+                        onClick={() => { setBivType(t.key); setBivCol1(""); setBivCol2(""); }}
+                        className={`px-4 py-2 rounded-lg text-xs font-semibold border transition ${
+                          bivType === t.key
+                            ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:bg-blue-50"
+                        }`}>
+                        {t.label}
+                      </button>
                     ))}
-                  </>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                        {bivType === "num_cat" ? "Numeric Column" : "Column 1"}
+                      </label>
+                      <select value={bivCol1} onChange={(e) => setBivCol1(e.target.value)}
+                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select column…</option>
+                        {(bivType === "cat_cat" ? data.categorical_cols : data.numeric_cols).map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                        {bivType === "num_cat" ? "Categorical Column" : "Column 2"}
+                      </label>
+                      <select value={bivCol2} onChange={(e) => setBivCol2(e.target.value)}
+                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select column…</option>
+                        {(bivType === "num_num" ? data.numeric_cols :
+                          bivType === "cat_cat" ? data.categorical_cols :
+                          data.categorical_cols
+                        ).filter((c) => c !== bivCol1).map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chart result */}
+                {(!bivCol1 || !bivCol2) && (
+                  <div className="bg-white rounded-xl border border-dashed border-slate-200 p-10 text-center">
+                    <GitMerge className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+                    <p className="text-sm text-slate-400">Select two columns above to visualise their relationship</p>
+                  </div>
                 )}
 
-                {show("grouped_box") && data.multi_column.grouped_box?.groups && (
-                  <>
-                    <TabHeader label="Grouped Box Plot" />
-                    <Card
-                      title={`${data.multi_column.grouped_box.numeric_col} by ${data.multi_column.grouped_box.categorical_col}`}
-                      desc="Distribution of highest-variance numeric column split by category" wide>
-                      <GroupedBox data={data.multi_column.grouped_box} />
-                    </Card>
-                  </>
+                {bivCol1 && bivCol2 && bivLoading && (
+                  <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400 text-sm animate-pulse">
+                    Computing…
+                  </div>
                 )}
 
-                {!data.multi_column.scatter_pairs.length && !data.multi_column.grouped_box?.groups && (
-                  <div className="col-span-2">
-                    <Empty msg="Need at least 2 numeric columns for bivariate analysis" />
+                {bivCol1 && bivCol2 && !bivLoading && bivData && (
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-4 pt-3 pb-2 border-b border-slate-100 flex items-center justify-between">
+                      <p className="text-xs font-bold text-slate-800">{bivCol1} × {bivCol2}</p>
+                      {"n" in (bivData as object) && (
+                        <span className="text-[10px] text-slate-400">{(bivData as any).n?.toLocaleString()} rows</span>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      {bivType === "num_num" && <BivNumNum data={bivData} col1={bivCol1} col2={bivCol2} />}
+                      {bivType === "cat_cat" && <BivCatCat data={bivData} />}
+                      {bivType === "num_cat" && <BivNumCat data={bivData} />}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1070,40 +1119,79 @@ export default function AnalysisPage() {
 
             {/* ══════════ MULTIVARIATE TAB ══════════ */}
             {activeTab === "multivariate" && (
-              <div className="grid grid-cols-2 gap-4">
-                {show("correlation") && (
-                  <>
-                    <TabHeader label="Correlation Matrix" />
-                    <Card title="Pearson Correlation Heatmap"
-                      desc="Pairwise linear correlation between all numeric columns. Range: −1 (red) to +1 (blue)"
-                      wide
-                      insight={
-                        (() => {
-                          const z = data.multi_column.correlation?.z as number[][] ?? [];
-                          const labels = data.multi_column.correlation?.labels ?? [];
-                          let strongPairs: string[] = [];
-                          for (let i = 0; i < z.length; i++) for (let j = i + 1; j < z[i].length; j++) {
-                            if (Math.abs(z[i][j]) > 0.85) strongPairs.push(`${labels[i]} & ${labels[j]}`);
-                          }
-                          return strongPairs.length ? `Highly correlated pairs: ${strongPairs.slice(0, 3).join(", ")}` : undefined;
-                        })()
-                      }
-                      insightLevel="warning">
-                      <CorrelationHeatmap data={data.multi_column.correlation} />
-                    </Card>
-                  </>
-                )}
+              <div className="space-y-6">
 
-                {show("radar") && (
-                  <>
-                    <TabHeader label="Column Health Radar" />
-                    <Card title="Column Quality Radar"
-                      desc="Per-column overview of skewness, kurtosis, outlier %, missing %, and normality"
-                      wide>
-                      <ColumnRadar data={data} />
-                    </Card>
-                  </>
-                )}
+                {/* Correlation Heatmap */}
+                <section>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Correlation Heatmap</h3>
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-4 pt-3 pb-2 border-b border-slate-100">
+                      <p className="text-xs font-bold text-slate-800">Pearson Correlation Matrix</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Pairwise linear correlation − 1 (red) to +1 (blue)</p>
+                    </div>
+                    <div className="p-4"><CorrelationHeatmap data={data.multi_column.correlation} /></div>
+                  </div>
+                </section>
+
+                {/* Pair Plot */}
+                <section>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Pair Plot</h3>
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-4 pt-3 pb-2 border-b border-slate-100">
+                      <p className="text-xs font-bold text-slate-800">Top Correlated Pairs</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Scatter + trend line for highest-correlation numeric pairs</p>
+                    </div>
+                    <div className="p-4"><PairPlot pairs={data.multi_column.scatter_pairs} /></div>
+                  </div>
+                </section>
+
+                {/* 3D Scatter */}
+                <section>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">3D Scatter Plot</h3>
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                    <div className="flex gap-3 mb-4 flex-wrap">
+                      {([
+                        { label: "X Axis", val: s3x, set: setS3x },
+                        { label: "Y Axis", val: s3y, set: setS3y },
+                        { label: "Z Axis", val: s3z, set: setS3z },
+                      ] as { label: string; val: string; set: (v: string) => void }[]).map(({ label, val, set }) => (
+                        <div key={label} className="flex-1 min-w-[140px]">
+                          <label className="text-xs font-semibold text-slate-600 block mb-1">{label}</label>
+                          <select value={val} onChange={(e) => set(e.target.value)}
+                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select…</option>
+                            {data.numeric_cols.map((c) => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                    {!s3Enabled && (
+                      <div className="border border-dashed border-slate-200 rounded-lg p-8 text-center text-slate-400 text-sm">
+                        Select three different numeric columns to render the 3D scatter
+                      </div>
+                    )}
+                    {s3Enabled && s3Loading && (
+                      <div className="p-8 text-center text-slate-400 text-sm animate-pulse">Computing…</div>
+                    )}
+                    {s3Enabled && !s3Loading && s3Data && <Scatter3DPlot data={s3Data} />}
+                  </div>
+                </section>
+
+                {/* PCA */}
+                <section>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">PCA Analysis</h3>
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="px-4 pt-3 pb-2 border-b border-slate-100">
+                      <p className="text-xs font-bold text-slate-800">Principal Component Analysis</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Score plot (PC1 vs PC2) and variable loadings across all numeric columns</p>
+                    </div>
+                    <div className="p-4">
+                      {pcaLoading && <div className="text-center text-slate-400 text-sm py-8 animate-pulse">Computing PCA…</div>}
+                      {pcaData && <PCAPlot data={pcaData} />}
+                    </div>
+                  </div>
+                </section>
+
               </div>
             )}
 

@@ -72,7 +72,8 @@ export const datasetsApi = {
       headers: { "Content-Type": "multipart/form-data" },
     }),
   get: (datasetId: string) => api.get(`/datasets/${datasetId}`),
-  delete: (datasetId: string) => api.delete(`/datasets/${datasetId}`),
+  delete: (workspaceId: string, datasetId: string) =>
+  api.delete(`/workspaces/${workspaceId}/datasets/${datasetId}`),
   refresh: (datasetId: string) => api.post(`/datasets/${datasetId}/refresh`),
   preview: (datasetId: string) => api.get(`/datasets/${datasetId}/preview`),
   getProfile: (datasetId: string) =>
@@ -152,6 +153,13 @@ export const datasetsApi = {
     api.get(`/datasets/${datasetId}/analysis`),
   getAnalysisColumn: (datasetId: string, colName: string) =>
     api.get(`/datasets/${datasetId}/analysis/column/${encodeURIComponent(colName)}`),
+  // On-demand bivariate / multivariate
+  getBivariate: (datasetId: string, col1: string, col2: string, btype: "num_num" | "cat_cat" | "num_cat") =>
+    api.get(`/datasets/${datasetId}/bivariate`, { params: { col1, col2, btype } }),
+  getPCA: (datasetId: string, nComponents = 2) =>
+    api.get(`/datasets/${datasetId}/pca`, { params: { n_components: nComponents } }),
+  getScatter3d: (datasetId: string, x: string, y: string, z: string) =>
+    api.get(`/datasets/${datasetId}/scatter3d`, { params: { x, y, z } }),
   // SQL Editor
   sqlExecute: (datasetId: string, sql: string, limit = 1000) =>
     api.post(`/datasets/${datasetId}/sql/execute`, { sql, limit }),
@@ -213,7 +221,10 @@ export const sourcesApi = {
   preview: (workspaceId: string, sourceId: number, table?: string, rows = 50) =>
     api.get(`/workspaces/${workspaceId}/sources/${sourceId}/preview`, { params: { table, rows } }),
   importAsDataset: (workspaceId: string, sourceId: number, data: {
-    dataset_name: string; workspace_id: number; limit?: number;
+    dataset_name: string;
+    workspace_id: number;
+    table?: string | null;
+    limit?: number;
   }) => api.post(`/workspaces/${workspaceId}/sources/${sourceId}/import`, data),
 };
 

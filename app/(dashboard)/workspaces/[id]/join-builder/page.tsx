@@ -35,7 +35,9 @@ import { PageSpinner } from "@/components/shared/LoadingBar";
 import {
   GitMerge, Database, Plus, Trash2, X, Play, Code2, Copy,
   ChevronDown, ChevronUp, Search, Download, Undo2, Maximize2,
-  AlertCircle, CheckCircle2, Info,
+  AlertCircle, CheckCircle2, Info, ChevronLeft, ChevronRight,
+  Settings, PanelLeftClose, PanelRightClose, PanelLeft, PanelRight,
+  Zap, Table2, Eye, EyeOff, Layers,
 } from "lucide-react";
 import type { Dataset } from "@/types";
 
@@ -44,11 +46,11 @@ import type { Dataset } from "@/types";
 const JOIN_TYPES = ["INNER", "LEFT", "RIGHT", "FULL"] as const;
 type JoinType = typeof JOIN_TYPES[number];
 
-const JOIN_META: Record<JoinType, { color: string; bg: string; border: string; desc: string; symbol: string }> = {
-  INNER: { color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe", desc: "Only matching rows from both tables", symbol: "⋈" },
-  LEFT:  { color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", desc: "All left rows + matching right rows", symbol: "⟕" },
-  RIGHT: { color: "#10b981", bg: "#f0fdf4", border: "#a7f3d0", desc: "All right rows + matching left rows", symbol: "⟵" },
-  FULL:  { color: "#f59e0b", bg: "#fffbeb", border: "#fde68a", desc: "All rows from both tables", symbol: "⟷" },
+const JOIN_META: Record<JoinType, { color: string; bg: string; border: string; desc: string; symbol: string; gradient: string }> = {
+  INNER: { color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe", desc: "Only matching rows from both tables", symbol: "⋈", gradient: "from-blue-500 to-blue-600" },
+  LEFT:  { color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", desc: "All left rows + matching right rows", symbol: "⟕", gradient: "from-violet-500 to-violet-600" },
+  RIGHT: { color: "#10b981", bg: "#f0fdf4", border: "#a7f3d0", desc: "All right rows + matching left rows", symbol: "⟵", gradient: "from-emerald-500 to-emerald-600" },
+  FULL:  { color: "#f59e0b", bg: "#fffbeb", border: "#fde68a", desc: "All rows from both tables", symbol: "⟷", gradient: "from-amber-500 to-amber-600" },
 };
 
 // ────────── Types ──────────────────────────────────────────────────────────
@@ -81,12 +83,15 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
 
   return (
     <div
-      className="rounded-xl shadow-lg bg-white flex flex-col"
+      className="rounded-2xl flex flex-col overflow-hidden"
       style={{
-        minWidth: 210,
-        maxWidth: 240,
-        border: `2px solid ${selected ? "#3b82f6" : "#e2e8f0"}`,
-        transition: "border-color 0.15s",
+        minWidth: 220,
+        maxWidth: 250,
+        background: "white",
+        boxShadow: selected
+          ? `0 0 0 2px #3b82f6, 0 20px 40px rgba(59,130,246,0.15)`
+          : `0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)`,
+        transition: "box-shadow 0.2s",
       }}
     >
       {/* Left (target) handle */}
@@ -94,28 +99,44 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         type="target"
         position={Position.Left}
         id="left"
-        style={{ width: 14, height: 14, background: "#8b5cf6", border: "3px solid #fff", boxShadow: "0 0 0 2px #8b5cf6", left: -8 }}
+        style={{
+          width: 16, height: 16,
+          background: "linear-gradient(135deg, #8b5cf6, #7c3aed)",
+          border: "3px solid white",
+          boxShadow: "0 0 0 2px #8b5cf6",
+          left: -9,
+        }}
       />
 
       {/* Header */}
       <div
-        className="px-2.5 py-2 flex items-center gap-1.5 rounded-t-xl"
-        style={{ background: selected ? "#eff6ff" : "#f8fafc", borderBottom: "1px solid #e2e8f0" }}
+        className="px-3 py-2.5 flex items-center gap-2"
+        style={{
+          background: selected
+            ? "linear-gradient(135deg, #eff6ff, #dbeafe)"
+            : "linear-gradient(135deg, #f8fafc, #f1f5f9)",
+          borderBottom: "1px solid rgba(0,0,0,0.06)",
+        }}
       >
-        <Database className="w-3.5 h-3.5 text-brand flex-shrink-0" />
-        <span className="text-xs font-bold text-gray-800 flex-1 truncate">{data.label}</span>
-        <span className="text-[9px] text-gray-400">{data.columns.length} cols</span>
+        <div
+          className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: selected ? "#3b82f6" : "#64748b" }}
+        >
+          <Table2 className="w-3 h-3 text-white" />
+        </div>
+        <span className="text-xs font-semibold text-gray-800 flex-1 truncate">{data.label}</span>
+        <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-medium">
+          {data.columns.length}
+        </span>
         <button
           onClick={() => setCollapsed((v) => !v)}
-          className="p-0.5 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition"
-          title={collapsed ? "Expand" : "Collapse"}
+          className="p-0.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition"
         >
           {collapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
         </button>
         <button
           onClick={() => data.onDelete(id)}
-          className="p-0.5 rounded hover:bg-red-100 text-gray-400 hover:text-red-500 transition"
-          title="Remove from canvas"
+          className="p-0.5 rounded-md hover:bg-red-50 text-gray-300 hover:text-red-500 transition"
         >
           <X className="w-3 h-3" />
         </button>
@@ -124,50 +145,55 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
       {/* Column list */}
       {!collapsed && (
         <>
-          {data.columns.length > 8 && (
-            <div className="px-2 pt-1.5 pb-1">
-              <div className="flex items-center gap-1 border border-gray-200 rounded px-2 py-0.5 bg-white">
+          {data.columns.length > 6 && (
+            <div className="px-2.5 pt-2 pb-1">
+              <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-1.5">
                 <Search className="w-2.5 h-2.5 text-gray-400 flex-shrink-0" />
                 <input
                   className="text-[10px] bg-transparent outline-none flex-1 text-gray-600 placeholder-gray-300"
-                  placeholder="Search columns..."
+                  placeholder="Find column..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  // prevent ReactFlow drag when typing
                   onMouseDown={(e) => e.stopPropagation()}
                 />
               </div>
             </div>
           )}
-          <div className="overflow-y-auto divide-y divide-gray-50" style={{ maxHeight: 200 }}>
-            {filtered.slice(0, 30).map((col) => (
+          <div className="overflow-y-auto" style={{ maxHeight: 180 }}>
+            {filtered.slice(0, 30).map((col, idx) => (
               <button
                 key={col}
-                className="w-full text-left px-3 py-1 hover:bg-brand/10 group flex items-center gap-1.5 transition-colors"
+                className="w-full text-left px-3 py-1.5 hover:bg-blue-50 group flex items-center gap-2 transition-colors"
+                style={{ borderBottom: idx < filtered.length - 1 ? "1px solid #f8fafc" : "none" }}
                 onClick={() => data.onSuggestKey(id, col)}
-                title={`Click to suggest "${col}" as a join key`}
+                title={`Use "${col}" as join key`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-blue-400 flex-shrink-0 transition-colors" />
-                <span className="text-[10px] font-mono text-gray-600 group-hover:text-brand truncate">{col}</span>
+                <span
+                  className="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors"
+                  style={{ background: "#cbd5e1" }}
+                />
+                <span className="text-[10px] font-mono text-gray-500 group-hover:text-blue-600 truncate transition-colors">{col}</span>
               </button>
             ))}
             {filtered.length > 30 && (
-              <div className="px-3 py-1">
-                <span className="text-[9px] text-gray-400">+{filtered.length - 30} more</span>
-              </div>
+              <div className="px-3 py-1.5 text-[9px] text-gray-400 italic">+{filtered.length - 30} more columns</div>
             )}
             {filtered.length === 0 && (
-              <div className="px-3 py-2 text-[10px] text-gray-400">No matching columns</div>
+              <div className="px-3 py-3 text-[10px] text-gray-400 text-center">No matches</div>
             )}
           </div>
         </>
       )}
 
-      {/* Footer hint */}
-      <div className="px-2.5 py-1 rounded-b-xl" style={{ borderTop: "1px solid #f1f5f9", background: "#fafafa" }}>
+      {/* Footer */}
+      <div
+        className="px-3 py-1.5 flex items-center justify-between"
+        style={{ borderTop: "1px solid rgba(0,0,0,0.04)", background: "#fafafa" }}
+      >
         <span className="text-[9px] text-gray-400">
-          Drag <span className="font-bold text-brand">→</span> (right) → <span className="font-bold text-purple-500">←</span> (left) to join
+          <span className="text-blue-400 font-semibold">→</span> drag to connect
         </span>
+        <span className="text-[9px] text-gray-400">click col to key</span>
       </div>
 
       {/* Right (source) handle */}
@@ -175,7 +201,13 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         type="source"
         position={Position.Right}
         id="right"
-        style={{ width: 14, height: 14, background: "#3b82f6", border: "3px solid #fff", boxShadow: "0 0 0 2px #3b82f6", right: -8 }}
+        style={{
+          width: 16, height: 16,
+          background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+          border: "3px solid white",
+          boxShadow: "0 0 0 2px #3b82f6",
+          right: -9,
+        }}
       />
     </div>
   );
@@ -197,7 +229,12 @@ function JoinEdge({ id, sourceX, sourceY, targetX, targetY, data, selected, mark
         id={id}
         path={edgePath}
         markerEnd={markerEnd}
-        style={{ stroke: meta.color, strokeWidth: selected ? 3 : 2.5, filter: selected ? `drop-shadow(0 0 4px ${meta.color}88)` : "none" }}
+        style={{
+          stroke: meta.color,
+          strokeWidth: selected ? 3 : 2,
+          filter: selected ? `drop-shadow(0 0 6px ${meta.color}88)` : "none",
+          transition: "stroke-width 0.2s, filter 0.2s",
+        }}
       />
       <EdgeLabelRenderer>
         <div
@@ -207,33 +244,37 @@ function JoinEdge({ id, sourceX, sourceY, targetX, targetY, data, selected, mark
             pointerEvents: "all",
             zIndex: 10,
           }}
-          className="nodrag nopan flex flex-col items-center gap-0.5"
+          className="nodrag nopan flex flex-col items-center gap-1"
         >
-          {/* Join type badge */}
           <div
-            className="flex items-center gap-1 px-2 py-0.5 rounded-full shadow-md cursor-pointer select-none"
-            style={{ background: meta.color }}
-            title="Click edge to configure"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full shadow-lg cursor-pointer select-none"
+            style={{
+              background: `linear-gradient(135deg, ${meta.color}, ${meta.color}dd)`,
+              boxShadow: selected ? `0 4px 16px ${meta.color}44` : `0 2px 8px ${meta.color}33`,
+              border: `1px solid ${meta.color}33`,
+            }}
           >
-            <span className="text-white text-[10px] font-bold">{jt}</span>
-            <span className="text-white text-[11px]">{meta.symbol}</span>
+            <span className="text-white text-[10px] font-bold tracking-wide">{jt}</span>
+            <span className="text-white/80 text-sm">{meta.symbol}</span>
           </div>
 
-          {/* Condition pills */}
           {condCount > 0 && data?.conditions.map((c, i) => (
             <span
               key={i}
-              className="px-2 py-0.5 rounded text-[9px] font-mono shadow-sm border"
-              style={{ background: meta.bg, borderColor: meta.border, color: meta.color }}
+              className="px-2 py-0.5 rounded-lg text-[9px] font-mono shadow-sm border backdrop-blur-sm"
+              style={{
+                background: `${meta.bg}ee`,
+                borderColor: meta.border,
+                color: meta.color,
+              }}
             >
               {c.sourceKey} = {c.targetKey}
             </span>
           ))}
 
           {condCount === 0 && (
-            <span className="px-2 py-0.5 rounded text-[9px] bg-amber-50 border border-amber-200 text-amber-600 flex items-center gap-1">
-              <AlertCircle className="w-2.5 h-2.5" />
-              set keys
+            <span className="px-2 py-0.5 rounded-lg text-[9px] bg-amber-50/90 border border-amber-200 text-amber-600 flex items-center gap-1 backdrop-blur-sm">
+              <AlertCircle className="w-2.5 h-2.5" /> set keys
             </span>
           )}
         </div>
@@ -244,7 +285,103 @@ function JoinEdge({ id, sourceX, sourceY, targetX, targetY, data, selected, mark
 
 const edgeTypes = { joinEdge: JoinEdge };
 
-// ────────── Main Component (needs ReactFlowProvider) ────────────────────────
+// ────────── Collapsible Panel Wrapper ──────────────────────────────────────
+
+function CollapsiblePanel({
+  side,
+  collapsed,
+  onToggle,
+  width,
+  children,
+  label,
+  icon,
+}: {
+  side: "left" | "right";
+  collapsed: boolean;
+  onToggle: () => void;
+  width: number;
+  children: React.ReactNode;
+  label: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div
+      className="flex flex-col border-gray-200 bg-white flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+      style={{
+        width: collapsed ? 52 : width,
+        borderRight: side === "left" ? "1px solid #e2e8f0" : undefined,
+        borderLeft: side === "right" ? "1px solid #e2e8f0" : undefined,
+      }}
+    >
+      {/* Top Header */}
+      <div
+className={`h-12 flex items-center justify-between px-3 border-b flex-shrink-0 ${
+  side === "left"
+    ? "bg-gradient-to-r from-blue-800 to-blue-600 border-blue-700"
+    : "bg-white border-gray-100"
+}`}      >
+        {!collapsed ? (
+          <>
+            <div className="flex items-center gap-2">
+<div className={side === "left" ? "text-white" : "text-gray-500"}>
+  {icon}
+</div>              <span
+  className={`text-[11px] font-semibold ${
+    side === "left" ? "text-white" : "text-gray-700"
+  }`}
+>
+                {label}
+              </span>
+            </div>
+
+            <button
+              onClick={onToggle}
+className={`p-1.5 rounded-lg transition ${
+  side === "left"
+    ? "hover:bg-white/10"
+    : "hover:bg-gray-100"
+}`}            >
+              {side === "left" ? (
+<ChevronLeft
+  className={`w-4 h-4 ${
+    side === "left" ? "text-white" : "text-gray-500"
+  }`}
+/>              ) : (
+<ChevronRight
+  className={`w-4 h-4 ${
+    side === "left" ? "text-white" : "text-gray-500"
+  }`}
+/>              )}
+            </button>
+          </>
+        ) : (
+<button
+  onClick={onToggle}
+className={`w-full h-full flex items-center justify-center transition ${    side === "left"
+      ? "bg-gradient-to-b from-blue-800 to-blue-700 hover:from-blue-700 hover:to-blue-600"
+      : "hover:bg-gray-50"
+  }`}
+>
+{side === "left" ? (
+  <Database className="w-4 h-4 text-white/90" />
+) : (
+  <Settings className="w-4 h-4 text-gray-400" />
+)}
+</button>
+        )}
+      </div>
+
+      {/* Content */}
+      {!collapsed && (
+        <div className="flex flex-col flex-1 overflow-hidden">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ────────── Main Component ────────────────────────────────────────────────
 
 function JoinBuilderInner() {
   const { id: workspaceId } = useParams<{ id: string }>();
@@ -252,25 +389,21 @@ function JoinBuilderInner() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeData>([]);
+  const [leftCollapsed, setLeftCollapsed] = useState(false);
+  const [rightCollapsed, setRightCollapsed] = useState(false);
+  const [activeRightTab, setActiveRightTab] = useState<"config" | "results">("config");
 
-  // ────── Stable refs for current state (avoids stale closures without causing re-renders) ──
   const nodesRef = useRef<Node<NodeData>[]>([]);
   const edgesRef = useRef<Edge<EdgeData>[]>([]);
   const selectedEdgeIdRef = useRef<string | null>(null);
-  // Keep refs in sync -- these effects never call setNodes/setEdges, so no loop
+
   useEffect(() => { nodesRef.current = nodes; }, [nodes]);
   useEffect(() => { edgesRef.current = edges; }, [edges]);
 
-  // ────── Undo history ──────────────────────────────────────────────────────
   const history = useRef<HistoryEntry[]>([]);
-  // pushHistory uses refs -> empty deps -> always stable
   const pushHistory = useCallback(() => {
-    history.current = [
-      ...history.current.slice(-29),
-      { nodes: nodesRef.current, edges: edgesRef.current },
-    ];
+    history.current = [...history.current.slice(-29), { nodes: nodesRef.current, edges: edgesRef.current }];
   }, []);
-
   const undo = useCallback(() => {
     const prev = history.current.pop();
     if (!prev) return;
@@ -278,31 +411,29 @@ function JoinBuilderInner() {
     setEdges(prev.edges);
   }, [setNodes, setEdges]);
 
-  // ────── Selected edge state + ref ──────────────────────────────────────────
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [edgeConfig, setEdgeConfig] = useState<{ joinType: JoinType; conditions: JoinCondition[] }>({
     joinType: "INNER", conditions: [],
   });
   useEffect(() => { selectedEdgeIdRef.current = selectedEdgeId; }, [selectedEdgeId]);
+  useEffect(() => {
+    if (selectedEdgeId && rightCollapsed) setRightCollapsed(false);
+  }, [selectedEdgeId]);
 
-  // Key suggestion from node column click
   const [suggestedKey, setSuggestedKey] = useState<{ nodeId: string; col: string } | null>(null);
-
-  // Results & SQL
   const [result, setResult] = useState<SqlResult | null>(null);
   const [generatedSql, setGeneratedSql] = useState("");
   const [showSql, setShowSql] = useState(false);
   const [rowLimit, setRowLimit] = useState(1000);
   const [datasetSchemas, setDatasetSchemas] = useState<Record<string | number, string[]>>({});
+  const [datasetSearch, setDatasetSearch] = useState("");
   const nodeIdCounter = useRef(0);
 
-  // Data
   const { data: datasets, isLoading } = useQuery({
     queryKey: queryKeys.datasets.list(workspaceId),
     queryFn: () => datasetsApi.list(workspaceId).then((r) => r.data),
   });
 
-  // ────── Keyboard shortcuts ────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "z") { e.preventDefault(); undo(); }
@@ -312,19 +443,14 @@ function JoinBuilderInner() {
     return () => window.removeEventListener("keydown", handler);
   }, [undo]);
 
-  // ────── Delete node -- stable: pushHistory is stable, setNodes/setEdges are stable ──
   const deleteNode = useCallback((id: string) => {
     pushHistory();
     setNodes((nds) => nds.filter((n) => n.id !== id));
     setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
   }, [pushHistory, setNodes, setEdges]);
 
-  // ────── Column click -> suggest join key -- stable: uses refs, no state deps ────
   const handleSuggestKey = useCallback((nodeId: string, col: string) => {
-    if (!selectedEdgeIdRef.current) {
-      setSuggestedKey({ nodeId, col });
-      return;
-    }
+    if (!selectedEdgeIdRef.current) { setSuggestedKey({ nodeId, col }); return; }
     const edge = edgesRef.current.find((e) => e.id === selectedEdgeIdRef.current);
     if (!edge) return;
     const srcNode = nodesRef.current.find((n) => n.id === edge.source);
@@ -333,24 +459,17 @@ function JoinBuilderInner() {
       const conds = [...cfg.conditions];
       if (conds.length === 0) conds.push({ sourceKey: "", targetKey: "" });
       const last = conds[conds.length - 1];
-      conds[conds.length - 1] = isSource
-        ? { ...last, sourceKey: col }
-        : { ...last, targetKey: col };
+      conds[conds.length - 1] = isSource ? { ...last, sourceKey: col } : { ...last, targetKey: col };
       return { ...cfg, conditions: conds };
     });
-  }, []); // -> empty deps: truly stable forever
+  }, []);
 
-  // ────── Stable wrapper ref: delegates to latest callbacks without changing identity ──
-  // This is the key fix -- node data holds wrappers that call through the ref,
-  // so node data never needs to be updated when callbacks change.
   const cbRef = useRef({ deleteNode, handleSuggestKey });
   cbRef.current.deleteNode = deleteNode;
   cbRef.current.handleSuggestKey = handleSuggestKey;
-  // These wrappers are created once and never change
   const stableOnDelete = useRef((id: string) => cbRef.current.deleteNode(id)).current;
   const stableOnSuggestKey = useRef((nodeId: string, col: string) => cbRef.current.handleSuggestKey(nodeId, col)).current;
 
-  // ────── Add dataset to canvas ────────────────────────────────────────────
   const addDatasetNode = async (ds: Dataset) => {
     let cols: string[] = datasetSchemas[ds.id] ?? [];
     if (!cols.length) {
@@ -370,14 +489,13 @@ function JoinBuilderInner() {
           id: nodeId,
           type: "datasetNode",
           position: {
-            x: 80 + (nds.length % 3) * 280,
-            y: 60 + Math.floor(nds.length / 3) * 380,
+            x: 80 + (nds.length % 3) * 300,
+            y: 80 + Math.floor(nds.length / 3) * 360,
           },
           data: {
             label: sameCount > 0 ? `${ds.name} (${sameCount + 1})` : ds.name,
             datasetId: ds.id,
             columns: cols,
-            // Use stable wrappers -- no useEffect needed, no infinite loop
             onDelete: stableOnDelete,
             onSuggestKey: stableOnSuggestKey,
           },
@@ -386,64 +504,55 @@ function JoinBuilderInner() {
     });
   };
 
-  // ────── Connect two nodes ────────────────────────────────────────────────
   const onConnect = useCallback(
     (conn: Connection) => {
       pushHistory();
       const edgeId = `edge-${Date.now()}`;
-
-      // Auto-detect matching column names -- use ref to avoid stale closure
       const srcNode = nodesRef.current.find((n) => n.id === conn.source);
       const tgtNode = nodesRef.current.find((n) => n.id === conn.target);
       const srcCols = new Set(srcNode?.data.columns ?? []);
       const tgtCols = tgtNode?.data.columns ?? [];
       const autoMatch = tgtCols.find((c) => srcCols.has(c));
-      const initConditions: JoinCondition[] = autoMatch
-        ? [{ sourceKey: autoMatch, targetKey: autoMatch }]
-        : [];
+      const initConditions: JoinCondition[] = autoMatch ? [{ sourceKey: autoMatch, targetKey: autoMatch }] : [];
 
-  const newEdge: Edge<EdgeData> = {
-    ...conn,
-    id: edgeId,
-    type: "joinEdge",
-    markerEnd: { type: MarkerType.ArrowClosed, color: "#3b82f6" },
-    data: { joinType: "INNER", conditions: initConditions },
-    source: conn.source!,
-    target: conn.target!,
-  };
- 
+      const newEdge: Edge<EdgeData> = {
+        ...conn,
+        id: edgeId,
+        type: "joinEdge",
+        markerEnd: { type: MarkerType.ArrowClosed, color: "#3b82f6" },
+        data: { joinType: "INNER", conditions: initConditions },
+        source: conn.source!,
+        target: conn.target!,
+      };
+
       setEdges((eds) => addEdge(newEdge, eds));
-
-      // Open config immediately
       setSelectedEdgeId(edgeId);
       setEdgeConfig({ joinType: "INNER", conditions: initConditions });
       setSuggestedKey(null);
+      setActiveRightTab("config");
+      if (rightCollapsed) setRightCollapsed(false);
     },
-    [pushHistory, setEdges]  // nodesRef is a ref -- not a dep
+    [pushHistory, setEdges, rightCollapsed]
   );
 
-  // ────── Edge click ────────────────────────────────────────────────────────
   const onEdgeClick = useCallback((_: React.MouseEvent, edge: Edge<EdgeData>) => {
     setSelectedEdgeId(edge.id);
-    setEdgeConfig({
-      joinType: edge.data?.joinType ?? "INNER",
-      conditions: edge.data?.conditions ?? [],
-    });
-  }, []);
+    setEdgeConfig({ joinType: edge.data?.joinType ?? "INNER", conditions: edge.data?.conditions ?? [] });
+    setActiveRightTab("config");
+    if (rightCollapsed) setRightCollapsed(false);
+  }, [rightCollapsed]);
 
   const onPaneClick = useCallback(() => {
     setSelectedEdgeId(null);
     setSuggestedKey(null);
   }, []);
 
-  // ────── Edge deletion -- uses ref for selectedEdgeId to stay stable ───────
   const deleteEdge = useCallback((edgeId: string) => {
     pushHistory();
     setEdges((eds) => eds.filter((e) => e.id !== edgeId));
     if (selectedEdgeIdRef.current === edgeId) setSelectedEdgeId(null);
   }, [pushHistory, setEdges]);
 
-  // ────── Apply config ────────────────────────────────────────────────────
   const applyEdgeConfig = () => {
     setEdges((eds) =>
       eds.map((e) =>
@@ -455,13 +564,10 @@ function JoinBuilderInner() {
     setSelectedEdgeId(null);
   };
 
-  // ────── Condition helpers ────────────────────────────────────────────────
   const addCondition = () =>
     setEdgeConfig((c) => ({ ...c, conditions: [...c.conditions, { sourceKey: "", targetKey: "" }] }));
-
   const removeCondition = (i: number) =>
     setEdgeConfig((c) => ({ ...c, conditions: c.conditions.filter((_, idx) => idx !== i) }));
-
   const updateCondition = (i: number, field: "sourceKey" | "targetKey", val: string) =>
     setEdgeConfig((c) => {
       const conds = [...c.conditions];
@@ -469,7 +575,6 @@ function JoinBuilderInner() {
       return { ...c, conditions: conds };
     });
 
-  // ────── Build API payload ────────────────────────────────────────────────
   const buildPayload = () => ({
     nodes: nodes.map((n) => ({ id: n.data.datasetId, label: n.data.label })),
     edges: edges.map((e) => {
@@ -489,15 +594,14 @@ function JoinBuilderInner() {
 
   const generateSqlMutation = useMutation({
     mutationFn: () => workspacesExtraApi.generateJoinSql(workspaceId, buildPayload()),
-    onSuccess: (res) => { setGeneratedSql(res.data.sql ?? ""); setShowSql(true); },
+    onSuccess: (res) => { setGeneratedSql(res.data.sql ?? ""); setShowSql(true); setActiveRightTab("results"); if (rightCollapsed) setRightCollapsed(false); },
   });
 
   const executeMutation = useMutation({
     mutationFn: () => workspacesExtraApi.executeJoin(workspaceId, { ...buildPayload(), limit: rowLimit }),
-    onSuccess: (res) => { setResult(res.data); setShowSql(false); },
+    onSuccess: (res) => { setResult(res.data); setShowSql(false); setActiveRightTab("results"); if (rightCollapsed) setRightCollapsed(false); },
   });
 
-  // ────── Export result as CSV ────────────────────────────────────────────
   const exportCsv = () => {
     if (!result) return;
     const rows = [result.columns.join(","), ...result.rows.map((r) => (r as unknown[]).map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(","))];
@@ -508,7 +612,6 @@ function JoinBuilderInner() {
     a.click();
   };
 
-  // ────── Derived state ────────────────────────────────────────────────────
   const selectedEdge = edges.find((e) => e.id === selectedEdgeId);
   const srcNode = selectedEdge ? nodes.find((n) => n.id === selectedEdge.source) : null;
   const tgtNode = selectedEdge ? nodes.find((n) => n.id === selectedEdge.target) : null;
@@ -516,81 +619,177 @@ function JoinBuilderInner() {
   const tgtCols = tgtNode?.data.columns ?? [];
   const configuredEdges = edges.filter((e) => (e.data?.conditions?.length ?? 0) > 0).length;
   const readyToRun = nodes.length >= 2 && edges.length > 0 && configuredEdges === edges.length;
-
-  // Smart suggestions: matching column names
   const matchingSuggestions = srcCols.filter((c) => tgtCols.includes(c)).slice(0, 5);
+  const filteredDatasets = (datasets ?? []).filter((ds: Dataset) =>
+    ds.name.toLowerCase().includes(datasetSearch.toLowerCase())
+  );
 
   if (isLoading) return <PageSpinner />;
 
   return (
-    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-slate-50">
+    <div className="flex h-[calc(100vh-56px)] overflow-hidden" style={{ background: "#f0f4f8" }}>
 
       {/* ═════════════ LEFT PANEL ═════════════ */}
-      <div className="w-60 border-r border-gray-200 bg-white flex flex-col flex-shrink-0">
-
+      <CollapsiblePanel
+        side="left"
+        collapsed={leftCollapsed}
+        onToggle={() => setLeftCollapsed((v) => !v)}
+        width={220}
+        label="Tables"
+        icon={<Database className="w-4 h-4" />}
+      >
         {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-600 to-blue-700">
-          <div className="flex items-center gap-2 mb-0.5">
-            <GitMerge className="w-4 h-4 text-white" />
-            <span className="text-sm font-bold text-white">Join Builder</span>
+
+
+        {/* Status bar */}
+        <div className="px-3 py-2 flex-shrink-0 flex gap-2" style={{ borderBottom: "1px solid #f1f5f9" }}>
+          <div className="flex-1 rounded-lg bg-blue-50 border border-blue-100 px-2 py-1 text-center">
+            <div className="text-sm font-bold text-blue-600">{nodes.length}</div>
+            <div className="text-[9px] text-blue-400 font-medium">Tables</div>
           </div>
-          <p className="text-[10px] text-blue-200 leading-snug">
-            Add tables · Connect handles · Configure keys
-          </p>
+          <div className="flex-1 rounded-lg bg-purple-50 border border-purple-100 px-2 py-1 text-center">
+            <div className="text-sm font-bold text-purple-600">{edges.length}</div>
+            <div className="text-[9px] text-purple-400 font-medium">Joins</div>
+          </div>
+          <div className="flex-1 rounded-lg bg-green-50 border border-green-100 px-2 py-1 text-center">
+            <div className="text-sm font-bold text-green-600">{configuredEdges}</div>
+            <div className="text-[9px] text-green-400 font-medium">Configured</div>
+          </div>
+        </div>
+
+        {/* Dataset search */}
+        <div className="px-3 py-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-2">
+            <Search className="w-3 h-3 text-gray-400 flex-shrink-0" />
+            <input
+              className="text-[10px] bg-transparent outline-none flex-1 text-gray-600 placeholder-gray-300"
+              placeholder="Search tables..."
+              value={datasetSearch}
+              onChange={(e) => setDatasetSearch(e.target.value)}
+            />
+          </div>
         </div>
 
         {/* Dataset list */}
-        <div className="flex-1 overflow-y-auto px-3 py-2">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
-            Tables ({(datasets ?? []).length})
+        <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-1">
+          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+            {filteredDatasets.length} Tables
           </p>
-          <div className="space-y-1">
-            {(datasets ?? []).map((ds: Dataset) => {
-              const onCanvas = nodes.filter((n) => n.data.datasetId === ds.id).length;
-              return (
-                <button
-                  key={ds.id}
-                  onClick={() => addDatasetNode(ds)}
-                  className="w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-lg border border-gray-100 hover:border-brand/30 hover:bg-brand/10 transition group"
+          {filteredDatasets.map((ds: Dataset) => {
+            const onCanvas = nodes.filter((n) => n.data.datasetId === ds.id).length;
+            return (
+              <button
+                key={ds.id}
+                onClick={() => addDatasetNode(ds)}
+                className="w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-xl border transition-all duration-150 group"
+                style={{
+                  border: onCanvas > 0 ? "1px solid #bfdbfe" : "1px solid #f1f5f9",
+                  background: onCanvas > 0 ? "#eff6ff" : "#fafafa",
+                }}
+              >
+                <div
+                  className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                  style={{ background: onCanvas > 0 ? "#3b82f6" : "#e2e8f0" }}
                 >
-                  <Database className="w-3.5 h-3.5 text-gray-400 group-hover:text-brand flex-shrink-0" />
-                  <span className="text-xs text-gray-700 truncate flex-1">{ds.name}</span>
-                  {onCanvas > 0 && (
-                    <span className="text-[9px] bg-blue-100 text-brand px-1.5 py-0.5 rounded-full font-semibold">
-                      ✕ {onCanvas}
-                    </span>
-                  )}
-                  <Plus className="w-3 h-3 text-gray-300 group-hover:text-brand transition" />
-                </button>
-              );
-            })}
-          </div>
+                  <Database className="w-3 h-3" style={{ color: onCanvas > 0 ? "white" : "#94a3b8" }} />
+                </div>
+                <span className="text-[11px] font-medium text-gray-700 truncate flex-1 group-hover:text-blue-600 transition-colors">{ds.name}</span>
+                {onCanvas > 0
+                  ? <span className="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-bold">×{onCanvas}</span>
+                  : <Plus className="w-3 h-3 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
+                }
+              </button>
+            );
+          })}
         </div>
 
-        {/* Undo / Actions */}
-        <div className="border-t border-gray-100 px-3 py-2 space-y-1.5">
+        {/* Bottom actions */}
+        <div className="px-3 py-2 flex-shrink-0 space-y-1" style={{ borderTop: "1px solid #f1f5f9" }}>
           <button
             onClick={undo}
             disabled={history.current.length === 0}
-            className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
-            title="Ctrl/Cmd+Z"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <Undo2 className="w-3.5 h-3.5" />
             Undo
+            <span className="ml-auto text-[9px] text-gray-400">⌘Z</span>
           </button>
           <button
             onClick={() => fitView()}
-            className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-xs font-medium text-gray-700 hover:bg-gray-100 transition"
-            title="Fit to view"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-medium text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <Maximize2 className="w-3.5 h-3.5" />
             Fit View
           </button>
         </div>
-      </div>
+      </CollapsiblePanel>
 
       {/* ═════════════ CENTER CANVAS ═════════════ */}
-      <div className="flex-1 flex flex-col bg-slate-50">
+      <div className="flex-1 flex flex-col relative overflow-hidden">
+
+        {/* Floating top toolbar */}
+        <div
+          className="absolute top-3 left-1/2 z-10 flex items-center gap-1.5 px-3 py-2 rounded-2xl shadow-lg"
+          style={{
+            transform: "translateX(-50%)",
+            background: "rgba(255,255,255,0.95)",
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(226,232,240,0.8)",
+          }}
+        >
+          {/* Canvas stats */}
+          {nodes.length > 0 && (
+            <div className="flex items-center gap-1 mr-1 pr-3" style={{ borderRight: "1px solid #e2e8f0" }}>
+              <Layers className="w-3 h-3 text-gray-400" />
+              <span className="text-[10px] text-gray-500">
+                <span className="font-semibold text-gray-700">{nodes.length}</span> tables,{" "}
+                <span className="font-semibold text-gray-700">{edges.length}</span> joins
+              </span>
+            </div>
+          )}
+
+          {/* Run controls */}
+          <button
+            onClick={() => generateSqlMutation.mutate()}
+            disabled={!readyToRun || generateSqlMutation.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: readyToRun ? "#1e40af" : "#94a3b8", color: "white" }}
+            title={!readyToRun ? "Need 2+ tables with configured join keys" : ""}
+          >
+            <Code2 className="w-3 h-3" />
+            SQL
+          </button>
+
+          <button
+            onClick={() => executeMutation.mutate()}
+            disabled={!readyToRun || executeMutation.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: readyToRun ? "#059669" : "#94a3b8", color: "white" }}
+          >
+            <Play className="w-3 h-3" />
+            {executeMutation.isPending ? "Running..." : "Run"}
+          </button>
+
+          {result && (
+            <button
+              onClick={exportCsv}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
+            >
+              <Download className="w-3 h-3" />
+              CSV
+            </button>
+          )}
+
+          {/* Ready indicator */}
+          <div className="ml-1 flex items-center gap-1">
+            {readyToRun
+              ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+              : <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+            }
+            <span className="text-[9px] text-gray-400">{readyToRun ? "Ready" : "Configure joins"}</span>
+          </div>
+        </div>
+
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -603,219 +802,318 @@ function JoinBuilderInner() {
           edgeTypes={edgeTypes}
           fitView
           connectionLineType={ConnectionLineType.Bezier}
+          style={{ background: "transparent" }}
         >
-          <Background />
-          <Controls />
-          <MiniMap />
+          <Background color="#cbd5e1" gap={20} size={1} />
+          <Controls style={{ bottom: 16, left: 16 }} />
+          <MiniMap
+            style={{ bottom: 16, right: 16, borderRadius: 12, border: "1px solid #e2e8f0" }}
+            nodeColor="#3b82f6"
+          />
         </ReactFlow>
+
+        {/* Empty state overlay */}
+        {nodes.length === 0 && (
+          <div
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            style={{ zIndex: 5 }}
+          >
+            <div className="text-center">
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{ background: "rgba(59,130,246,0.08)", border: "2px dashed #bfdbfe" }}
+              >
+                <GitMerge className="w-8 h-8 text-blue-300" />
+              </div>
+              <p className="text-sm font-semibold text-gray-400">Add tables from the left panel</p>
+              <p className="text-[11px] text-gray-300 mt-1">Drag the blue handle → to the purple ← to create a join</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ═════════════ RIGHT PANEL ═════════════ */}
-      <div className="w-80 border-l border-gray-200 bg-white flex flex-col flex-shrink-0 overflow-hidden">
-        {/* Top: Actions */}
-        <div className="px-4 py-3 border-b border-gray-100 space-y-2">
-          <div className="flex gap-1.5">
+      <CollapsiblePanel
+        side="right"
+        collapsed={rightCollapsed}
+        onToggle={() => setRightCollapsed((v) => !v)}
+        width={300}
+        label="Configure"
+        icon={<Settings className="w-4 h-4" />}
+      >
+        {/* Tabs */}
+        <div
+          className="flex flex-shrink-0"
+          style={{ borderBottom: "1px solid #f1f5f9" }}
+        >
+          {(["config", "results"] as const).map((tab) => (
             <button
-              onClick={() => generateSqlMutation.mutate()}
-              disabled={!readyToRun}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              title={!readyToRun ? "Need: 2+ tables, configured join keys" : ""}
+              key={tab}
+              onClick={() => setActiveRightTab(tab)}
+              className="flex-1 py-2.5 text-[11px] font-semibold transition-colors relative"
+              style={{
+                color: activeRightTab === tab ? "#2563eb" : "#94a3b8",
+                background: activeRightTab === tab ? "#eff6ff" : "transparent",
+              }}
             >
-              <Code2 className="w-3.5 h-3.5" />
-              Gen SQL
+              {tab === "config" ? (
+                <span className="flex items-center justify-center gap-1.5">
+                  <Settings className="w-3 h-3" />
+                  Configure
+                  {selectedEdge && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  )}
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-1.5">
+                  <Table2 className="w-3 h-3" />
+                  Results
+                  {result && (
+                    <span className="text-[9px] bg-green-100 text-green-600 px-1 rounded-full">{result.row_count}</span>
+                  )}
+                </span>
+              )}
+              {activeRightTab === tab && (
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t" />
+              )}
             </button>
-            <button
-              onClick={() => executeMutation.mutate()}
-              disabled={!readyToRun}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-              title={!readyToRun ? "Need: 2+ tables, configured join keys" : ""}
-            >
-              <Play className="w-3.5 h-3.5" />
-              Run
-            </button>
-          </div>
-          {result && (
-            <button
-              onClick={exportCsv}
-              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 border border-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Export CSV
-            </button>
-          )}
+          ))}
         </div>
 
-        {/* Edge config panel */}
-        {selectedEdge && (
-          <div className="px-4 py-3 border-b border-gray-100 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-700">Join Configuration</span>
-              <button onClick={() => setSelectedEdgeId(null)} className="p-0.5 rounded hover:bg-gray-100">
-                <X className="w-3 h-3 text-gray-400" />
-              </button>
-            </div>
-
-            {/* Join type selector */}
-            <div>
-              <label className="text-[10px] font-semibold text-gray-600 block mb-1">Join Type</label>
-              <div className="space-y-1">
-                {JOIN_TYPES.map((jt) => (
-                  <button
-                    key={jt}
-                    onClick={() => setEdgeConfig((c) => ({ ...c, joinType: jt }))}
-                    className="w-full text-left px-2.5 py-1.5 rounded-lg border transition"
-                    style={{
-                      borderColor: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#e2e8f0",
-                      background: edgeConfig.joinType === jt ? JOIN_META[jt].bg : "#fff",
-                      color: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#666",
-                    }}
-                  >
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-bold">{jt}</span>
-                      <span className="text-[10px]">{JOIN_META[jt].symbol}</span>
-                    </div>
-                    <p className="text-[9px] text-gray-500 mt-0.5">{JOIN_META[jt].desc}</p>
+        {/* Config tab */}
+        {activeRightTab === "config" && (
+          <div className="flex-1 overflow-y-auto">
+            {selectedEdge ? (
+              <div className="px-4 py-3 space-y-4">
+                {/* Edge header */}
+                <div
+                  className="flex items-center justify-between p-3 rounded-xl"
+                  style={{ background: `${JOIN_META[edgeConfig.joinType].bg}`, border: `1px solid ${JOIN_META[edgeConfig.joinType].border}` }}
+                >
+                  <div>
+                    <p className="text-[10px] font-bold" style={{ color: JOIN_META[edgeConfig.joinType].color }}>
+                      {srcNode?.data.label} → {tgtNode?.data.label}
+                    </p>
+                    <p className="text-[9px] text-gray-500 mt-0.5">{JOIN_META[edgeConfig.joinType].desc}</p>
+                  </div>
+                  <button onClick={() => setSelectedEdgeId(null)} className="p-1 rounded-lg hover:bg-white/60">
+                    <X className="w-3.5 h-3.5 text-gray-400" />
                   </button>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Join conditions */}
-            <div>
-              <label className="text-[10px] font-semibold text-gray-600 block mb-1.5">Join Conditions</label>
-              <div className="space-y-1.5">
-                {edgeConfig.conditions.length === 0 ? (
-                  <p className="text-[9px] text-gray-400 italic">No conditions yet. Click a column to add.</p>
-                ) : (
-                  edgeConfig.conditions.map((c, i) => (
-                    <div key={i} className="flex gap-1 items-center">
-                      <select
-                        value={c.sourceKey}
-                        onChange={(e) => updateCondition(i, "sourceKey", e.target.value)}
-                        className="flex-1 text-[10px] border border-gray-200 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-brand"
-                      >
-                        <option value="">Source key...</option>
-                        {srcCols.map((col) => (
-                          <option key={col} value={col}>{col}</option>
-                        ))}
-                      </select>
-                      <span className="text-[9px] text-gray-400">=</span>
-                      <select
-                        value={c.targetKey}
-                        onChange={(e) => updateCondition(i, "targetKey", e.target.value)}
-                        className="flex-1 text-[10px] border border-gray-200 rounded px-2 py-1 outline-none focus:ring-1 focus:ring-brand"
-                      >
-                        <option value="">Target key...</option>
-                        {tgtCols.map((col) => (
-                          <option key={col} value={col}>{col}</option>
-                        ))}
-                      </select>
+                {/* Join type */}
+                <div>
+                  <label className="text-[10px] font-bold text-gray-600 block mb-2 uppercase tracking-wider">Join Type</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {JOIN_TYPES.map((jt) => (
                       <button
-                        onClick={() => removeCondition(i)}
-                        className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition flex-shrink-0"
+                        key={jt}
+                        onClick={() => setEdgeConfig((c) => ({ ...c, joinType: jt }))}
+                        className="px-2 py-2 rounded-xl border transition-all text-left"
+                        style={{
+                          borderColor: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#e2e8f0",
+                          background: edgeConfig.joinType === jt ? JOIN_META[jt].bg : "white",
+                          boxShadow: edgeConfig.joinType === jt ? `0 0 0 1px ${JOIN_META[jt].color}33` : "none",
+                        }}
                       >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              {/* Matching suggestions */}
-              {matchingSuggestions.length > 0 && edgeConfig.conditions.length === 0 && (
-                <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
-                  <p className="text-[9px] font-semibold text-blue-900 mb-1">Matching columns:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {matchingSuggestions.map((col) => (
-                      <button
-                        key={col}
-                        onClick={() => setEdgeConfig((c) => ({
-                          ...c,
-                          conditions: [{ sourceKey: col, targetKey: col }],
-                        }))}
-                        className="text-[9px] px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition font-mono"
-                      >
-                        {col}
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-[11px] font-bold" style={{ color: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#64748b" }}>{jt}</span>
+                          <span className="text-sm">{JOIN_META[jt].symbol}</span>
+                        </div>
+                        <p className="text-[8px] text-gray-400 leading-tight">{JOIN_META[jt].desc}</p>
                       </button>
                     ))}
                   </div>
                 </div>
-              )}
 
-              <div className="flex gap-1 mt-2">
+                {/* Conditions */}
+                <div>
+                  <label className="text-[10px] font-bold text-gray-600 block mb-2 uppercase tracking-wider">Join Keys</label>
+
+                  {matchingSuggestions.length > 0 && edgeConfig.conditions.length === 0 && (
+                    <div className="mb-2 p-2.5 rounded-xl" style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}>
+                      <p className="text-[9px] font-bold text-blue-700 mb-1.5 flex items-center gap-1">
+                        <Zap className="w-2.5 h-2.5" /> Smart suggestions
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {matchingSuggestions.map((col) => (
+                          <button
+                            key={col}
+                            onClick={() => setEdgeConfig((c) => ({ ...c, conditions: [{ sourceKey: col, targetKey: col }] }))}
+                            className="text-[9px] px-2 py-1 bg-white text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 font-mono font-semibold transition-colors"
+                          >
+                            {col}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {edgeConfig.conditions.length === 0 ? (
+                      <p className="text-[9px] text-gray-400 italic py-2 text-center">
+                        No conditions yet — click a column in a table node or use suggestions above
+                      </p>
+                    ) : (
+                      edgeConfig.conditions.map((c, i) => (
+                        <div key={i} className="flex gap-1 items-center">
+                          <select
+                            value={c.sourceKey}
+                            onChange={(e) => updateCondition(i, "sourceKey", e.target.value)}
+                            className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition"
+                          >
+                            <option value="">Source…</option>
+                            {srcCols.map((col) => <option key={col} value={col}>{col}</option>)}
+                          </select>
+                          <span className="text-gray-300 text-xs">=</span>
+                          <select
+                            value={c.targetKey}
+                            onChange={(e) => updateCondition(i, "targetKey", e.target.value)}
+                            className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition"
+                          >
+                            <option value="">Target…</option>
+                            {tgtCols.map((col) => <option key={col} value={col}>{col}</option>)}
+                          </select>
+                          <button
+                            onClick={() => removeCondition(i)}
+                            className="p-1 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition flex-shrink-0"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={addCondition}
+                      className="flex-1 text-[10px] px-2.5 py-2 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center justify-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" /> Condition
+                    </button>
+                    <button
+                      onClick={applyEdgeConfig}
+                      className="flex-1 text-[10px] px-2.5 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+
                 <button
-                  onClick={addCondition}
-                  className="flex-1 text-[10px] px-2 py-1.5 border border-gray-200 rounded hover:bg-gray-50 font-medium text-gray-700 transition"
+                  onClick={() => { deleteEdge(selectedEdge.id); setSelectedEdgeId(null); }}
+                  className="w-full text-[10px] px-3 py-2 text-red-500 border border-red-100 rounded-xl font-semibold hover:bg-red-50 transition flex items-center justify-center gap-1.5"
                 >
-                  + Add Condition
-                </button>
-                <button
-                  onClick={applyEdgeConfig}
-                  className="flex-1 text-[10px] px-2 py-1.5 bg-brand text-white rounded hover:bg-blue-700 font-bold transition"
-                >
-                  Apply
+                  <Trash2 className="w-3 h-3" /> Remove Join
                 </button>
               </div>
-            </div>
-
-            {/* Delete edge */}
-            <button
-              onClick={() => { deleteEdge(selectedEdge.id); setSelectedEdgeId(null); }}
-              className="w-full text-[10px] px-2 py-1.5 text-red-600 border border-red-200 rounded hover:bg-red-50 font-medium transition flex items-center justify-center gap-1"
-            >
-              <Trash2 className="w-3 h-3" />
-              Delete Edge
-            </button>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full px-6 py-8 text-center">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
+                  style={{ background: "#f1f5f9" }}
+                >
+                  <Settings className="w-6 h-6 text-gray-300" />
+                </div>
+                <p className="text-[11px] font-semibold text-gray-400">No join selected</p>
+                <p className="text-[10px] text-gray-300 mt-1 leading-relaxed">
+                  Click on a join edge in the canvas to configure it
+                </p>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Results */}
-        <div className="flex-1 overflow-y-auto">
-          {generatedSql && showSql && (
-            <div className="px-4 py-3 space-y-2">
-              <p className="text-xs font-semibold text-gray-700">Generated SQL:</p>
-              <div className="p-2.5 bg-gray-900 rounded-lg text-[9px] text-gray-100 font-mono overflow-x-auto whitespace-pre-wrap break-words">
-                {generatedSql}
-              </div>
-            </div>
-          )}
-
-          {result && !showSql && (
-            <div className="px-4 py-3 space-y-2">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-gray-700">Results</p>
-                <span className="text-[9px] text-gray-500">
-                  {result.row_count} rows{result.truncated ? " (truncated)" : ""}
-                </span>
-              </div>
-              {result.error ? (
-                <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-[10px] text-red-700 flex gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                  <span>{result.error}</span>
+        {/* Results tab */}
+        {activeRightTab === "results" && (
+          <div className="flex-1 overflow-y-auto">
+            {generatedSql && showSql && (
+              <div className="px-4 py-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Generated SQL</p>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(generatedSql)}
+                    className="p-1 rounded hover:bg-gray-100 text-gray-400"
+                    title="Copy SQL"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </button>
                 </div>
-              ) : (
-                <div className="rounded-lg border border-gray-200 overflow-hidden">
-                  <SqlResultsTable columns={result.columns} rows={result.rows.slice(0, 50)} />
+                <div
+                  className="p-3 rounded-xl text-[9px] text-green-300 font-mono overflow-x-auto whitespace-pre-wrap break-words leading-relaxed"
+                  style={{ background: "#0f172a" }}
+                >
+                  {generatedSql}
                 </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
-          {!result && !generatedSql && (
-            <div className="px-4 py-6 text-center">
-              <Info className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-              <p className="text-[10px] text-gray-500 leading-relaxed">
-                Connect datasets and configure join keys to get started.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+            {result && !showSql && (
+              <div className="px-4 py-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Results</p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="text-[9px] px-2 py-0.5 rounded-full font-semibold"
+                      style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
+                    >
+                      {result.row_count} rows{result.truncated ? " ✂" : ""}
+                    </span>
+                  </div>
+                </div>
+
+                {result.error ? (
+                  <div
+                    className="p-3 rounded-xl text-[10px] flex gap-2"
+                    style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626" }}
+                  >
+                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>{result.error}</span>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-gray-100 overflow-hidden shadow-sm">
+                    <SqlResultsTable columns={result.columns} rows={result.rows.slice(0, 50)} />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!result && !generatedSql && (
+              <div className="flex flex-col items-center justify-center h-full px-6 py-8 text-center">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
+                  style={{ background: "#f1f5f9" }}
+                >
+                  <Table2 className="w-6 h-6 text-gray-300" />
+                </div>
+                <p className="text-[11px] font-semibold text-gray-400">No results yet</p>
+                <p className="text-[10px] text-gray-300 mt-1">Run a join to see results here</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Row limit footer */}
+        {activeRightTab === "results" && (
+          <div
+            className="px-4 py-2 flex-shrink-0 flex items-center gap-2"
+            style={{ borderTop: "1px solid #f1f5f9" }}
+          >
+            <span className="text-[9px] text-gray-400 font-medium">Row limit</span>
+            <select
+              value={rowLimit}
+              onChange={(e) => setRowLimit(Number(e.target.value))}
+              className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1 outline-none"
+            >
+              {[100, 500, 1000, 5000].map((v) => <option key={v} value={v}>{v.toLocaleString()}</option>)}
+            </select>
+          </div>
+        )}
+      </CollapsiblePanel>
     </div>
   );
 }
-
-// ────────── Exported wrapper with provider ──────────────────────────────────
 
 export default function JoinBuilder() {
   return (

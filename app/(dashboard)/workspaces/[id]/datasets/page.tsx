@@ -18,11 +18,12 @@ import {
   Rows,
   Columns,
   CheckCircle,
-  AlertCircle,
-  Loader2,
-  X,
-  Plus,
-  GitMerge,
+AlertCircle,
+Loader2,
+X,
+Plus,
+GitMerge,
+Trash2,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Dataset } from "@/types";
@@ -189,6 +190,16 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
 
 function DatasetCard({ dataset, workspaceId }: { dataset: Dataset; workspaceId: string }) {
   const router = useRouter();
+  const qc = useQueryClient();
+
+const deleteMutation = useMutation({
+mutationFn: () =>
+  datasetsApi.delete(workspaceId, String(dataset.id)), onSuccess: () => {
+    qc.invalidateQueries({
+      queryKey: queryKeys.datasets.list(workspaceId),
+    });
+  },
+});
 
   return (
     <div
@@ -206,10 +217,37 @@ function DatasetCard({ dataset, workspaceId }: { dataset: Dataset; workspaceId: 
         <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
           <FileText className="w-5 h-5 text-gray-500" />
         </div>
-        <div className="flex items-center gap-1.5">
-          {STATUS_ICON[dataset.status]}
-          <span className="text-xs text-gray-400 capitalize">{dataset.status}</span>
-        </div>
+<div className="flex items-center gap-2">
+  <div className="flex items-center gap-1.5">
+    {STATUS_ICON[dataset.status]}
+    <span className="text-xs text-gray-400 capitalize">
+      {dataset.status}
+    </span>
+  </div>
+
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+
+      const confirmed = window.confirm(
+        `Delete dataset "${dataset.name}"?`
+      );
+
+      if (!confirmed) return;
+
+      deleteMutation.mutate();
+    }}
+    disabled={deleteMutation.isPending}
+    className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600"
+    title="Delete dataset"
+  >
+    {deleteMutation.isPending ? (
+      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+    ) : (
+      <Trash2 className="w-3.5 h-3.5" />
+    )}
+  </button>
+</div>
       </div>
 
       <h3 className="font-semibold text-gray-900 mb-0.5 truncate">{dataset.name}</h3>

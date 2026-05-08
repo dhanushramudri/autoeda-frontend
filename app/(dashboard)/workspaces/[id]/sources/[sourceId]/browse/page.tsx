@@ -47,12 +47,15 @@ export default function BrowseSourcePage() {
   });
 
   const importMut = useMutation({
-    mutationFn: () =>
-      sourcesApi.importAsDataset(workspaceId, Number(sourceId), {
-        dataset_name: importName.trim(),
-        workspace_id: Number(workspaceId),
-        limit: 100000,
-      }),
+   mutationFn: () =>
+  sourcesApi.importAsDataset(workspaceId, Number(sourceId), {
+    dataset_name: importName.trim(),
+    workspace_id: Number(workspaceId),
+
+    table: selectedTable,
+
+    limit: 100000,
+  }),
     onSuccess: () => {
       setImportSuccess(true);
       qc.invalidateQueries({ queryKey: ["datasets", workspaceId] });
