@@ -39,18 +39,18 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-brand flex items-center justify-center">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z" fill="white" opacity="0.8"/>
                 <path d="M14 14h7v7h-7z" fill="white"/>
               </svg>
             </div>
             <div className="text-left">
-              <p className="text-xs text-slate-400 font-medium tracking-widest uppercase">Jman Group</p>
+              <p className="text-xs text-white/60 font-medium tracking-widest uppercase">Jman Group</p>
               <h1 className="text-2xl font-bold text-white">AutoEDA</h1>
             </div>
           </div>
-          <p className="text-slate-400 text-sm">
+          <p className="text-white/60 text-sm">
             Automated Exploratory Data Analysis Platform
           </p>
         </div>
@@ -76,7 +76,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition"
                 placeholder="you@jmangroup.com"
                 autoComplete="email"
               />
@@ -92,7 +92,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition"
                 placeholder="••••••••"
                 autoComplete="current-password"
               />
@@ -101,7 +101,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-blue-600 text-white font-medium rounded-lg text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="w-full py-2.5 px-4 bg-brand text-white font-medium rounded-lg text-sm hover:bg-[#2a0d8a] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -109,7 +109,7 @@ export default function LoginPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  Signing in…
+                  Signing in...
                 </span>
               ) : (
                 "Sign in"

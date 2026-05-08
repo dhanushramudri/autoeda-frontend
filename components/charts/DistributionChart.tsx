@@ -37,7 +37,7 @@ export function DistributionChart({ data, column }: Props) {
       {/* Histogram + KDE */}
       {chartData.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Distribution — {column}</h4>
+          <h4 className="text-sm font-semibold text-gray-700 mb-3">Distribution  --  {column}</h4>
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={chartData} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -77,7 +77,7 @@ export function DistributionChart({ data, column }: Props) {
             <div key={label} className="bg-gray-50 rounded-lg p-3 text-center">
               <p className="text-[10px] text-gray-400 mb-0.5">{label}</p>
               <p className="text-sm font-semibold text-gray-800">
-                {typeof value === "number" ? value.toFixed(3) : "—"}
+                {typeof value === "number" ? value.toFixed(3) : " -- "}
               </p>
             </div>
           ))}
@@ -89,7 +89,7 @@ export function DistributionChart({ data, column }: Props) {
         <div className="bg-gray-50 rounded-lg p-3 flex items-center gap-4 text-xs">
           <span className="text-gray-500">Normality ({normality.test}):</span>
           <span className="font-mono text-gray-700">
-            p = {normality.p_value?.toFixed(4) ?? "—"}
+            p = {normality.p_value?.toFixed(4) ?? " -- "}
           </span>
           <span
             className={

@@ -8,7 +8,7 @@ interface Props {
 }
 
 function interpolate(value: number): string {
-  // -1 → red, 0 → white, 1 → blue
+  // -1 -> red, 0 -> white, 1 -> blue
   const r = value < 0 ? 239 : Math.round(239 - (value * 189));
   const g = value < 0 ? Math.round(68 + (value + 1) * 100) : Math.round(68 + (1 - value) * 100);
   const b = value < 0 ? Math.round(68 + (value + 1) * 100) : 239;
@@ -58,7 +58,7 @@ export function CorrelationHeatmap({ data }: Props) {
             </div>
             {columns.map((colCol) => {
               const val = matrix[rowCol]?.[colCol];
-              const display = val !== null && val !== undefined ? val.toFixed(2) : "—";
+              const display = val !== null && val !== undefined ? val.toFixed(2) : " -- ";
               const bg = val !== null && val !== undefined ? interpolate(val) : "#f3f4f6";
               const isText = val !== null && val !== undefined && Math.abs(val) > 0.5;
               return (
@@ -66,7 +66,7 @@ export function CorrelationHeatmap({ data }: Props) {
                   key={colCol}
                   style={{ width: cellSize, height: cellSize, backgroundColor: bg }}
                   className="flex items-center justify-center border border-white/40 cursor-default transition-transform hover:scale-110 hover:z-10 relative"
-                  title={`${rowCol} × ${colCol}: ${display}`}
+                  title={`${rowCol} x ${colCol}: ${display}`}
                 >
                   <span
                     className="text-[9px] font-mono select-none"
@@ -90,7 +90,7 @@ export function CorrelationHeatmap({ data }: Props) {
               <div key={i} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-xs">
                 <span className="text-gray-600 truncate">
                   <span className="font-mono">{pair.col1}</span>
-                  <span className="text-gray-400 mx-1">×</span>
+                  <span className="text-gray-400 mx-1">x</span>
                   <span className="font-mono">{pair.col2}</span>
                 </span>
                 <span

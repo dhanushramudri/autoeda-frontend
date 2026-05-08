@@ -31,6 +31,8 @@ export const queryKeys = {
       ["eda", "text", datasetId, column] as const,
     quality: (datasetId: string) => ["eda", "quality", datasetId] as const,
     insights: (datasetId: string) => ["eda", "insights", datasetId] as const,
+    analysis: (datasetId: string) => ["eda", "analysis", datasetId] as const,
+    analysisColumn: (datasetId: string, col: string) => ["eda", "analysis", datasetId, col] as const,
   },
   jobs: {
     get: (jobId: string) => ["jobs", jobId] as const,
@@ -63,5 +65,14 @@ export const queryKeys = {
   },
   analytics: {
     workspace: (workspaceId: string) => ["analytics", "workspace", workspaceId] as const,
+  },
+  sql: {
+    schema: (datasetId: string) => ["sql", "schema", datasetId] as const,
+  },
+  sources: {
+    catalog: () => ["sources", "catalog"] as const,
+    list: (workspaceId: string) => ["sources", workspaceId] as const,
+    detail: (workspaceId: string, sourceId: number) => ["sources", workspaceId, sourceId] as const,
+    schema: (workspaceId: string, sourceId: number) => ["source-schema", workspaceId, sourceId] as const,
   },
 };

@@ -99,9 +99,9 @@ export default function CompareDatasets() {
               <select
                 value={current}
                 onChange={(e) => setter(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand"
               >
-                <option value="">Select a dataset…</option>
+                <option value="">Select a dataset</option>
                 {(datasets ?? [])
                   .filter((d: { id: string }) => d.id !== other)
                   .map((d: { id: string; name: string }) => (
@@ -197,7 +197,7 @@ export default function CompareDatasets() {
                         {Object.entries(typeCounts).map(([type, count]) => (
                           <span
                             key={type}
-                            className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
+                            className="px-3 py-1 bg-blue-50 text-brand rounded-full text-xs font-medium"
                           >
                             {type}: {count}
                           </span>

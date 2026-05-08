@@ -82,7 +82,7 @@ export default function TimeSeriesPage() {
                 <select
                   value={timeCol}
                   onChange={(e) => setParams("time_col", e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
                 >
                   {datetimeCols.map((c: string) => (
                     <option key={c} value={c}>{c}</option>
@@ -94,7 +94,7 @@ export default function TimeSeriesPage() {
                 <select
                   value={valueCol}
                   onChange={(e) => setParams("value_col", e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
                 >
                   {numericCols.map((c: string) => (
                     <option key={c} value={c}>{c}</option>

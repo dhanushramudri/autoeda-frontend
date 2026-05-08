@@ -29,7 +29,7 @@ import type { Dataset } from "@/types";
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
   ready: <CheckCircle className="w-4 h-4 text-emerald-500" />,
-  processing: <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />,
+  processing: <Loader2 className="w-4 h-4 text-brand animate-spin" />,
   failed: <AlertCircle className="w-4 h-4 text-red-500" />,
   pending: <Clock className="w-4 h-4 text-amber-500" />,
 };
@@ -79,12 +79,12 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
           <AnalysisLoader
-            label={job.message ?? "Processing dataset…"}
+            label={job.message ?? "Processing dataset..."}
             progress={job.progress ?? 0}
           />
           {job.status === "completed" && (
             <p className="text-center text-emerald-600 text-sm font-medium mt-4">
-              Done! Closing…
+              Done! Closing...
             </p>
           )}
           {job.status === "failed" && (
@@ -121,11 +121,11 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
           onDrop={handleDrop}
           onDragOver={(e) => e.preventDefault()}
           onClick={() => fileRef.current?.click()}
-          className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition mb-4"
+          className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-brand/60 hover:bg-brand/10/30 transition mb-4"
         >
           <Upload className="w-8 h-8 text-gray-300 mx-auto mb-2" />
           {file ? (
-            <p className="text-sm font-medium text-blue-600">{file.name}</p>
+            <p className="text-sm font-medium text-brand">{file.name}</p>
           ) : (
             <>
               <p className="text-sm text-gray-500">Drop file or click to browse</p>
@@ -152,7 +152,7 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Sales Data 2024"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
           <div>
@@ -162,7 +162,7 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional description"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
         </div>
@@ -177,9 +177,9 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
           <button
             onClick={() => mutation.mutate()}
             disabled={!file || mutation.isPending}
-            className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition"
+            className="flex-1 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] disabled:opacity-50 transition"
           >
-            {mutation.isPending ? "Uploading…" : "Upload & Analyze"}
+            {mutation.isPending ? "Uploading..." : "Upload & Analyze"}
           </button>
         </div>
       </div>
@@ -198,7 +198,7 @@ function DatasetCard({ dataset, workspaceId }: { dataset: Dataset; workspaceId: 
       }
       className={`bg-white rounded-xl border p-5 transition group ${
         dataset.status === "ready"
-          ? "border-gray-200 hover:border-blue-300 hover:shadow-md cursor-pointer"
+          ? "border-gray-200 hover:border-brand/30 hover:shadow-md cursor-pointer"
           : "border-gray-100 opacity-75"
       }`}
     >
@@ -234,7 +234,7 @@ function DatasetCard({ dataset, workspaceId }: { dataset: Dataset; workspaceId: 
           <Clock className="w-3 h-3" />
           {dataset.created_at
             ? formatDistanceToNow(new Date(dataset.created_at), { addSuffix: true })
-            : "—"}
+            : "--"}
         </span>
       </div>
 
@@ -243,7 +243,7 @@ function DatasetCard({ dataset, workspaceId }: { dataset: Dataset; workspaceId: 
           <span className="text-xs text-gray-400">
             {dataset.source_type === "file" ? "File upload" : dataset.source_type}
           </span>
-          <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition" />
+          <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-brand transition" />
         </div>
       )}
     </div>
@@ -293,37 +293,37 @@ function JoinModal({ workspaceId, datasets, onClose }: { workspaceId: string; da
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Dataset A</label>
-            <select value={dsA} onChange={(e) => setDsA(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="">Select…</option>
+            <select value={dsA} onChange={(e) => setDsA(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand">
+              <option value="">Select...</option>
               {readyDatasets.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Dataset B</label>
-            <select value={dsB} onChange={(e) => setDsB(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="">Select…</option>
+            <select value={dsB} onChange={(e) => setDsB(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand">
+              <option value="">Select...</option>
               {readyDatasets.filter((d) => d.id !== dsA).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Join Type</label>
-            <select value={joinType} onChange={(e) => setJoinType(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500">
+            <select value={joinType} onChange={(e) => setJoinType(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand">
               {["inner", "left", "right", "outer"].map((t) => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Key (A)</label>
-              <input value={keyA} onChange={(e) => setKeyA(e.target.value)} placeholder="column name" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              <input value={keyA} onChange={(e) => setKeyA(e.target.value)} placeholder="column name" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand" />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Key (B)</label>
-              <input value={keyB} onChange={(e) => setKeyB(e.target.value)} placeholder="column name" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+              <input value={keyB} onChange={(e) => setKeyB(e.target.value)} placeholder="column name" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand" />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Result Name (optional)</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Joined_Sales_Users" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500" />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Joined_Sales_Users" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-brand" />
           </div>
         </div>
         <div className="flex gap-3 mt-6">
@@ -331,9 +331,9 @@ function JoinModal({ workspaceId, datasets, onClose }: { workspaceId: string; da
           <button
             onClick={() => mutation.mutate()}
             disabled={!dsA || !dsB || !keyA || !keyB || mutation.isPending}
-            className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition"
+            className="flex-1 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] disabled:opacity-50 transition"
           >
-            {mutation.isPending ? "Joining…" : "Join & Save"}
+            {mutation.isPending ? "Joining..." : "Join & Save"}
           </button>
         </div>
       </div>
@@ -369,7 +369,7 @@ export default function DatasetsPage() {
       <Breadcrumb
         items={[
           { label: "Workspaces", href: "/workspaces" },
-          { label: workspace?.name ?? "…" },
+          { label: workspace?.name ?? "..." },
         ]}
       />
 
@@ -390,7 +390,7 @@ export default function DatasetsPage() {
           </button>
           <button
             onClick={() => setShowUpload(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] transition shadow-sm"
           >
             <Plus className="w-4 h-4" />
             Add Dataset
@@ -408,7 +408,7 @@ export default function DatasetsPage() {
           action={
             <button
               onClick={() => setShowUpload(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+              className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] transition"
             >
               Upload dataset
             </button>

@@ -36,7 +36,7 @@ export default function WorkspaceAnalyticsPage() {
   const trends = analytics?.trends ?? [];
 
   const barData = datasets.map((d) => ({
-    name: d.name.length > 14 ? d.name.slice(0, 14) + "…" : d.name,
+    name: d.name.length > 14 ? d.name.slice(0, 14) + "..." : d.name,
     quality: d.quality_score ?? 0,
     fill: QUAL_COLOR(d.quality_score),
   }));
@@ -57,7 +57,7 @@ export default function WorkspaceAnalyticsPage() {
     <div className="p-8 max-w-6xl mx-auto">
       <Breadcrumb items={[
         { label: "Workspaces", href: "/workspaces" },
-        { label: workspace?.name ?? "…", href: `/workspaces/${workspaceId}/datasets` },
+        { label: workspace?.name ?? "...", href: `/workspaces/${workspaceId}/datasets` },
         { label: "Analytics" },
       ]} />
 
@@ -168,14 +168,14 @@ export default function WorkspaceAnalyticsPage() {
                       <p className="text-sm font-medium text-gray-800">{ds.name}</p>
                       <p className="text-xs text-gray-400">{ds.status}</p>
                     </td>
-                    <td className="px-4 py-2.5 text-right text-xs text-gray-600">{ds.row_count?.toLocaleString() ?? "—"}</td>
-                    <td className="px-4 py-2.5 text-right text-xs text-gray-600">{ds.column_count ?? "—"}</td>
+                    <td className="px-4 py-2.5 text-right text-xs text-gray-600">{ds.row_count?.toLocaleString() ?? " -- "}</td>
+                    <td className="px-4 py-2.5 text-right text-xs text-gray-600">{ds.column_count ?? " -- "}</td>
                     <td className="px-4 py-2.5 text-right text-xs text-gray-600">
-                      {ds.missing_pct != null ? `${ds.missing_pct.toFixed(1)}%` : "—"}
+                      {ds.missing_pct != null ? `${ds.missing_pct.toFixed(1)}%` : " -- "}
                     </td>
                     <td className="px-4 py-2.5 text-right">
                       <span className="text-xs font-bold" style={{ color: QUAL_COLOR(ds.quality_score) }}>
-                        {ds.quality_score ?? "—"}
+                        {ds.quality_score ?? " -- "}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-xs text-gray-400">

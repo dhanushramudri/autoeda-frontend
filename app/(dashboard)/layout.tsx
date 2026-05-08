@@ -39,7 +39,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!token) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar
         datasets={datasets ?? []}
         workspaceId={activeWorkspaceId}

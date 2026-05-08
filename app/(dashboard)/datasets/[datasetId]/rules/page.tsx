@@ -92,7 +92,7 @@ export default function RulesPage() {
               <div className="flex gap-1">
                 <button
                   onClick={() => setAddingRule(true)}
-                  className="text-xs flex items-center gap-1 text-blue-600 hover:text-blue-700"
+                  className="text-xs flex items-center gap-1 text-brand hover:text-brand"
                 >
                   <Plus className="w-3 h-3" /> Add
                 </button>
@@ -123,7 +123,7 @@ export default function RulesPage() {
                   value={draft.rule_type ?? ""}
                   onChange={(e) => setDraft({ rule_type: e.target.value as RuleType })}
                 >
-                  <option value="">Rule type…</option>
+                  <option value="">Rule type...</option>
                   {RULE_TYPES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                 </select>
                 {draft.rule_type && draft.rule_type !== "unique" && draft.rule_type !== "allowed_values" && (
@@ -132,7 +132,7 @@ export default function RulesPage() {
                     value={draft.column_name ?? ""}
                     onChange={(e) => setDraft((d) => ({ ...d, column_name: e.target.value }))}
                   >
-                    <option value="">Column…</option>
+                    <option value="">Column...</option>
                     {columns.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
                   </select>
                 )}
@@ -142,7 +142,7 @@ export default function RulesPage() {
                     value={draft.column_name ?? ""}
                     onChange={(e) => setDraft((d) => ({ ...d, column_name: e.target.value }))}
                   >
-                    <option value="">Column…</option>
+                    <option value="">Column...</option>
                     {columns.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
                   </select>
                 )}
@@ -162,15 +162,15 @@ export default function RulesPage() {
                       value={draft.column_name ?? ""}
                       onChange={(e) => setDraft((d) => ({ ...d, column_name: e.target.value }))}
                     >
-                      <option value="">Column…</option>
+                      <option value="">Column...</option>
                       {columns.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
                     </select>
                     <input className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none" placeholder="Values (comma-separated)" value={draft.values ?? ""} onChange={(e) => setDraft((d) => ({ ...d, values: e.target.value }))} />
                   </>
                 )}
                 <div className="flex gap-1.5">
-                  <button onClick={addRule} disabled={!draft.rule_type} className="flex-1 text-xs bg-blue-600 text-white rounded-lg py-1.5 disabled:opacity-40">Add</button>
-                  <button onClick={() => { setAddingRule(false); setDraft({}); }} className="text-xs border border-gray-200 rounded-lg py-1.5 px-2">✕</button>
+                  <button onClick={addRule} disabled={!draft.rule_type} className="flex-1 text-xs bg-brand text-white rounded-lg py-1.5 disabled:opacity-40">Add</button>
+                  <button onClick={() => { setAddingRule(false); setDraft({}); }} className="text-xs border border-gray-200 rounded-lg py-1.5 px-2">x</button>
                 </div>
               </div>
             )}
@@ -178,10 +178,10 @@ export default function RulesPage() {
             <button
               onClick={() => saveMutation.mutate()}
               disabled={rules.length === 0 || saveMutation.isPending}
-              className="w-full mt-3 flex items-center justify-center gap-1.5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg disabled:opacity-40 hover:bg-blue-700 transition"
+              className="w-full mt-3 flex items-center justify-center gap-1.5 py-2 bg-brand text-white text-sm font-medium rounded-lg disabled:opacity-40 hover:bg-[#2a0d8a] transition"
             >
               <Play className="w-3.5 h-3.5" />
-              {saveMutation.isPending ? "Running…" : "Save & Validate"}
+              {saveMutation.isPending ? "Running..." : "Save & Validate"}
             </button>
           </div>
 
@@ -219,7 +219,7 @@ export default function RulesPage() {
                 </div>
                 {r.sample_failing_rows.length > 0 && (
                   <details className="mt-2">
-                    <summary className="text-xs text-blue-600 cursor-pointer">Show sample failing rows</summary>
+                    <summary className="text-xs text-brand cursor-pointer">Show sample failing rows</summary>
                     <div className="mt-2 overflow-x-auto">
                       <pre className="text-xs bg-gray-50 rounded p-2 text-gray-700">
                         {JSON.stringify(r.sample_failing_rows, null, 2)}

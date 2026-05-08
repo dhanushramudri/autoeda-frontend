@@ -172,7 +172,7 @@ export default function ChartsPage() {
                     key={ct.value}
                     onClick={() => setChartType(ct.value)}
                     className={`text-xs py-1.5 rounded-lg border transition ${
-                      chartType === ct.value ? "bg-blue-600 text-white border-blue-600" : "border-gray-200 text-gray-600 hover:border-blue-400"
+                      chartType === ct.value ? "bg-brand text-white border-brand" : "border-gray-200 text-gray-600 hover:border-brand/60"
                     }`}
                   >
                     {ct.label}
@@ -184,7 +184,7 @@ export default function ChartsPage() {
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">X Axis</label>
               <select value={xCol} onChange={(e) => setXCol(e.target.value)} className="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 outline-none">
-                <option value="">Select…</option>
+                <option value="">Select...</option>
                 {columns.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
               </select>
             </div>
@@ -192,7 +192,7 @@ export default function ChartsPage() {
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Y Axis</label>
               <select value={yCol} onChange={(e) => setYCol(e.target.value)} className="w-full text-sm border border-gray-200 rounded-lg px-2 py-1.5 outline-none">
-                <option value="">Select…</option>
+                <option value="">Select...</option>
                 {numericCols.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
@@ -200,9 +200,9 @@ export default function ChartsPage() {
             <button
               onClick={buildChart}
               disabled={(!xCol && chartType !== "pie") || loadingPreview}
-              className="w-full py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+              className="w-full py-2 bg-brand text-white text-sm font-medium rounded-lg hover:bg-[#2a0d8a] disabled:opacity-50 transition"
             >
-              {loadingPreview ? "Loading…" : "Build Chart"}
+              {loadingPreview ? "Loading..." : "Build Chart"}
             </button>
 
             {previewData.length > 0 && (
@@ -219,18 +219,18 @@ export default function ChartsPage() {
                 <input
                   value={chartName}
                   onChange={(e) => setChartName(e.target.value)}
-                  placeholder="Chart name…"
+                  placeholder="Chart name..."
                   className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none"
                 />
                 <div className="flex gap-1.5">
                   <button
                     onClick={() => saveChartMutation.mutate()}
                     disabled={saveChartMutation.isPending}
-                    className="flex-1 text-xs bg-blue-600 text-white rounded-lg py-1.5"
+                    className="flex-1 text-xs bg-brand text-white rounded-lg py-1.5"
                   >
                     Save
                   </button>
-                  <button onClick={() => setShowSaveForm(false)} className="text-xs border border-gray-200 rounded-lg py-1.5 px-2">✕</button>
+                  <button onClick={() => setShowSaveForm(false)} className="text-xs border border-gray-200 rounded-lg py-1.5 px-2">x</button>
                 </div>
               </div>
             )}

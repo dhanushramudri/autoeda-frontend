@@ -58,7 +58,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
         params: s.params,
       }))).then((r) => r.data),
     onSuccess: (data: { applied: number; result_preview: Record<string, unknown>[]; row_count: number }) => {
-      setResultMsg(`Applied ${data.applied} steps → ${data.row_count.toLocaleString()} rows`);
+      setResultMsg(`Applied ${data.applied} steps -> ${data.row_count.toLocaleString()} rows`);
       onResult?.(data.result_preview);
       qc.invalidateQueries({ queryKey: queryKeys.pipeline.get(datasetId) });
     },
@@ -185,7 +185,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
             value={draft.operation ?? ""}
             onChange={(e) => setDraft({ operation: e.target.value })}
           >
-            <option value="">Select operation…</option>
+            <option value="">Select operation...</option>
             {OPERATIONS.map((o) => (
               <option key={o.value} value={o.value}>{o.icon} {o.label}</option>
             ))}
@@ -197,7 +197,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
               value={draft.column ?? ""}
               onChange={(e) => setDraft((d) => ({ ...d, column: e.target.value }))}
             >
-              <option value="">Select column…</option>
+              <option value="">Select column...</option>
               {columns.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           )}
@@ -252,7 +252,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
             <button
               onClick={addStep}
               disabled={!draft.operation || (currentOp?.needsColumn && !draft.column)}
-              className="flex-1 text-xs bg-blue-600 text-white rounded-lg py-1.5 disabled:opacity-40 hover:bg-blue-700 transition"
+              className="flex-1 text-xs bg-brand text-white rounded-lg py-1.5 disabled:opacity-40 hover:bg-[#2a0d8a] transition"
             >
               Add Step
             </button>
@@ -274,7 +274,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
         {!addingStep && (
           <button
             onClick={() => setAddingStep(true)}
-            className="w-full flex items-center justify-center gap-1.5 text-xs border border-dashed border-gray-300 rounded-lg py-2 text-gray-500 hover:border-blue-400 hover:text-blue-600 transition"
+            className="w-full flex items-center justify-center gap-1.5 text-xs border border-dashed border-gray-300 rounded-lg py-2 text-gray-500 hover:border-brand/60 hover:text-brand transition"
           >
             <Plus className="w-3 h-3" /> Add Step
           </button>
@@ -282,7 +282,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
         <button
           onClick={() => runMutation.mutate()}
           disabled={steps.length === 0 || runMutation.isPending}
-          className="w-full flex items-center justify-center gap-1.5 text-xs bg-blue-600 text-white rounded-lg py-2 font-medium disabled:opacity-40 hover:bg-blue-700 transition"
+          className="w-full flex items-center justify-center gap-1.5 text-xs bg-brand text-white rounded-lg py-2 font-medium disabled:opacity-40 hover:bg-[#2a0d8a] transition"
         >
           {runMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
           Run Pipeline ({steps.length} step{steps.length !== 1 ? "s" : ""})

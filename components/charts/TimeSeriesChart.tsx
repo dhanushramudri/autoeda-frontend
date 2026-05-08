@@ -104,10 +104,10 @@ export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
         <div className="bg-gray-50 rounded-lg p-3 text-xs flex items-center gap-6">
           <span className="text-gray-500">ADF Stationarity:</span>
           <span className="font-mono text-gray-700">
-            stat = {data.adf_statistic?.toFixed(4) ?? "—"}
+            stat = {data.adf_statistic?.toFixed(4) ?? " -- "}
           </span>
           <span className="font-mono text-gray-700">
-            p = {data.adf_pvalue?.toFixed(4) ?? "—"}
+            p = {data.adf_pvalue?.toFixed(4) ?? " -- "}
           </span>
           <span
             className={

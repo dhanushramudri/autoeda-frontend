@@ -4,26 +4,99 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    /* JMAN Brand Color System — Light Mode */
+    --background: 0 0% 98%;
+    --foreground: 255 71% 21%;
+
+    --primary: 255 81% 35%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 11% 95%;
+    --secondary-foreground: 255 71% 21%;
+
+    --muted: 240 11% 95%;
+    --muted-foreground: 248 19% 48%;
+
+    --accent: 240 11% 95%;
+    --accent-foreground: 255 71% 21%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 11% 91%;
+    --input: 240 11% 91%;
+    --ring: 255 81% 35%;
     --radius: 0.5rem;
+
+    /* JMAN Brand */
+    --brand: 255 81% 35%;
+    --brand-foreground: 0 0% 100%;
+    --highlight: 338 100% 69%;
+    --highlight-foreground: 0 0% 100%;
+
+    /* App Color Mappings */
+    --appColor1: 240 11% 95%;
+    --appColor2: 338 100% 69%;
+    --appColor3: 0 0% 100%;
+    --appColor4: 0 0% 100%;
+    --appColor5: 255 71% 21%;
+    --appColor6: 255 81% 35%;
+    --appColor7: 187 82% 55%;
+    --appColor8: 176 73% 34%;
+    --appColor9: 0 0% 98%;
+    --appColor10: 0 0% 0%;
+    --appColor11: 255 71% 21%;
+
+    /* Sidebar — light JMAN theme */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 255 71% 18%;
+    --sidebar-primary: 255 81% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 255 55% 96%;
+    --sidebar-accent-foreground: 255 71% 18%;
+    --sidebar-border: 255 40% 91%;
+    --sidebar-ring: 255 81% 35%;
+  }
+
+  .dark {
+    --background: 255 71% 7%;
+    --foreground: 0 0% 100%;
+    --primary: 255 81% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 248 25% 18%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 248 25% 18%;
+    --muted-foreground: 248 19% 65%;
+    --accent: 248 25% 18%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 248 25% 18%;
+    --input: 248 25% 18%;
+    --ring: 248 19% 84%;
+    --brand: 255 81% 55%;
+    --brand-foreground: 0 0% 100%;
+    --highlight: 338 100% 69%;
+    --highlight-foreground: 0 0% 100%;
+    --appColor1: 248 25% 17%;
+    --appColor2: 338 100% 69%;
+    --appColor3: 255 71% 7%;
+    --appColor4: 0 0% 100%;
+    --appColor5: 0 0% 90%;
+    --appColor6: 255 81% 55%;
+    --appColor7: 187 82% 55%;
+    --appColor8: 176 73% 25%;
+    --appColor9: 255 71% 21%;
+    --appColor10: 0 0% 100%;
+    --appColor11: 338 100% 69%;
+    --sidebar-background: 255 30% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 255 81% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 255 55% 18%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 255 40% 18%;
+    --sidebar-ring: 255 81% 55%;
   }
 
   * {
@@ -46,28 +119,62 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    background: transparent;
+    border-style: none;
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 rounded-full;
+    background: #BAB7CE;
+    border-radius: 16px;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #251C63;
   }
 
   .data-table thead tr {
-    @apply border-b border-gray-100;
+    border-bottom: 1px solid #E8E7EF;
   }
 
   .data-table tbody tr:hover {
-    @apply bg-gray-50;
+    background-color: #F3F3F7;
   }
 
   .chart-container {
     @apply w-full;
     min-height: 300px;
   }
+}
+
+/* JMAN Brand Gradients */
+.bg-gradient-jman {
+  background: linear-gradient(135deg, #3411A3, #C36BDB);
+}
+.bg-gradient-jman-rose {
+  background: linear-gradient(90deg, #3411A3, #FF6196);
+}
+.bg-gradient-jman-lightblue {
+  background: linear-gradient(90deg, #3411A3, #26D4F0);
+}
+
+/* Scrollbar global */
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+*::-webkit-scrollbar-track {
+  border-style: none;
+}
+*::-webkit-scrollbar-thumb {
+  background: #BAB7CE;
+  border-radius: 16px;
+}
+
+*:focus {
+  outline: none !important;
 }

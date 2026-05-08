@@ -98,7 +98,7 @@ export default function OutliersPage() {
               <select
                 value={activeCol ?? ""}
                 onChange={(e) => setParam("column", e.target.value)}
-                className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
               >
                 {numericCols.map((c: string) => (
                   <option key={c} value={c}>{c}</option>
@@ -167,8 +167,8 @@ export default function OutliersPage() {
                         </span>
                       ),
                     },
-                    { key: "lower_bound", label: "Lower Bound", align: "right", render: (v) => v != null ? Number(v).toFixed(3) : "—" },
-                    { key: "upper_bound", label: "Upper Bound", align: "right", render: (v) => v != null ? Number(v).toFixed(3) : "—" },
+                    { key: "lower_bound", label: "Lower Bound", align: "right", render: (v) => v != null ? Number(v).toFixed(3) : "--" },
+                    { key: "upper_bound", label: "Upper Bound", align: "right", render: (v) => v != null ? Number(v).toFixed(3) : "--" },
                   ]}
                   data={data.columns.map((col: { name: string; outlier_count: number; outlier_pct: number; bounds: Record<string, number | null> }) => ({
                     column: col.name,

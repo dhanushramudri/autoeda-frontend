@@ -86,15 +86,15 @@ export default function SettingsPage() {
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
           <button
             onClick={() => updateMutation.mutate()}
             disabled={updateMutation.isPending}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition"
+            className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] disabled:opacity-50 transition"
           >
-            {updateMutation.isPending ? "Saving…" : "Save profile"}
+            {updateMutation.isPending ? "Saving..." : "Save profile"}
           </button>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function SettingsPage() {
               type="password"
               value={currentPwd}
               onChange={(e) => setCurrentPwd(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
           <div>
@@ -118,7 +118,7 @@ export default function SettingsPage() {
               type="password"
               value={newPwd}
               onChange={(e) => setNewPwd(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
           <button
@@ -126,7 +126,7 @@ export default function SettingsPage() {
             disabled={!currentPwd || !newPwd || passwordMutation.isPending}
             className="px-4 py-2 bg-gray-800 text-white rounded-lg text-sm font-medium hover:bg-gray-900 disabled:opacity-50 transition"
           >
-            {passwordMutation.isPending ? "Changing…" : "Change password"}
+            {passwordMutation.isPending ? "Changing..." : "Change password"}
           </button>
         </div>
       </div>

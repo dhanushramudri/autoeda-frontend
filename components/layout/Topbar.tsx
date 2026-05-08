@@ -77,16 +77,16 @@ export function Topbar() {
               >
                 <span className="flex-1 text-left truncate">{ws.name}</span>
                 {ws.id === currentWorkspaceId && (
-                  <Check className="w-3.5 h-3.5 text-blue-500" />
+                  <Check className="w-3.5 h-3.5 text-brand" />
                 )}
               </button>
             ))}
             <div className="border-t border-gray-100 mt-1 pt-1">
               <button
                 onClick={() => { router.push("/workspaces"); setWsOpen(false); }}
-                className="w-full text-left px-4 py-2 text-xs text-blue-600 hover:bg-blue-50 transition"
+                className="w-full text-left px-4 py-2 text-xs text-brand hover:bg-brand/10 transition"
               >
-                Manage workspaces →
+                Manage workspaces ->
               </button>
             </div>
           </div>
@@ -108,7 +108,7 @@ export function Topbar() {
           onClick={() => setUserOpen((v) => !v)}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition"
         >
-          <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold">
+          <div className="w-7 h-7 rounded-full bg-brand flex items-center justify-center text-white text-xs font-semibold">
             {user?.full_name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U"}
           </div>
           <div className="text-left hidden sm:block">
@@ -116,7 +116,7 @@ export function Topbar() {
               {user?.full_name ?? user?.email}
             </p>
             {user?.is_admin && (
-              <p className="text-[10px] text-blue-500">Admin</p>
+              <p className="text-[10px] text-brand">Admin</p>
             )}
           </div>
           <ChevronDown className="w-3.5 h-3.5 text-gray-400 hidden sm:block" />

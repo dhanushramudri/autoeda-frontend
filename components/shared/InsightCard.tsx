@@ -8,7 +8,7 @@ const severityConfig = {
     bg: "bg-blue-50",
     border: "border-blue-200",
     text: "text-blue-800",
-    icon_color: "text-blue-500",
+    icon_color: "text-brand",
   },
   warning: {
     icon: AlertTriangle,

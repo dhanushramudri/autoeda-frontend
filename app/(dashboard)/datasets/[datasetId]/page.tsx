@@ -72,7 +72,7 @@ export default function DatasetOverviewPage() {
         <div className="mt-4 mb-8">
         <div className="flex items-start gap-3">
           <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-            <Database className="w-5 h-5 text-blue-600" />
+            <Database className="w-5 h-5 text-brand" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{dataset.name}</h1>
@@ -93,17 +93,17 @@ export default function DatasetOverviewPage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <StatCard
           label="Rows"
-          value={dataset.row_count?.toLocaleString() ?? "—"}
+          value={dataset.row_count?.toLocaleString() ?? "--"}
           icon={<Rows className="w-4 h-4" />}
         />
         <StatCard
           label="Columns"
-          value={dataset.column_count ?? "—"}
+          value={dataset.column_count ?? "--"}
           icon={<Columns className="w-4 h-4" />}
         />
         <StatCard
           label="Source"
-          value={dataset.source_type ?? "—"}
+          value={dataset.source_type ?? "--"}
           icon={<FileText className="w-4 h-4" />}
         />
         <StatCard
@@ -145,12 +145,12 @@ export default function DatasetOverviewPage() {
             <button
               key={link.href}
               onClick={() => router.push(`/datasets/${datasetId}/${link.href}`)}
-              className="text-left bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition group"
+              className="text-left bg-white rounded-xl border border-gray-200 p-4 hover:border-brand/30 hover:shadow-sm transition group"
               disabled={dataset.status !== "ready"}
             >
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-sm font-semibold text-gray-800">{link.label}</span>
-                <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition" />
+                <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-brand transition" />
               </div>
               <p className="text-xs text-gray-400">{link.desc}</p>
             </button>

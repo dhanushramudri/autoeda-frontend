@@ -244,14 +244,14 @@ export interface ApiError {
   code?: string;
 }
 
-// ── NL Query ──────────────────────────────────────────────────────────────────
+// -- NL Query ------------------------------------------------------------------
 export interface NLQueryResult {
   action: "navigate" | "transform" | "filter" | "unknown";
   params: Record<string, string | number | boolean>;
   message: string;
 }
 
-// ── Pipeline ──────────────────────────────────────────────────────────────────
+// -- Pipeline ------------------------------------------------------------------
 export interface PipelineStep {
   id?: number;
   step_order: number;
@@ -260,14 +260,14 @@ export interface PipelineStep {
   params: Record<string, unknown>;
 }
 
-// ── Column Metadata ───────────────────────────────────────────────────────────
+// -- Column Metadata -----------------------------------------------------------
 export interface ColumnMeta {
   column: string;
   tags: string[];
   notes: string | null;
 }
 
-// ── Column Detail ─────────────────────────────────────────────────────────────
+// -- Column Detail -------------------------------------------------------------
 export interface ColumnDetail {
   stats: {
     name: string;
@@ -294,7 +294,7 @@ export interface ColumnDetail {
   notes: string | null;
 }
 
-// ── Filter ────────────────────────────────────────────────────────────────────
+// -- Filter --------------------------------------------------------------------
 export type FilterOperator =
   | "equals" | "not_equals" | "gt" | "gte" | "lt" | "lte"
   | "contains" | "starts_with" | "is_null" | "is_not_null";
@@ -307,7 +307,7 @@ export interface FilterConfig {
   logic?: "AND" | "OR";
 }
 
-// ── Rules ─────────────────────────────────────────────────────────────────────
+// -- Rules ---------------------------------------------------------------------
 export type RuleType = "not_null" | "range" | "regex" | "unique" | "allowed_values";
 
 export interface QualityRule {
@@ -325,14 +325,14 @@ export interface RuleResult extends QualityRule {
   sample_failing_rows: Record<string, unknown>[];
 }
 
-// ── Pivot ─────────────────────────────────────────────────────────────────────
+// -- Pivot ---------------------------------------------------------------------
 export interface PivotResult {
   index: string[];
   columns: string[];
   data: number[][];
 }
 
-// ── Saved Chart ───────────────────────────────────────────────────────────────
+// -- Saved Chart ---------------------------------------------------------------
 export interface SavedChart {
   id: number;
   name: string;
@@ -341,7 +341,7 @@ export interface SavedChart {
   created_at: string;
 }
 
-// ── Segment ───────────────────────────────────────────────────────────────────
+// -- Segment -------------------------------------------------------------------
 export interface NamedSegment {
   id: number;
   name: string;
@@ -349,7 +349,7 @@ export interface NamedSegment {
   created_at: string;
 }
 
-// ── EDA History ───────────────────────────────────────────────────────────────
+// -- EDA History ---------------------------------------------------------------
 export interface EDARunRecord {
   id: number;
   run_at: string;
@@ -360,7 +360,208 @@ export interface EDARunRecord {
   triggered_by: string;
 }
 
-// ── Workspace Analytics ───────────────────────────────────────────────────────
+// -- EDA Full Analysis ---------------------------------------------------------
+
+export interface HistogramKDE {
+  bins: (number | null)[];
+  counts: (number | null)[];
+  kde_x: (number | null)[];
+  kde_y: (number | null)[];
+  mean: number | null;
+  median: number | null;
+}
+
+export interface BoxStats {
+  min: number | null;
+  q1: number | null;
+  median: number | null;
+  q3: number | null;
+  max: number | null;
+  mean: number | null;
+  outliers: (number | null)[];
+}
+
+export interface ViolinData {
+  y: (number | null)[];
+  density: (number | null)[];
+}
+
+export interface QQData {
+  theoretical: (number | null)[];
+  sample: (number | null)[];
+  line_x: (number | null)[];
+  line_y: (number | null)[];
+}
+
+export interface ECDFData {
+  x: (number | null)[];
+  y: (number | null)[];
+  p25: number | null;
+  p50: number | null;
+  p75: number | null;
+}
+
+export interface NormalityResult {
+  test: string;
+  statistic?: number | null;
+  p_value: number | null;
+  is_normal: boolean | null;
+}
+
+export interface NumericCharts {
+  histogram_kde: HistogramKDE;
+  box: BoxStats;
+  violin: ViolinData;
+  qq: QQData;
+  ecdf: ECDFData;
+  normality: NormalityResult;
+  skewness: number | null;
+  kurtosis: number | null;
+}
+
+export interface BarChartData {
+  labels: string[];
+  values: number[];
+  percentages: number[];
+  other_count: number;
+  total_categories: number;
+}
+
+export interface PieData {
+  labels: string[];
+  values: number[];
+  percentages: number[];
+}
+
+export interface ParetoData {
+  labels: string[];
+  values: number[];
+  cumulative_pct: number[];
+}
+
+export interface CategoricalCharts {
+  bar: BarChartData;
+  pie: PieData | null;
+  pareto: ParetoData;
+}
+
+export interface TimeseriesData {
+  dates: string[];
+  values: (number | null)[];
+}
+
+export interface SeasonalityData {
+  by_hour: { labels: string[]; values: number[] };
+  by_dow: { labels: string[]; values: number[] };
+  by_month: { labels: string[]; values: number[] };
+}
+
+export interface DatetimeCharts {
+  timeseries: TimeseriesData;
+  seasonality: SeasonalityData;
+}
+
+export interface CorrelationHeatmapData {
+  labels: string[];
+  z: (number | null)[][];
+}
+
+export interface ScatterPair {
+  col1: string;
+  col2: string;
+  pearson_r: number | null;
+  r2: number | null;
+  x: (number | null)[];
+  y: (number | null)[];
+  line_x: number[];
+  line_y: number[];
+}
+
+export interface GroupedBoxGroup {
+  min: number | null;
+  q1: number | null;
+  median: number | null;
+  q3: number | null;
+  max: number | null;
+  outliers: (number | null)[];
+  n: number;
+}
+
+export interface GroupedBoxData {
+  numeric_col: string;
+  categorical_col: string;
+  groups: Record<string, GroupedBoxGroup>;
+}
+
+export interface MultiColumnAnalysis {
+  correlation: CorrelationHeatmapData;
+  scatter_pairs: ScatterPair[];
+  grouped_box: GroupedBoxData;
+}
+
+export interface MissingBarItem {
+  column: string;
+  missing_count: number;
+  missing_pct: number | null;
+}
+
+export interface NormalityRow {
+  column: string;
+  n: number;
+  test: string;
+  p_value: number | null;
+  is_normal: boolean | null;
+  skewness: number | null;
+  kurtosis: number | null;
+}
+
+export interface OutlierSummaryRow {
+  column: string;
+  outlier_count: number;
+  outlier_pct: number | null;
+  lower_bound: number | null;
+  upper_bound: number | null;
+}
+
+export interface CardinalityRow {
+  column: string;
+  unique_count: number;
+  unique_pct: number | null;
+  flag: "id_like" | "constant" | "binary" | "low_cardinality" | "normal";
+  dtype: string;
+}
+
+export interface DuplicateInfo {
+  total_rows: number;
+  duplicate_count: number;
+  duplicate_pct: number | null;
+}
+
+export interface StatCards {
+  normality_table: NormalityRow[];
+  outlier_summary: OutlierSummaryRow[];
+  cardinality: CardinalityRow[];
+  duplicates: DuplicateInfo;
+  missing_bar: MissingBarItem[];
+}
+
+export interface FullAnalysisResult {
+  sampled: boolean;
+  sample_size: number;
+  total_rows: number;
+  column_types: Record<string, string>;
+  numeric_cols: string[];
+  categorical_cols: string[];
+  datetime_cols: string[];
+  numeric_charts: Record<string, NumericCharts>;
+  categorical_charts: Record<string, CategoricalCharts>;
+  datetime_charts: Record<string, DatetimeCharts>;
+  multi_column: MultiColumnAnalysis;
+  missing_charts: { bar: MissingBarItem[] };
+  stat_cards: StatCards;
+}
+
+// -- Workspace Analytics -------------------------------------------------------
 export interface DatasetSummary {
   id: number;
   name: string;

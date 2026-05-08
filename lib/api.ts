@@ -147,6 +147,11 @@ export const datasetsApi = {
   // Report
   getReport: (datasetId: string) =>
     api.get(`/datasets/${datasetId}/report`, { responseType: "text", headers: { Accept: "text/html" } }),
+  // Full EDA Analysis
+  getAnalysis: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/analysis`),
+  getAnalysisColumn: (datasetId: string, colName: string) =>
+    api.get(`/datasets/${datasetId}/analysis/column/${encodeURIComponent(colName)}`),
   // SQL Editor
   sqlExecute: (datasetId: string, sql: string, limit = 1000) =>
     api.post(`/datasets/${datasetId}/sql/execute`, { sql, limit }),
@@ -162,6 +167,54 @@ export const workspacesExtraApi = {
     api.post(`/workspaces/${workspaceId}/datasets/join`, data),
   getAnalytics: (workspaceId: string) =>
     api.get(`/workspaces/${workspaceId}/analytics`),
+  // Join Builder
+  generateJoinSql: (workspaceId: string, data: { nodes: unknown[]; edges: unknown[] }) =>
+    api.post(`/workspaces/${workspaceId}/join-builder/generate-sql`, data),
+  executeJoin: (workspaceId: string, data: { nodes: unknown[]; edges: unknown[]; limit?: number }) =>
+    api.post(`/workspaces/${workspaceId}/join-builder/execute`, data),
+};
+
+// Warehouse
+export const warehouseApi = {
+  catalog: (workspaceId: string) => api.get(`/workspaces/${workspaceId}/warehouse/catalog`),
+  execute: (workspaceId: string, sql: string, limit = 5000) =>
+    api.post(`/workspaces/${workspaceId}/warehouse/execute`, { sql, limit }),
+  explain: (workspaceId: string, sql: string) =>
+    api.post(`/workspaces/${workspaceId}/warehouse/explain`, { sql }),
+  sourceTableColumns: (workspaceId: string, sourceId: number, table: string) =>
+    api.get(`/workspaces/${workspaceId}/warehouse/sources/${sourceId}/tables/${encodeURIComponent(table)}/columns`),
+};
+
+// Data Sources
+export const sourcesApi = {
+  catalog: () => api.get("/sources/catalog"),
+  list: (workspaceId: string) => api.get(`/workspaces/${workspaceId}/sources`),
+  create: (workspaceId: string, data: {
+    name: string; description?: string; source_type: string;
+    credentials?: Record<string, unknown>; config?: Record<string, unknown>;
+  }) => api.post(`/workspaces/${workspaceId}/sources`, data),
+  get: (workspaceId: string, sourceId: number) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}`),
+  update: (workspaceId: string, sourceId: number, data: {
+    name?: string; description?: string;
+    credentials?: Record<string, unknown>; config?: Record<string, unknown>;
+  }) => api.patch(`/workspaces/${workspaceId}/sources/${sourceId}`, data),
+  delete: (workspaceId: string, sourceId: number) =>
+    api.delete(`/workspaces/${workspaceId}/sources/${sourceId}`),
+  test: (workspaceId: string, sourceId: number) =>
+    api.post(`/workspaces/${workspaceId}/sources/${sourceId}/test`),
+  testAdhoc: (data: {
+    source_type: string; credentials?: Record<string, unknown>; config?: Record<string, unknown>;
+  }) => api.post("/sources/test", data),
+  schema: (workspaceId: string, sourceId: number) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/schema`),
+  tableColumns: (workspaceId: string, sourceId: number, table: string) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/schema/${encodeURIComponent(table)}/columns`),
+  preview: (workspaceId: string, sourceId: number, table?: string, rows = 50) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/preview`, { params: { table, rows } }),
+  importAsDataset: (workspaceId: string, sourceId: number, data: {
+    dataset_name: string; workspace_id: number; limit?: number;
+  }) => api.post(`/workspaces/${workspaceId}/sources/${sourceId}/import`, data),
 };
 
 // Jobs

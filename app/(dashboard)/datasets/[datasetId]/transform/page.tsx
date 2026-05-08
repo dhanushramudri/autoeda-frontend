@@ -60,9 +60,9 @@ export default function TransformStudioPage() {
   const opLabel = (op: TransformOp): string => {
     switch (op.type) {
       case "drop_columns": return `Drop columns: ${op.columns.join(", ")}`;
-      case "fill_missing": return `Fill missing "${op.column}" → ${op.strategy}${op.value ? ` (${op.value})` : ""}`;
-      case "encode": return `Encode "${op.column}" → ${op.method}`;
-      case "scale": return `Scale "${op.column}" → ${op.method}`;
+      case "fill_missing": return `Fill missing "${op.column}" -> ${op.strategy}${op.value ? ` (${op.value})` : ""}`;
+      case "encode": return `Encode "${op.column}" -> ${op.method}`;
+      case "scale": return `Scale "${op.column}" -> ${op.method}`;
       case "drop_duplicates": return "Drop duplicate rows";
       case "drop_outliers": return `Drop outliers in "${op.column}" (${op.method})`;
     }
@@ -122,7 +122,7 @@ export default function TransformStudioPage() {
               {/* Drop duplicates */}
               <button
                 onClick={() => addOp({ type: "drop_duplicates" })}
-                className="w-full text-left px-4 py-3 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition text-sm font-medium text-gray-700 flex items-center gap-2"
+                className="w-full text-left px-4 py-3 bg-white rounded-xl border border-gray-200 hover:border-brand/30 transition text-sm font-medium text-gray-700 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4 text-gray-400" />
                 Drop Duplicate Rows
@@ -165,12 +165,12 @@ export default function TransformStudioPage() {
                   <button
                     onClick={() => applyMutation.mutate()}
                     disabled={applyMutation.isPending}
-                    className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] disabled:opacity-50 transition flex items-center justify-center gap-2"
                   >
                     {applyMutation.isPending ? (
                       <>
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Applying…
+                        Applying...
                       </>
                     ) : applied ? (
                       <>
@@ -249,7 +249,7 @@ function MultiColSelect({
       <button
         onClick={() => { if (selected.length) { onAdd(selected); setSelected([]); } }}
         disabled={!selected.length}
-        className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition flex items-center gap-1"
+        className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] disabled:opacity-50 transition flex items-center gap-1"
       >
         <Plus className="w-3 h-3" /> Add
       </button>
@@ -274,14 +274,14 @@ function FillMissingForm({
         <select
           value={col}
           onChange={(e) => setCol(e.target.value)}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
         >
           {cols.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <select
           value={strategy}
           onChange={(e) => setStrategy(e.target.value as typeof strategy)}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
         >
           {["mean", "median", "mode", "constant"].map((s) => (
             <option key={s} value={s}>{s}</option>
@@ -294,12 +294,12 @@ function FillMissingForm({
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder="Fill value"
-          className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
         />
       )}
       <button
         onClick={() => onAdd({ type: "fill_missing", column: col, strategy, value: value || undefined })}
-        className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-1"
+        className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1"
       >
         <Plus className="w-3 h-3" /> Add
       </button>
@@ -316,21 +316,21 @@ function EncodeForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp) 
       <select
         value={col}
         onChange={(e) => setCol(e.target.value)}
-        className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
       >
         {cols.map((c) => <option key={c} value={c}>{c}</option>)}
       </select>
       <select
         value={method}
         onChange={(e) => setMethod(e.target.value as typeof method)}
-        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
       >
         <option value="label">Label</option>
         <option value="onehot">One-Hot</option>
       </select>
       <button
         onClick={() => onAdd({ type: "encode", column: col, method })}
-        className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-1"
+        className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1"
       >
         <Plus className="w-3 h-3" /> Add
       </button>
@@ -347,21 +347,21 @@ function ScaleForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp) =
       <select
         value={col}
         onChange={(e) => setCol(e.target.value)}
-        className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
       >
         {cols.map((c) => <option key={c} value={c}>{c}</option>)}
       </select>
       <select
         value={method}
         onChange={(e) => setMethod(e.target.value as typeof method)}
-        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand"
       >
         <option value="standard">Standard</option>
         <option value="minmax">Min-Max</option>
       </select>
       <button
         onClick={() => onAdd({ type: "scale", column: col, method })}
-        className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-1"
+        className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1"
       >
         <Plus className="w-3 h-3" /> Add
       </button>

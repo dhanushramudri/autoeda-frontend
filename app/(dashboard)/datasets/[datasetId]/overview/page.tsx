@@ -21,7 +21,7 @@ import {
 import type { ColumnProfile, QualityScore, InsightCard } from "@/types";
 
 const TYPE_COLORS: Record<string, string> = {
-  numeric: "bg-blue-100 text-blue-700",
+  numeric: "bg-blue-100 text-brand",
   categorical: "bg-purple-100 text-purple-700",
   datetime: "bg-green-100 text-green-700",
   boolean: "bg-amber-100 text-amber-700",
@@ -45,7 +45,7 @@ function ColumnCard({ col, datasetId, onClick }: { col: ColumnProfile; datasetId
   return (
     <div
       onClick={onClick}
-      className="bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md cursor-pointer transition group"
+      className="bg-white border border-gray-200 rounded-xl p-4 hover:border-brand/30 hover:shadow-md cursor-pointer transition group"
     >
       <div className="flex items-start justify-between mb-2">
         <h4 className="text-xs font-semibold text-gray-900 truncate mr-2 flex-1">{col.name}</h4>
@@ -68,7 +68,7 @@ function ColumnCard({ col, datasetId, onClick }: { col: ColumnProfile; datasetId
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-1 text-xs text-gray-500 mt-2">
         <span>{col.unique_count.toLocaleString()} unique</span>
-        {col.mean != null && <span>μ={col.mean.toFixed(2)}</span>}
+        {col.mean != null && <span>Î¼={col.mean.toFixed(2)}</span>}
         {col.skewness != null && Math.abs(col.skewness) > 1 && (
           <span className="text-amber-600 col-span-2">Skew: {col.skewness.toFixed(2)}</span>
         )}
@@ -85,7 +85,7 @@ function ColumnCard({ col, datasetId, onClick }: { col: ColumnProfile; datasetId
       )}
 
       <div className="mt-2 flex items-center justify-end opacity-0 group-hover:opacity-100 transition">
-        <span className="text-xs text-blue-500 flex items-center gap-0.5">
+        <span className="text-xs text-brand flex items-center gap-0.5">
           Details <ChevronRight className="w-3 h-3" />
         </span>
       </div>
@@ -191,8 +191,8 @@ export default function DatasetOverviewPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <StatCard label="Rows" value={profile?.total_rows?.toLocaleString() ?? dataset.row_count?.toLocaleString() ?? "—"} color="blue" />
-          <StatCard label="Columns" value={profile?.total_columns ?? dataset.column_count ?? "—"} color="green" />
+          <StatCard label="Rows" value={profile?.total_rows?.toLocaleString() ?? dataset.row_count?.toLocaleString() ?? "--"} color="blue" />
+          <StatCard label="Columns" value={profile?.total_columns ?? dataset.column_count ?? "--"} color="green" />
           <StatCard label="Memory" value={`${memoryMb.toFixed(2)} MB`} />
           <StatCard
             label="Missing %"
@@ -235,7 +235,7 @@ export default function DatasetOverviewPage() {
 
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-blue-500" /> Recommendations
+              <Zap className="w-4 h-4 text-brand" /> Recommendations
             </h2>
             {quality?.suggestions?.length ? (
               <div className="space-y-1.5">
@@ -266,10 +266,10 @@ export default function DatasetOverviewPage() {
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Search columns…"
+                placeholder="Search columns..."
                 value={searchCol}
                 onChange={(e) => setSearchCol(e.target.value)}
-                className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-40 outline-none focus:ring-1 focus:ring-blue-500"
+                className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-40 outline-none focus:ring-1 focus:ring-brand"
               />
               <select
                 value={typeFilter}

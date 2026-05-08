@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { workspacesApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
@@ -9,7 +8,8 @@ import { useWorkspaceStore } from "@/store/workspaceStore";
 import { useAuthStore } from "@/store/authStore";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Plus, FolderOpen, Users, Database, Clock, ChevronRight, X } from "lucide-react";
+import { Plus, FolderOpen, Users, Database, Clock, ChevronRight, X, Plug, Warehouse } from "lucide-react";
+import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import type { Workspace } from "@/types";
 
@@ -56,7 +56,7 @@ function NewWorkspaceModal({ onClose }: { onClose: () => void }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Sales Analytics Q4"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </div>
           <div>
@@ -68,7 +68,7 @@ function NewWorkspaceModal({ onClose }: { onClose: () => void }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What is this workspace for?"
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand resize-none"
             />
           </div>
         </div>
@@ -83,9 +83,9 @@ function NewWorkspaceModal({ onClose }: { onClose: () => void }) {
           <button
             onClick={() => mutation.mutate()}
             disabled={!name.trim() || mutation.isPending}
-            className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="flex-1 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            {mutation.isPending ? "Creating…" : "Create workspace"}
+            {mutation.isPending ? "Creating..." : "Create workspace"}
           </button>
         </div>
       </div>
@@ -94,46 +94,76 @@ function NewWorkspaceModal({ onClose }: { onClose: () => void }) {
 }
 
 function WorkspaceCard({ workspace }: { workspace: Workspace }) {
-  const router = useRouter();
   const { setCurrentWorkspace } = useWorkspaceStore();
+  const wid = workspace.id;
 
-  const handleOpen = () => {
-    setCurrentWorkspace(workspace.id);
-    router.push(`/workspaces/${workspace.id}/datasets`);
-  };
+  const handleClick = () => setCurrentWorkspace(workspace.id);
 
   return (
-    <div
-      onClick={handleOpen}
-      className="bg-white rounded-xl border border-gray-200 p-5 cursor-pointer hover:border-blue-300 hover:shadow-md transition group"
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-          <FolderOpen className="w-5 h-5 text-blue-600" />
+    <div className="bg-white rounded-xl border border-gray-200 hover:border-brand/30 hover:shadow-md transition group flex flex-col overflow-hidden">
+      {/* Main clickable area */}
+      <Link
+        href={`/workspaces/${wid}/datasets`}
+        onClick={handleClick}
+        className="p-5 flex-1 block"
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+            <FolderOpen className="w-5 h-5 text-brand" />
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-brand transition mt-1" />
         </div>
-        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-500 transition mt-1" />
-      </div>
 
-      <h3 className="font-semibold text-gray-900 mb-0.5 truncate">{workspace.name}</h3>
-      {workspace.description && (
-        <p className="text-xs text-gray-400 mb-3 line-clamp-2">{workspace.description}</p>
-      )}
+        <h3 className="font-semibold text-gray-900 mb-0.5 truncate">{workspace.name}</h3>
+        {workspace.description && (
+          <p className="text-xs text-gray-400 mb-3 line-clamp-2">{workspace.description}</p>
+        )}
 
-      <div className="flex items-center gap-4 text-xs text-gray-400 mt-auto">
-        <span className="flex items-center gap-1">
-          <Database className="w-3 h-3" />
-          {workspace.dataset_count ?? 0} datasets
-        </span>
-        <span className="flex items-center gap-1">
-          <Users className="w-3 h-3" />
-          {workspace.member_count ?? 0} members
-        </span>
-        <span className="flex items-center gap-1 ml-auto">
-          <Clock className="w-3 h-3" />
-          {workspace.updated_at
-            ? formatDistanceToNow(new Date(workspace.updated_at), { addSuffix: true })
-            : "—"}
-        </span>
+        <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap mt-2">
+          <span className="flex items-center gap-1">
+            <Database className="w-3 h-3" />
+            {workspace.dataset_count ?? 0} datasets
+          </span>
+          <span className="flex items-center gap-1">
+            <Plug className="w-3 h-3" />
+            {(workspace as unknown as { source_count?: number }).source_count ?? 0} sources
+          </span>
+          <span className="flex items-center gap-1">
+            <Users className="w-3 h-3" />
+            {workspace.member_count ?? 0} members
+          </span>
+          <span className="flex items-center gap-1 ml-auto">
+            <Clock className="w-3 h-3" />
+            {workspace.updated_at
+              ? formatDistanceToNow(new Date(workspace.updated_at), { addSuffix: true })
+              : " -- "}
+          </span>
+        </div>
+      </Link>
+
+      {/* Quick-access bar */}
+      <div className="border-t border-gray-100 flex divide-x divide-gray-100">
+        <Link
+          href={`/workspaces/${wid}/sources`}
+          onClick={handleClick}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-brand hover:bg-brand/10 transition"
+        >
+          <Plug className="w-3 h-3" /> Sources
+        </Link>
+        <Link
+          href={`/workspaces/${wid}/warehouse`}
+          onClick={handleClick}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition"
+        >
+          <Warehouse className="w-3 h-3" /> Warehouse
+        </Link>
+        <Link
+          href={`/workspaces/${wid}/join-builder`}
+          onClick={handleClick}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition"
+        >
+          <Database className="w-3 h-3" /> Join Builder
+        </Link>
       </div>
     </div>
   );
@@ -160,7 +190,7 @@ export default function WorkspacesPage() {
         {user?.is_admin && (
           <button
             onClick={() => setShowNew(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] transition shadow-sm"
           >
             <Plus className="w-4 h-4" />
             New Workspace
@@ -179,7 +209,7 @@ export default function WorkspacesPage() {
             user?.is_admin ? (
               <button
                 onClick={() => setShowNew(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+                className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] transition"
               >
                 Create workspace
               </button>

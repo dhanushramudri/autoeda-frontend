@@ -82,7 +82,7 @@ export default function FeatureImportancePage() {
             <select
               value={activeTarget}
               onChange={(e) => setTarget(e.target.value)}
-              className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand"
             >
               {allCols.map((c: string) => (
                 <option key={c} value={c}>{c}</option>
@@ -104,7 +104,7 @@ export default function FeatureImportancePage() {
             <div className="bg-white rounded-xl border border-gray-200 p-3">
               <div className="flex items-center gap-3 px-3 py-2 mb-2">
                 <span className="text-sm font-semibold text-gray-800">Target: </span>
-                <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-mono">
+                <span className="px-2 py-0.5 bg-blue-50 text-brand rounded text-xs font-mono">
                   {data.target}
                 </span>
                 <span className="text-xs text-gray-400 ml-2">{data.problem_type}</span>

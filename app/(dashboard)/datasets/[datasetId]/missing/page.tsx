@@ -34,7 +34,7 @@ export default function MissingPage() {
       column: col.name,
       missing_count: col.count,
       missing_pct: col.pct,
-      dtype: col.dtype ?? "—",
+      dtype: col.dtype ?? " -- ",
     }))
     .sort((a: any, b: any) => b.missing_pct - a.missing_pct);
 

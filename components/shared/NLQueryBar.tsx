@@ -75,7 +75,7 @@ export function NLQueryBar({ datasetId }: NLQueryBarProps) {
   }, [open]);
 
   const severityColor: Record<string, string> = {
-    navigate: "text-blue-600",
+    navigate: "text-brand",
     transform: "text-amber-600",
     filter: "text-purple-600",
     unknown: "text-gray-500",
@@ -88,9 +88,9 @@ export function NLQueryBar({ datasetId }: NLQueryBarProps) {
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-500 rounded-lg text-sm transition w-56 text-left"
       >
-        <Sparkles className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-        <span className="flex-1 text-gray-400">Ask anything…</span>
-        <kbd className="text-xs bg-white border border-gray-200 rounded px-1 py-0.5 text-gray-400 font-mono">⌘K</kbd>
+        <Sparkles className="w-3.5 h-3.5 text-brand flex-shrink-0" />
+        <span className="flex-1 text-gray-400">Ask anything...</span>
+        <kbd className="text-xs bg-white border border-gray-200 rounded px-1 py-0.5 text-gray-400 font-mono">Cmd+K</kbd>
       </button>
 
       {/* Modal */}
@@ -102,19 +102,19 @@ export function NLQueryBar({ datasetId }: NLQueryBarProps) {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden">
             {/* Input */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
-              <Sparkles className="w-5 h-5 text-blue-500 flex-shrink-0" />
+              <Sparkles className="w-5 h-5 text-brand flex-shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
                 value={query}
                 onChange={(e) => { setQuery(e.target.value); setResult(null); }}
                 onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
-                placeholder={resolvedId ? "Ask anything about your data…" : "Navigate to a dataset first"}
+                placeholder={resolvedId ? "Ask anything about your data..." : "Navigate to a dataset first"}
                 className="flex-1 text-sm outline-none text-gray-900 placeholder-gray-400"
                 disabled={!resolvedId}
               />
               {mutation.isPending ? (
-                <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+                <Loader2 className="w-4 h-4 text-brand animate-spin" />
               ) : query ? (
                 <button onClick={() => { setQuery(""); setResult(null); }}>
                   <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
@@ -129,7 +129,7 @@ export function NLQueryBar({ datasetId }: NLQueryBarProps) {
                   {result.message}
                 </p>
                 {result.action === "navigate" && (
-                  <p className="text-xs text-gray-400 mt-0.5">Redirecting…</p>
+                  <p className="text-xs text-gray-400 mt-0.5">Redirecting...</p>
                 )}
                 {(result.action === "transform" || result.action === "filter") && (
                   <div className="mt-2 flex gap-2">
@@ -140,7 +140,7 @@ export function NLQueryBar({ datasetId }: NLQueryBarProps) {
                         setQuery("");
                         setResult(null);
                       }}
-                      className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 flex items-center gap-1"
+                      className="text-xs bg-brand text-white px-3 py-1.5 rounded-lg hover:bg-[#2a0d8a] flex items-center gap-1"
                     >
                       Open Transform <ChevronRight className="w-3 h-3" />
                     </button>
@@ -153,7 +153,7 @@ export function NLQueryBar({ datasetId }: NLQueryBarProps) {
             {!result && (
               <div className="py-2">
                 <p className="px-4 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                  Try asking…
+                  Try asking...
                 </p>
                 {SUGGESTIONS.map((s) => (
                   <button
@@ -170,11 +170,11 @@ export function NLQueryBar({ datasetId }: NLQueryBarProps) {
 
             {/* Footer */}
             <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-              <span className="text-xs text-gray-400">Press Enter to submit · Esc to close</span>
+              <span className="text-xs text-gray-400">Press Enter to submit . Esc to close</span>
               <button
                 onClick={handleSubmit}
                 disabled={!query.trim() || mutation.isPending || !resolvedId}
-                className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg disabled:opacity-50 hover:bg-blue-700 transition"
+                className="text-xs bg-brand text-white px-3 py-1.5 rounded-lg disabled:opacity-50 hover:bg-[#2a0d8a] transition"
               >
                 Ask
               </button>

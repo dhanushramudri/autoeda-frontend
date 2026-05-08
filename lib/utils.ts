@@ -1,4 +1,4 @@
-import { type ClassValue, clsx } from "clsx";
+﻿import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -67,7 +67,7 @@ export function getSemanticTypeLabel(type: string): string {
 
 export function getSeverityColor(severity: string): string {
   const colors: Record<string, string> = {
-    info: "text-blue-600 bg-blue-50 border-blue-200",
+    info: "text-brand bg-blue-50 border-blue-200",
     warning: "text-amber-600 bg-amber-50 border-amber-200",
     danger: "text-red-600 bg-red-50 border-red-200",
   };
@@ -97,5 +97,5 @@ export function getQualityScoreColor(score: number): string {
 }
 
 export function truncate(str: string, maxLen: number): string {
-  return str.length > maxLen ? str.slice(0, maxLen) + "…" : str;
+  return str.length > maxLen ? str.slice(0, maxLen) + "..." : str;
 }

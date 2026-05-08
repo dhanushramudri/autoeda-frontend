@@ -75,28 +75,28 @@ export default function PivotPage() {
           <div className="flex flex-wrap gap-4 items-end">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Row</label>
-              <select value={rowCol} onChange={(e) => { setRowCol(e.target.value); setReady(false); }} className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Select column…</option>
+              <select value={rowCol} onChange={(e) => { setRowCol(e.target.value); setReady(false); }} className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand">
+                <option value="">Select column...</option>
                 {columns.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Column</label>
-              <select value={colCol} onChange={(e) => { setColCol(e.target.value); setReady(false); }} className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Select column…</option>
+              <select value={colCol} onChange={(e) => { setColCol(e.target.value); setReady(false); }} className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand">
+                <option value="">Select column...</option>
                 {columns.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Value</label>
-              <select value={valueCol} onChange={(e) => { setValueCol(e.target.value); setReady(false); }} className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Select column…</option>
+              <select value={valueCol} onChange={(e) => { setValueCol(e.target.value); setReady(false); }} className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand">
+                <option value="">Select column...</option>
                 {numericCols.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Aggregation</label>
-              <select value={aggFunc} onChange={(e) => { setAggFunc(e.target.value); setReady(false); }} className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500">
+              <select value={aggFunc} onChange={(e) => { setAggFunc(e.target.value); setReady(false); }} className="text-sm border border-gray-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-brand">
                 {AGG_FUNCS.map((f) => <option key={f} value={f}>{f}</option>)}
               </select>
             </div>
@@ -109,7 +109,7 @@ export default function PivotPage() {
             <button
               onClick={() => { setReady(true); setTimeout(() => refetch(), 50); }}
               disabled={!rowCol || !colCol || !valueCol}
-              className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-blue-700 transition"
+              className="flex items-center gap-1.5 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium disabled:opacity-50 hover:bg-[#2a0d8a] transition"
             >
               <RefreshCw className="w-3.5 h-3.5" /> Generate
             </button>
@@ -160,7 +160,7 @@ export default function PivotPage() {
 
         {!pivot && !pivotLoading && (
           <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400 text-sm">
-            Select Row, Column, Value, and Aggregation — then click Generate.
+            Select Row, Column, Value, and Aggregation -- then click Generate.
           </div>
         )}
       </div>

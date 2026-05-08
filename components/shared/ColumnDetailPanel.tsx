@@ -67,7 +67,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
     : [];
 
   const topData = (data?.top_values ?? []).map((v) => ({
-    value: String(v.value).length > 14 ? String(v.value).slice(0, 14) + "…" : String(v.value),
+    value: String(v.value).length > 14 ? String(v.value).slice(0, 14) + "..." : String(v.value),
     count: v.count,
     pct: v.pct,
   }));
@@ -101,7 +101,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
         <div className="flex-1 overflow-y-auto">
           {isLoading && (
             <div className="flex items-center justify-center h-40">
-              <Loader2 className="w-6 h-6 text-blue-500 animate-spin" />
+              <Loader2 className="w-6 h-6 text-brand animate-spin" />
             </div>
           )}
 
@@ -125,7 +125,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
                 ].map((s, i) => (
                   <div key={i} className="bg-gray-50 rounded-lg p-2.5">
                     <p className="text-xs text-gray-400 mb-0.5">{s.label}</p>
-                    <p className={`text-sm font-semibold ${s.color ?? "text-gray-900"}`}>{s.value ?? "—"}</p>
+                    <p className={`text-sm font-semibold ${s.color ?? "text-gray-900"}`}>{s.value ?? " -- "}</p>
                   </div>
                 ))}
               </div>
@@ -190,8 +190,8 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
               {/* Suggested dtype */}
               {data.suggested_dtype && (
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
-                  <p className="text-xs font-medium text-blue-700">Suggested dtype</p>
-                  <p className="text-xs text-blue-600 mt-0.5">
+                  <p className="text-xs font-medium text-brand">Suggested dtype</p>
+                  <p className="text-xs text-brand mt-0.5">
                     This column could be cast to <strong>{data.suggested_dtype}</strong>
                   </p>
                 </div>
@@ -211,8 +211,8 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
                         onClick={() => toggleTag(tag)}
                         className={`text-xs px-2.5 py-1 rounded-full border transition ${
                           active
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"
+                            ? "bg-brand text-white border-brand"
+                            : "bg-white text-gray-600 border-gray-300 hover:border-brand/60"
                         }`}
                       >
                         {tag}
@@ -238,7 +238,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
                 <button
                   key={action.op}
                   onClick={() => { onQuickAction(action.op, columnName); onClose(); }}
-                  className="text-xs py-2 border border-gray-200 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition"
+                  className="text-xs py-2 border border-gray-200 rounded-lg text-gray-600 hover:border-brand/60 hover:text-brand transition"
                 >
                   {action.label}
                 </button>

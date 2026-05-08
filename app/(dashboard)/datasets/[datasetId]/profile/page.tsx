@@ -15,7 +15,7 @@ import { Download, Tag, X } from "lucide-react";
 import type { ColumnProfile, ColumnMeta } from "@/types";
 
 const TYPE_COLOR: Record<string, string> = {
-  numeric: "bg-blue-100 text-blue-700",
+  numeric: "bg-blue-100 text-brand",
   categorical: "bg-purple-100 text-purple-700",
   datetime: "bg-green-100 text-green-700",
   boolean: "bg-amber-100 text-amber-700",
@@ -27,7 +27,7 @@ const TYPE_COLOR: Record<string, string> = {
 const QUICK_TAGS = ["target", "feature", "id", "sensitive", "drop"];
 const TAG_COLORS: Record<string, string> = {
   target: "bg-emerald-100 text-emerald-700",
-  feature: "bg-blue-100 text-blue-700",
+  feature: "bg-blue-100 text-brand",
   id: "bg-gray-100 text-gray-600",
   sensitive: "bg-red-100 text-red-700",
   drop: "bg-amber-100 text-amber-700",
@@ -35,7 +35,7 @@ const TAG_COLORS: Record<string, string> = {
 
 function renderTopValues(v: unknown) {
   if (!v || !Array.isArray(v) || v.length === 0)
-    return <span className="text-gray-300">—</span>;
+    return <span className="text-gray-300">--</span>;
   return (
     <div className="flex flex-wrap gap-1">
       {(v as Array<Record<string, unknown>>).slice(0, 3).map((item, i) => {
@@ -93,7 +93,7 @@ export default function ProfilePage() {
     const headers = ["name", "dtype", "semantic_type", "missing_pct", "unique_count", "mean", "std", "min", "max"];
     const rows = data.columns.map((c: ColumnProfile) =>
       headers.map((h) => {
-        const v = (c as Record<string, unknown>)[h];
+        const v = (c as unknown as Record<string, unknown>)[h];
         return v != null ? String(v) : "";
       }).join(",")
     );
@@ -160,10 +160,10 @@ export default function ProfilePage() {
                   <tr key={col.name} className="border-b border-gray-50 hover:bg-gray-50">
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1.5">
-                        {isSensitive && <span title="Sensitive">🔒</span>}
+                        {isSensitive && <span title="Sensitive">ðŸ"'</span>}
                         <button
                           onClick={() => setSelectedCol(col.name)}
-                          className="font-mono text-xs text-blue-600 hover:underline text-left"
+                          className="font-mono text-xs text-brand hover:underline text-left"
                         >
                           {col.name}
                         </button>
@@ -180,10 +180,10 @@ export default function ProfilePage() {
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-xs text-gray-600">{col.unique_count.toLocaleString()}</td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{col.mean != null ? col.mean.toFixed(3) : "—"}</td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{col.std != null ? col.std.toFixed(3) : "—"}</td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{col.min != null ? String(col.min) : "—"}</td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{col.max != null ? String(col.max) : "—"}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{col.mean != null ? col.mean.toFixed(3) : "-"}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{col.std != null ? col.std.toFixed(3) : "-"}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{col.min != null ? String(col.min) : "-"}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-gray-600">{col.max != null ? String(col.max) : "-"}</td>
                     <td className="px-4 py-2.5">{renderTopValues(col.top_values)}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex flex-wrap gap-1 items-center">
@@ -200,7 +200,7 @@ export default function ProfilePage() {
                         ))}
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingTagCol(editingTagCol === col.name ? null : col.name); }}
-                          className="text-[10px] text-gray-400 hover:text-blue-500 flex items-center gap-0.5"
+                          className="text-[10px] text-gray-400 hover:text-brand flex items-center gap-0.5"
                         >
                           <Tag className="w-2.5 h-2.5" />
                         </button>
@@ -210,7 +210,7 @@ export default function ProfilePage() {
                               <button
                                 key={t}
                                 onClick={() => { toggleTag(col.name, t); setEditingTagCol(null); }}
-                                className={cn("text-[10px] px-2 py-1 rounded-full border transition", tags.includes(t) ? "bg-blue-600 text-white border-blue-600" : "border-gray-200 text-gray-600 hover:border-blue-400")}
+                                className={cn("text-[10px] px-2 py-1 rounded-full border transition", tags.includes(t) ? "bg-brand text-white border-brand" : "border-gray-200 text-gray-600 hover:border-brand/60")}
                               >
                                 {t}
                               </button>

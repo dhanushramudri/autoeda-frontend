@@ -10,6 +10,7 @@ interface SubNavProps {
 
 const NAV_ITEMS = [
   { label: "Overview", href: "", id: "overview" },
+  { label: "Analysis", href: "/analysis", id: "analysis" },
   { label: "Profile", href: "/profile", id: "profile" },
   { label: "Missing", href: "/missing", id: "missing" },
   { label: "Distributions", href: "/distributions", id: "distributions" },
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { label: "Charts", href: "/charts", id: "charts" },
   { label: "Rules", href: "/rules", id: "rules" },
   { label: "History", href: "/history", id: "history" },
+  { label: "SQL", href: "/sql", id: "sql" },
 ];
 
 export function SubNav({ datasetId }: SubNavProps) {
@@ -46,7 +48,7 @@ export function SubNav({ datasetId }: SubNavProps) {
             className={cn(
               "flex-shrink-0 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap",
               isActive(item.id)
-                ? "border-b-2 border-blue-600 text-blue-600"
+                ? "border-b-2 border-brand text-brand"
                 : "border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
             )}
           >

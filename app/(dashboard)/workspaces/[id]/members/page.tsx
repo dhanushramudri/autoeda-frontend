@@ -53,7 +53,7 @@ export default function MembersPage() {
 
   const ROLE_BADGE: Record<string, string> = {
     admin: "bg-red-100 text-red-700",
-    analyst: "bg-blue-100 text-blue-700",
+    analyst: "bg-blue-100 text-brand",
     viewer: "bg-gray-100 text-gray-600",
   };
 
@@ -94,12 +94,12 @@ export default function MembersPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="colleague@jmangroup.com"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as typeof role)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             >
               {ROLES.map((r) => (
                 <option key={r} value={r} className="capitalize">{r}</option>
@@ -108,9 +108,9 @@ export default function MembersPage() {
             <button
               onClick={() => inviteMutation.mutate()}
               disabled={!email.trim() || inviteMutation.isPending}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition"
+              className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] disabled:opacity-50 transition"
             >
-              {inviteMutation.isPending ? "Adding…" : "Add"}
+              {inviteMutation.isPending ? "Adding..." : "Add"}
             </button>
           </div>
         </div>

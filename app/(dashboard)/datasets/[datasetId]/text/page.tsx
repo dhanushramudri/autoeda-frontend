@@ -97,7 +97,7 @@ export default function TextAnalysisPage() {
                     onClick={() => setCol(col)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs transition truncate ${
                       col === activeCol
-                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        ? "bg-blue-50 text-brand font-semibold"
                         : "text-gray-600 hover:bg-gray-50"
                     }`}
                     title={col}
@@ -170,7 +170,7 @@ export default function TextAnalysisPage() {
                         {(data.bigrams as Array<{ ngram: string; count: number }>).slice(0, 20).map((item) => (
                           <span
                             key={item.ngram}
-                            className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
+                            className="px-2.5 py-1 bg-blue-50 text-brand rounded-full text-xs font-medium"
                           >
                             {item.ngram} <span className="opacity-60">({item.count})</span>
                           </span>
@@ -187,7 +187,7 @@ export default function TextAnalysisPage() {
                         { label: "Total Texts", value: data.total_texts ?? 0 },
                         { label: "Avg Length (words)", value: (data.avg_length ?? 0).toFixed(1) },
                         { label: "Median Length (words)", value: (data.median_length ?? 0).toFixed(1) },
-                        { label: "Language", value: data.language ?? "—" },
+                        { label: "Language", value: data.language ?? "--" },
                         { label: "Unique Words", value: wordData.length },
                       ].map(({ label, value }) => (
                         <div key={label} className="bg-gray-50 rounded-lg p-3">

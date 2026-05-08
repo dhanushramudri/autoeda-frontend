@@ -116,7 +116,7 @@ export function DataTable<T extends Record<string, unknown>>({
                       col.className
                     )}
                   >
-                    {col.render ? col.render(val, row) : String(val ?? "—")}
+                    {col.render ? col.render(val, row) : String(val ?? " -- ")}
                   </td>
                 );
               })}

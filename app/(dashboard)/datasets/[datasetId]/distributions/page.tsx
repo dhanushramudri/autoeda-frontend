@@ -84,7 +84,7 @@ export default function DistributionsPage() {
                     onClick={() => setCol(col)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs transition truncate ${
                       col === activeCol
-                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        ? "bg-blue-50 text-brand font-semibold"
                         : "text-gray-600 hover:bg-gray-50"
                     }`}
                     title={col}

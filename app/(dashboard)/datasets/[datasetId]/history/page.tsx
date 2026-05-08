@@ -60,7 +60,7 @@ export default function HistoryPage() {
           <button
             onClick={() => recordMutation.mutate()}
             disabled={recordMutation.isPending}
-            className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition"
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] disabled:opacity-50 transition"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${recordMutation.isPending ? "animate-spin" : ""}`} />
             Record EDA Run
@@ -104,7 +104,7 @@ export default function HistoryPage() {
                     onChange={(e) => setCompareA(e.target.value ? Number(e.target.value) : null)}
                     className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 outline-none"
                   >
-                    <option value="">Select run…</option>
+                    <option value="">Select run...</option>
                     {runs.map((r) => (
                       <option key={r.id} value={r.id}>{format(new Date(r.run_at), "MMM d, yyyy HH:mm")}</option>
                     ))}
@@ -117,7 +117,7 @@ export default function HistoryPage() {
                     onChange={(e) => setCompareB(e.target.value ? Number(e.target.value) : null)}
                     className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 outline-none"
                   >
-                    <option value="">Select run…</option>
+                    <option value="">Select run...</option>
                     {runs.map((r) => (
                       <option key={r.id} value={r.id}>{format(new Date(r.run_at), "MMM d, yyyy HH:mm")}</option>
                     ))}
@@ -139,7 +139,7 @@ export default function HistoryPage() {
                         <p className="text-xs text-gray-400 mb-1">{item.label}</p>
                         <div className="flex items-baseline gap-2">
                           <span className="text-lg font-bold text-gray-900">
-                            {item.b != null ? (item.pct ? `${item.b.toFixed(1)}%` : item.b.toLocaleString()) : "—"}
+                            {item.b != null ? (item.pct ? `${item.b.toFixed(1)}%` : item.b.toLocaleString()) : "--""}
                           </span>
                           {d != null && d.delta !== 0 && (
                             <span className={`text-xs flex items-center gap-0.5 ${d.better ? "text-emerald-600" : "text-red-500"}`}>
@@ -149,7 +149,7 @@ export default function HistoryPage() {
                           )}
                         </div>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          vs {item.a != null ? (item.pct ? `${item.a.toFixed(1)}%` : item.a.toLocaleString()) : "—"}
+                          vs {item.a != null ? (item.pct ? `${item.a.toFixed(1)}%` : item.a.toLocaleString()) : "--""}
                         </p>
                       </div>
                     );
@@ -183,12 +183,12 @@ export default function HistoryPage() {
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         <span className={`text-xs font-bold ${r.quality_score == null ? "text-gray-400" : r.quality_score >= 80 ? "text-emerald-600" : r.quality_score >= 60 ? "text-amber-600" : "text-red-600"}`}>
-                          {r.quality_score ?? "—"}
+                          {r.quality_score ?? "--""}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-right text-xs text-gray-600">{r.row_count?.toLocaleString() ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-right text-xs text-gray-600">{r.col_count ?? "—"}</td>
-                      <td className="px-4 py-2.5 text-right text-xs text-gray-600">{r.missing_pct != null ? `${r.missing_pct.toFixed(1)}%` : "—"}</td>
+                      <td className="px-4 py-2.5 text-right text-xs text-gray-600">{r.row_count?.toLocaleString() ?? "--""}</td>
+                      <td className="px-4 py-2.5 text-right text-xs text-gray-600">{r.col_count ?? "--""}</td>
+                      <td className="px-4 py-2.5 text-right text-xs text-gray-600">{r.missing_pct != null ? `${r.missing_pct.toFixed(1)}%` : "--""}</td>
                       <td className="px-4 py-2.5 text-xs text-gray-400">{r.triggered_by}</td>
                     </tr>
                   ))}
