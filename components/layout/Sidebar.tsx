@@ -9,7 +9,7 @@ import {
   Sliders, ChevronDown, LogOut, Settings, Users,
   FileSearch, TrendingUp, AlertTriangle, Layers,
   Type, Network, Wand2, Plug, Warehouse, ShieldCheck,
-  Code2, PieChart,
+  Code2, PieChart, ChevronLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dataset } from "@/types";
@@ -87,13 +87,15 @@ const WORKSPACE_LINKS = [
 
 // -- Small helpers --------------------------------------------------------------
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+function SectionLabel({ children, collapsed }: { children: React.ReactNode; collapsed: boolean }) {
   return (
-    <div className="px-4 pt-4 pb-1">
-      <span className="text-[9px] font-bold tracking-widest uppercase text-sidebar-foreground/30 select-none">
-        {children}
-      </span>
-    </div>
+    !collapsed && (
+      <div className="px-4 pt-4 pb-1">
+        <span className="text-[9px] font-bold tracking-widest uppercase text-sidebar-foreground/30 select-none">
+          {children}
+        </span>
+      </div>
+    )
   );
 }
 
@@ -118,6 +120,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const [expandedDataset, setExpandedDataset] = useState<string | null>(activeDatasetId ?? null);
   const [datasetsExpanded, setDatasetsExpanded] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleLogout = () => {
     clearAuth();
@@ -125,13 +128,28 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
   };
 
   return (
-    <aside className="w-64 min-h-screen bg-sidebar flex flex-col border-r border-sidebar-border shadow-sm">
+    <aside className={cn(
+      "min-h-screen bg-sidebar flex flex-col border-r border-sidebar-border shadow-sm transition-all duration-300 ease-in-out",
+      sidebarOpen ? "w-64" : "w-20"
+    )}>
 
-      {/* -- Logo -- */}
-      <div className="px-4 py-3 border-b border-sidebar-border flex items-center">
-        <Link href="/workspaces">
-          <img src="/logo.png" alt="AutoEDA" className="h-8 w-auto object-contain" />
-        </Link>
+      {/* -- Logo & Toggle -- */}
+      <div className="px-4 py-3 border-b border-sidebar-border flex items-center justify-between">
+        {sidebarOpen && (
+          <Link href="/workspaces">
+            <img src="/logo.png" alt="AutoEDA" className="h-8 w-auto object-contain" />
+          </Link>
+        )}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          <ChevronLeft className={cn(
+            "w-4 h-4 transition-transform",
+            sidebarOpen ? "rotate-0" : "rotate-180"
+          )} />
+        </button>
       </div>
 
       {/* -- Nav -- */}
@@ -143,14 +161,15 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
             <Link
               href="/workspaces"
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors justify-center sm:justify-start",
                 pathname === "/workspaces"
                   ? "bg-brand/10 text-brand font-semibold"
                   : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
               )}
+              title="All Workspaces"
             >
               <LayoutDashboard className="w-3.5 h-3.5 flex-shrink-0" />
-              All Workspaces
+              {sidebarOpen && <span>All Workspaces</span>}
             </Link>
           </div>
         )}
@@ -158,40 +177,50 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
         {workspaceId && (
           <>
             {/* -- 2. Datasets ---------------------------------------------- */}
-            <SectionLabel>Datasets</SectionLabel>
+            <SectionLabel collapsed={!sidebarOpen}>Datasets</SectionLabel>
 
 {/* -- 2. Datasets ---------------------------------------------- */}
 
 <div className="px-3 mt-2" data-tour="datasets-section">
   <button
     onClick={() => setDatasetsExpanded((p) => !p)}
-    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition"
+    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition justify-center sm:justify-start"
+    title="Datasets"
   >
     <Database className="w-3.5 h-3.5 text-sidebar-foreground/60" />
 
-    <span className="text-[11px] font-bold uppercase tracking-wider text-sidebar-foreground/70">
-      Datasets
-    </span>
+    {sidebarOpen && (
+      <>
+        <span className="text-[11px] font-bold uppercase tracking-wider text-sidebar-foreground/70">
+          Datasets
+        </span>
 
-    {datasets.length > 0 && (
-      <span className="px-1.5 py-0.5 rounded-full bg-brand/10 text-brand text-[10px] font-semibold">
-        {datasets.length}
-      </span>
+        {datasets.length > 0 && (
+          <span className="px-1.5 py-0.5 rounded-full bg-brand/10 text-brand text-[10px] font-semibold">
+            {datasets.length}
+          </span>
+        )}
+
+        <div className="flex-1" />
+      </>
     )}
 
-    <div className="flex-1" />
-
-    <ChevronDown
-      className={cn(
-        "w-3.5 h-3.5 text-sidebar-foreground/40 transition-transform",
-        datasetsExpanded ? "rotate-0" : "-rotate-90"
-      )}
-    />
+    {sidebarOpen && (
+      <ChevronDown
+        className={cn(
+          "w-3.5 h-3.5 text-sidebar-foreground/40 transition-transform",
+          datasetsExpanded ? "rotate-0" : "-rotate-90"
+        )}
+      />
+    )}
   </button>
 </div>
 
 {datasetsExpanded && (
-    <div className="px-4 mt-1 space-y-0.5">
+    <div className={cn(
+      "mt-1 space-y-0.5 transition-all duration-300",
+      sidebarOpen ? "px-4" : "hidden"
+    )}>
       {datasets.length === 0 && (
       <p className="px-3 py-2 text-xs text-sidebar-foreground/30 italic">
         No datasets yet
@@ -213,6 +242,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
                 ? "bg-brand text-white shadow-sm"
                 : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
             )}
+            title={ds.name}
           >
             <Database className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
 
@@ -275,8 +305,8 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
 )}
 
             {/* -- 3. Workspace tools --------------------------------------- */}
-            <div className="mt-3 mx-3 border-t border-sidebar-border/50" />
-            <SectionLabel>Workspace</SectionLabel>
+            {sidebarOpen && <div className="mt-3 mx-3 border-t border-sidebar-border/50" />}
+            <SectionLabel collapsed={!sidebarOpen}>Workspace</SectionLabel>
 
             <div className="px-3 space-y-0.5">
               {WORKSPACE_LINKS.map((link) => {
@@ -295,14 +325,15 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
                     href={href}
                     data-tour={tourAttr}
                     className={cn(
-                      "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+                      "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors justify-center sm:justify-start",
                       isActive
                         ? "bg-brand/10 text-brand font-semibold"
                         : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                     )}
+                    title={sidebarOpen ? undefined : link.label}
                   >
                     <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                    {link.label}
+                    {sidebarOpen && <span>{link.label}</span>}
                   </Link>
                 );
               })}
@@ -316,21 +347,23 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
         <Link
           href="/settings"
           className={cn(
-            "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+            "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors justify-center sm:justify-start",
             pathname === "/settings"
               ? "bg-brand/10 text-brand font-semibold"
               : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
           )}
+          title="Settings"
         >
           <Settings className="w-3.5 h-3.5 flex-shrink-0" />
-          Settings
+          {sidebarOpen && <span>Settings</span>}
         </Link>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10 justify-center sm:justify-start"
+          title="Sign out"
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-          Sign out
+          {sidebarOpen && <span>Sign out</span>}
         </button>
       </div>
     </aside>
