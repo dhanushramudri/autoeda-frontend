@@ -162,7 +162,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
 
 {/* -- 2. Datasets ---------------------------------------------- */}
 
-<div className="px-3 mt-2">
+<div className="px-3 mt-2" data-tour="datasets-section">
   <button
     onClick={() => setDatasetsExpanded((p) => !p)}
     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition"
@@ -283,10 +283,17 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
                 const href     = `/workspaces/${workspaceId}${link.href}`;
                 const isActive = pathname.includes(link.href);
                 const Icon     = link.icon;
+                const tourAttr =
+                  link.href === "/warehouse"
+                    ? "warehouse-link"
+                    : link.href === "/join-builder"
+                    ? "join-builder-link"
+                    : undefined;
                 return (
                   <Link
                     key={link.href}
                     href={href}
+                    data-tour={tourAttr}
                     className={cn(
                       "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
                       isActive

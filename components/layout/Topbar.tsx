@@ -8,15 +8,18 @@ import { queryKeys } from "@/lib/queryKeys";
 import type { Workspace } from "@/types";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Bell, Check } from "lucide-react";
+import { ChevronDown, Check, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NLQueryBar } from "@/components/shared/NLQueryBar";
+import { useTour } from "@/hooks/useTourContext";
+import { tourSteps } from "@/lib/tourSteps";
 
 export function Topbar() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const { currentWorkspaceId, setCurrentWorkspace } = useWorkspaceStore();
+  const { startTour } = useTour();
 
   const [wsOpen, setWsOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -53,7 +56,7 @@ export function Topbar() {
   return (
     <header className="h-14 border-b border-gray-200 bg-white flex items-center px-6 gap-4 flex-shrink-0">
       {/* Workspace switcher */}
-      <div className="relative" ref={wsRef}>
+      <div className="relative" ref={wsRef} data-tour="workspace-selector">
         <button
           onClick={() => setWsOpen((v) => !v)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition text-sm font-medium text-gray-700"
@@ -97,13 +100,19 @@ export function Topbar() {
         <NLQueryBar />
       </div>
 
-      {/* Notification bell (placeholder) */}
-      <button className="relative p-2 rounded-lg hover:bg-gray-100 transition text-gray-500">
-        <Bell className="w-4 h-4" />
+      {/* Tour button */}
+      <button
+        onClick={() => startTour(tourSteps)}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition text-sm font-medium"
+        title="Start guided tour"
+        data-tour="tour-button"
+      >
+        <HelpCircle className="w-4 h-4" />
+        <span className="hidden sm:inline">Tour</span>
       </button>
 
       {/* User menu */}
-      <div className="relative" ref={userRef}>
+      <div className="relative" ref={userRef} data-tour="user-menu">
         <button
           onClick={() => setUserOpen((v) => !v)}
           className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition"
