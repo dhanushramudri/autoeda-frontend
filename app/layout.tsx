@@ -8,7 +8,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Jman Group | AutoEDA",
   description: "Automated Exploratory Data Analysis Platform by Jman Group",
-  icons: { icon: "/favicon.ico" },
+  icons: { icon: "/favicon_logo.png" },
 };
 
 export default function RootLayout({

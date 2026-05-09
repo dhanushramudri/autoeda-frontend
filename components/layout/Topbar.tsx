@@ -86,7 +86,7 @@ export function Topbar() {
                 onClick={() => { router.push("/workspaces"); setWsOpen(false); }}
                 className="w-full text-left px-4 py-2 text-xs text-brand hover:bg-brand/10 transition"
               >
-                Manage workspaces ->
+                Manage workspaces →
               </button>
             </div>
           </div>

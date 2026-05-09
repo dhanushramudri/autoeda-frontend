@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { User } from "@/types";
 
 interface AuthStore {
@@ -19,21 +19,20 @@ export const useAuthStore = create<AuthStore>()(
       setAuth: (user, token) => {
         set({ user, token });
         if (typeof window !== "undefined") {
-          localStorage.setItem("access_token", token);
-          localStorage.setItem("autoeda-auth", JSON.stringify({ user, token }));
+          sessionStorage.setItem("access_token", token);
         }
       },
       clearAuth: () => {
         set({ user: null, token: null });
         if (typeof window !== "undefined") {
-          localStorage.removeItem("access_token");
-          localStorage.removeItem("autoeda-auth");
+          sessionStorage.removeItem("access_token");
+          sessionStorage.removeItem("autoeda-auth");
         }
       },
       isAuthenticated: () => !!get().token,
       rehydrate: () => {
         if (typeof window !== "undefined") {
-          const stored = localStorage.getItem("autoeda-auth");
+          const stored = sessionStorage.getItem("autoeda-auth");
           if (stored) {
             try {
               const { user, token } = JSON.parse(stored);
@@ -47,11 +46,13 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: "autoeda-auth",
+      storage: createJSONStorage(() =>
+        typeof window !== "undefined" ? sessionStorage : ({} as Storage)
+      ),
       partialize: (state) => ({ user: state.user, token: state.token }),
       onRehydrateStorage: () => (state) => {
-        // Restore token to localStorage when hydrating
-        if (state && state.token && typeof window !== "undefined") {
-          localStorage.setItem("access_token", state.token);
+        if (state?.token && typeof window !== "undefined") {
+          sessionStorage.setItem("access_token", state.token);
         }
       },
     }

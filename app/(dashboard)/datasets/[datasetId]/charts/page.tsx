@@ -108,18 +108,29 @@ export default function ChartsPage() {
         </ResponsiveContainer>
       );
     }
-    if (chartType === "line" || chartType === "area") {
-      const Comp = chartType === "area" ? AreaChart : LineChart;
-      const DataComp = chartType === "area" ? Area : Line;
+    if (chartType === "line") {
       return (
         <ResponsiveContainer width="100%" height={380}>
-          <Comp data={data} margin={{ top: 10, right: 20, bottom: 40, left: 20 }}>
+          <LineChart data={data} margin={{ top: 10, right: 20, bottom: 40, left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
             <XAxis dataKey="x" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" />
             <YAxis tick={{ fontSize: 11 }} />
             <Tooltip contentStyle={{ fontSize: 12 }} />
-            <DataComp type="monotone" dataKey="y" stroke="#3b82f6" fill="#bfdbfe" dot={false} strokeWidth={2} />
-          </Comp>
+            <Line type="monotone" dataKey="y" stroke="#3b82f6" dot={false} strokeWidth={2} />
+          </LineChart>
+        </ResponsiveContainer>
+      );
+    }
+    if (chartType === "area") {
+      return (
+        <ResponsiveContainer width="100%" height={380}>
+          <AreaChart data={data} margin={{ top: 10, right: 20, bottom: 40, left: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+            <XAxis dataKey="x" tick={{ fontSize: 11 }} angle={-30} textAnchor="end" />
+            <YAxis tick={{ fontSize: 11 }} />
+            <Tooltip contentStyle={{ fontSize: 12 }} />
+            <Area type="monotone" dataKey="y" stroke="#3b82f6" fill="#bfdbfe" dot={false} strokeWidth={2} />
+          </AreaChart>
         </ResponsiveContainer>
       );
     }

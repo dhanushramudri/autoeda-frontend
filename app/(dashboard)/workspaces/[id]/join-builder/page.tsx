@@ -342,16 +342,10 @@ className={`p-1.5 rounded-lg transition ${
     : "hover:bg-gray-100"
 }`}            >
               {side === "left" ? (
-<ChevronLeft
-  className={`w-4 h-4 ${
-    side === "left" ? "text-white" : "text-gray-500"
-  }`}
-/>              ) : (
-<ChevronRight
-  className={`w-4 h-4 ${
-    side === "left" ? "text-white" : "text-gray-500"
-  }`}
-/>              )}
+                <ChevronLeft className="w-4 h-4 text-white" />
+              ) : (
+                <ChevronRight className="w-4 h-4 text-gray-500" />
+              )}
             </button>
           </>
         ) : (

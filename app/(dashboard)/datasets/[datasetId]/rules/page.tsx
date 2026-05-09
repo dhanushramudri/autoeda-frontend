@@ -198,7 +198,7 @@ export default function RulesPage() {
                         : r.fail_pct > 20 ? <XCircle className="w-4 h-4 text-red-500" /> : <AlertCircle className="w-4 h-4 text-amber-500" />}
                       <span className="text-sm font-medium text-gray-800">{r.label}</span>
                     </div>
-                    {r.column && <p className="text-xs text-gray-400 mt-0.5 ml-6">{r.column}</p>}
+                    {r.column_name && <p className="text-xs text-gray-400 mt-0.5 ml-6">{r.column_name}</p>}
                   </div>
                   <div className="text-right">
                     <span className={`text-lg font-bold ${r.pass_pct >= 90 ? "text-emerald-600" : r.pass_pct >= 70 ? "text-amber-600" : "text-red-600"}`}>

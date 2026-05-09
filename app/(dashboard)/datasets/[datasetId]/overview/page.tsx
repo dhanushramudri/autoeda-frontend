@@ -143,7 +143,7 @@ export default function DatasetOverviewPage() {
     return matchSearch && matchType;
   });
 
-  const semanticTypes = [...new Set(columns.map((c) => c.semantic_type))];
+  const semanticTypes = Array.from(new Set(columns.map((c) => c.semantic_type)));
 
   const handleReport = async () => {
     const res = await datasetsApi.getReport(datasetId);

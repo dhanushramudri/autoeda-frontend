@@ -8,7 +8,7 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { AlertTriangle, TrendingDown, ChevronRight, BarChart2 } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Legend
 } from "recharts";
 import { format } from "date-fns";
@@ -42,7 +42,7 @@ export default function WorkspaceAnalyticsPage() {
   }));
 
   // Group trends by dataset
-  const trendDatasets = [...new Set(trends.map((t) => t.dataset_name))];
+  const trendDatasets = Array.from(new Set(trends.map((t) => t.dataset_name)));
   const trendMap: Record<string, Record<string, number>> = {};
   trends.forEach((t) => {
     const dateKey = format(new Date(t.run_at), "MMM d");
@@ -117,7 +117,7 @@ export default function WorkspaceAnalyticsPage() {
                   <Tooltip contentStyle={{ fontSize: 12 }} formatter={(v: number) => [`${v}/100`, "Quality"]} />
                   <Bar dataKey="quality" radius={[4, 4, 0, 0]}>
                     {barData.map((entry, idx) => (
-                      <Bar key={idx} fill={entry.fill} />
+                      <Cell key={idx} fill={entry.fill} />
                     ))}
                   </Bar>
                 </BarChart>
