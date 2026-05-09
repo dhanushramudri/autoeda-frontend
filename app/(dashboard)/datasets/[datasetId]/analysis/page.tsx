@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -110,15 +110,30 @@ function Insight({ text, level = "warning" }: { text: string; level?: "warning" 
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function HistKDE({ data, col }: { data: NumericCharts["histogram_kde"]; col: string }) {
-  if (!data?.bins?.length) return <Empty />;
+  if (!data || !data.bins || data.bins.length === 0) return <Empty />;
+  
   const traces: Data[] = [
-    { x: data.bins, y: data.counts, type: "bar", name: "Frequency",
-      marker: { color: C.primary, opacity: 0.75 } },
+    { 
+      x: data.bins || [], 
+      y: data.counts || [], 
+      type: "bar", 
+      name: "Frequency",
+      marker: { color: C.primary, opacity: 0.75 } 
+    },
   ];
-  if (data.kde_x?.length) {
-    traces.push({ x: data.kde_x, y: data.kde_y, type: "scatter", mode: "lines",
-      name: "KDE", line: { color: C.danger, width: 2.5 }, yaxis: "y2" });
+  
+  if (data.kde_x?.length && data.kde_y?.length) {
+    traces.push({ 
+      x: data.kde_x, 
+      y: data.kde_y, 
+      type: "scatter", 
+      mode: "lines",
+      name: "KDE", 
+      line: { color: C.danger, width: 2.5 }, 
+      yaxis: "y2" 
+    });
   }
+  
   const shapes: Partial<Shape>[] = [];
   if (data.mean != null) shapes.push({
     type: "line", x0: data.mean, x1: data.mean, y0: 0, y1: 1, yref: "paper",
@@ -128,6 +143,7 @@ function HistKDE({ data, col }: { data: NumericCharts["histogram_kde"]; col: str
     type: "line", x0: data.median, x1: data.median, y0: 0, y1: 1, yref: "paper",
     line: { color: C.success, width: 1.5, dash: "dot" },
   });
+  
   return (
     <Plot data={traces}
       layout={{ ...BASE_LAYOUT, shapes, xaxis: { title: col }, yaxis: { title: "Count" },
@@ -155,24 +171,8 @@ function BoxPlot({ data, col }: { data: NumericCharts["box"]; col: string }) {
   );
 }
 
-// Numeric stats summary row
-function NumericStatRow({ data, col }: { data: NumericCharts; col: string }) {
-  const stats = [
-    { label: "Mean",     value: data.histogram_kde?.mean?.toFixed(3)   ?? "--" },
-    { label: "Median",   value: data.histogram_kde?.median?.toFixed(3) ?? "--" },
-    { label: "Std Dev",  value: data.std?.toFixed(3)                   ?? "--" },
-    { label: "Skewness", value: data.skewness?.toFixed(3)              ?? "--",
-      color: Math.abs(data.skewness ?? 0) > 1 ? C.danger : Math.abs(data.skewness ?? 0) > 0.5 ? C.warning : C.success },
-    { label: "Kurtosis", value: data.kurtosis?.toFixed(3)              ?? "--" },
-    { label: "Min",      value: data.box?.min?.toFixed(3)              ?? "--" },
-    { label: "Max",      value: data.box?.max?.toFixed(3)              ?? "--" },
-  ];
-  return (
-    <div className="flex flex-wrap gap-2 px-1 pb-1">
-      {stats.map((s) => <Pill key={s.label} label={s.label} value={s.value} color={s.color} />)}
-    </div>
-  );
-}
+// Numeric stats summary row - REMOVED AS PER USER REQUEST
+// function NumericStatRow({ data, col }: { data: NumericCharts; col: string }) {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // UNIVARIATE — CATEGORICAL
@@ -194,8 +194,8 @@ function CatBar({ data, col }: { data: CategoricalCharts["bar"]; col: string }) 
           formatter={(v: number, _n, p) => [`${v.toLocaleString()} (${p.payload.pct?.toFixed(1)}%)`, col]}
           contentStyle={{ fontSize: 11, borderRadius: 8, border: `1px solid ${C.border}` }}
         />
-        <Bar dataKey="value" fill={C.primary} radius={[0, 6, 6, 0]}
-          background={{ fill: "#F1F5F9", radius: [0, 6, 6, 0] }} />
+        <Bar dataKey="value" fill={C.primary} radius={6}
+          background={{ fill: "#F1F5F9" }} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -439,6 +439,11 @@ function PCAPlot({ data }: { data: any }) {
 
 function CorrelationHeatmap({ data }: { data: FullAnalysisResult["multi_column"]["correlation"] }) {
   if (!data?.labels?.length) return <Empty msg="Need 2+ numeric columns" />;
+  
+  const textData = (data.z as number[][]).map((row) =>
+    row.map((v) => (v != null ? v.toFixed(2) : ""))
+  );
+  
   return (
     <Plot
       data={[{
@@ -446,12 +451,11 @@ function CorrelationHeatmap({ data }: { data: FullAnalysisResult["multi_column"]
         type: "heatmap",
         colorscale: [[0, C.danger], [0.5, "#ffffff"], [1, C.primary]],
         zmin: -1, zmax: 1,
-        text: (data.z as number[][]).map((row) =>
-          row.map((v) => (v != null ? v.toFixed(2) : ""))) as Data["text"],
+        text: textData,
         texttemplate: "%{text}",
         hovertemplate: "%{x} × %{y}: %{z:.3f}<extra></extra>",
         colorbar: { thickness: 12, len: 0.8, tickfont: { size: 10 } },
-      } as Data]}
+      } as any]}
       layout={{ ...BASE_LAYOUT, xaxis: { tickangle: -35 }, yaxis: { tickangle: 0 } }}
       config={PLOT_CFG} style={{ width: "100%", height: "360px" }} useResizeHandler />
   );
@@ -681,7 +685,7 @@ function Sidebar({
 
   // Charts relevant per tab
   const tabCharts: Record<AnalysisTab, ChartKey[]> = {
-    univariate:   ["histogram", "box", "bar", "pie"],
+    univariate:   ["histogram", "box", "violin", "qq", "ecdf", "bar", "pie", "pareto"],
     bivariate:    [],
     multivariate: [],
     quality:      [],
@@ -798,37 +802,89 @@ function TabHeader({ label, count }: { label: string; count?: number }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function AnalysisPage() {
   const { datasetId } = useParams<{ datasetId: string }>();
+  console.log("🔍 [AnalysisPage] Initializing with datasetId:", datasetId);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.eda.analysis(datasetId),
-    queryFn: () => datasetsApi.getAnalysis(datasetId).then((r) => r.data as FullAnalysisResult),
+    queryFn: () => {
+      console.log("📡 [AnalysisPage] Fetching analysis data for dataset:", datasetId);
+      return datasetsApi.getAnalysis(datasetId).then((r) => {
+        console.log("✅ [AnalysisPage] Analysis data received:", r.data);
+        return r.data as FullAnalysisResult;
+      });
+    },
     staleTime: 1000 * 60 * 10,
   });
 
   const allCols = useMemo(() => {
     if (!data) return [];
-    return [...data.numeric_cols, ...data.categorical_cols, ...data.datetime_cols];
+    const cols = [...data.numeric_cols, ...data.categorical_cols, ...data.datetime_cols];
+    console.log("📊 [AnalysisPage] Column breakdown:", {
+      numeric: data.numeric_cols.length,
+      categorical: data.categorical_cols.length,
+      datetime: data.datetime_cols.length,
+      total: cols.length,
+      numeric_cols: data.numeric_cols,
+      categorical_cols: data.categorical_cols,
+      datetime_cols: data.datetime_cols,
+    });
+    console.log("📈 [AnalysisPage] Numeric charts available:", Object.keys(data.numeric_charts));
+    console.log("📊 [AnalysisPage] Categorical charts available:", Object.keys(data.categorical_charts));
+    console.log("📅 [AnalysisPage] Datetime charts available:", Object.keys(data.datetime_charts));
+    return cols;
   }, [data]);
 
   const [activeTab, setActiveTab] = useState<AnalysisTab>("univariate");
-  const [visibleCols, setVisibleCols] = useState<Set<string>>(new Set());
+const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
+
   const [visibleCharts, setVisibleCharts] = useState<Set<ChartKey>>(
-    new Set(Object.keys(CHART_LABELS) as ChartKey[])
+    new Set(["histogram", "box", "violin", "qq", "ecdf", "bar", "pie", "pareto", "timeseries", "seasonality"] as ChartKey[])
   );
 
-  useMemo(() => {
-    if (allCols.length > 0 && visibleCols.size === 0) setVisibleCols(new Set(allCols));
-  }, [allCols]);
+  console.log("✨ [AnalysisPage] Initial chart visibility:", Array.from(visibleCharts));
 
-  function toggleCol(col: string) {
-    setVisibleCols((p) => { const n = new Set(p); n.has(col) ? n.delete(col) : n.add(col); return n; });
-  }
+
+  // Ensure all univariate charts are shown by default
+  useEffect(() => {
+    const univariateCharts: ChartKey[] = ["histogram", "box", "violin", "qq", "ecdf", "bar", "pie", "pareto"];
+    console.log("🎨 [AnalysisPage] Ensuring univariate charts are visible:", univariateCharts);
+    setVisibleCharts((prev) => {
+      const newSet = new Set(prev);
+      univariateCharts.forEach(chart => {
+        if (!newSet.has(chart)) {
+          console.log(`  ➕ Adding chart: ${chart}`);
+          newSet.add(chart);
+        }
+      });
+      console.log("📋 [AnalysisPage] Final visible charts:", Array.from(newSet));
+      return newSet;
+    });
+  }, []);
+
+function toggleCol(col: string) {
+  setHiddenCols((p) => { 
+    const n = new Set(p); 
+    n.has(col) ? n.delete(col) : n.add(col);
+    return n;
+  });
+}
   function toggleChart(k: ChartKey) {
-    setVisibleCharts((p) => { const n = new Set(p); n.has(k) ? n.delete(k) : n.add(k); return n; });
+    console.log(`🔀 [AnalysisPage] Toggling chart: ${k}`);
+    setVisibleCharts((p) => { 
+      const n = new Set(p); 
+      n.has(k) ? n.delete(k) : n.add(k);
+      console.log(`  Visible charts after toggle:`, Array.from(n));
+      return n;
+    });
   }
 
-  const show = (k: ChartKey) => visibleCharts.has(k);
-  const colOn = (c: string) => visibleCols.has(c);
+  const show = (k: ChartKey) => {
+    const visible = visibleCharts.has(k);
+    console.log(`👁️ [show("${k}")] -> ${visible}`);
+    return visible;
+  };
+const colOn = (c: string) => !hiddenCols.has(c);
+
 
   // ── Bivariate state ──────────────────────────────────────────────────────────
   const [bivType, setBivType] = useState<"num_num" | "cat_cat" | "num_cat">("num_num");
@@ -901,7 +957,7 @@ export default function AnalysisPage() {
           <Sidebar
             data={data}
             activeTab={activeTab} setActiveTab={setActiveTab}
-            visibleCols={visibleCols} toggleCol={toggleCol}
+           visibleCols={new Set(allCols.filter(c => !hiddenCols.has(c)))} toggleCol={toggleCol}
             visibleCharts={visibleCharts} toggleChart={toggleChart}
           />
 
@@ -921,37 +977,104 @@ export default function AnalysisPage() {
                   <p className="text-xs text-slate-500">Analyzing individual variables to understand their distributions and characteristics</p>
                 </div>
 
-                {/* Numerical Variables Distribution */}
+
+                {/* Numeric Variables */}
                 {data.numeric_cols.filter(colOn).length > 0 && (
-                  <div className="col-span-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 mt-1">
-                    Numerical Variables Distribution
+                  <div className="col-span-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 mt-2">
+                    Numeric Variables
                   </div>
                 )}
 
                 {data.numeric_cols.filter(colOn).map((col) => {
                   const charts = data.numeric_charts[col];
-                  if (!charts) return null;
+                  if (!charts) {
+                    console.log(`⚠️ [RENDER] No chart data for column: ${col}`);
+                    return null;
+                  }
+                  console.log(`📍 [RENDER] Rendering column: ${col}`);
                   const highSkew = Math.abs(charts.skewness ?? 0) > 1;
                   return (
                     <div key={col} className="contents">
                       <TabHeader label={col} />
 
-                      <div className="col-span-2">
-                        <NumericStatRow data={charts} col={col} />
-                      </div>
-
                       {show("histogram") && (
-                        <Card title={`Distribution — ${col}`}
-                          desc="Histogram with KDE overlay, mean (dashed) and median (dotted)"
-                          insight={highSkew ? `Skewness ${charts.skewness?.toFixed(2)} — ${(charts.skewness ?? 0) > 0 ? "right" : "left"}-skewed` : undefined}
+                        <Card title={`Histogram + KDE — ${col}`}
+                          desc="Frequency distribution with kernel density estimate, mean (dashed) & median (dotted)"
+                          insight={highSkew ? `Skewness ${charts.skewness?.toFixed(2)} — distribution is ${(charts.skewness ?? 0) > 0 ? "right" : "left"}-skewed` : undefined}
                           insightLevel={Math.abs(charts.skewness ?? 0) > 2 ? "danger" : "warning"}>
                           <HistKDE data={charts.histogram_kde} col={col} />
                         </Card>
                       )}
 
                       {show("box") && (
-                        <Card title={`Box Plot — ${col}`} desc="IQR box with whiskers and outlier points">
+                        <Card title={`Box Plot — ${col}`} desc="IQR box with whiskers and outlier dots">
                           <BoxPlot data={charts.box} col={col} />
+                        </Card>
+                      )}
+
+                      {show("violin") && (
+                        <Card title={`Violin Plot — ${col}`} desc="Full KDE distribution shape">
+                          {charts.violin && charts.violin.y?.length ? (
+                            <Plot
+                              data={[{
+                                type: "violin",
+                                y: charts.violin.y,
+                                x: Array(charts.violin.y.length).fill(col),
+                                name: col,
+                                box: { visible: true },
+                                meanline: { visible: true },
+                                line: { color: C.secondary },
+                                fillcolor: C.secondary,
+                                opacity: 0.55,
+                              } as any]}
+                              layout={{ ...BASE_LAYOUT, yaxis: { title: col } }}
+                              config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
+                          ) : <Empty />}
+                        </Card>
+                      )}
+
+                      {show("qq") && (
+                        <Card title={`QQ Plot — ${col}`}
+                          desc="Sample vs. theoretical normal quantiles"
+                          insight={charts.normality?.is_normal === false
+                            ? `Not normally distributed (p = ${charts.normality.p_value?.toFixed(4)})` : undefined}
+                          insightLevel="warning">
+                          {charts.qq && charts.qq.theoretical?.length ? (
+                            <Plot
+                              data={[
+                                { x: charts.qq.theoretical, y: charts.qq.sample, mode: "markers", type: "scatter",
+                                  name: "Sample", marker: { color: C.primary, size: 4, opacity: 0.55 } },
+                                { x: charts.qq.line_x, y: charts.qq.line_y, mode: "lines", type: "scatter",
+                                  name: "Normal line", line: { color: C.danger, width: 2 } },
+                              ]}
+                              layout={{ ...BASE_LAYOUT,
+                                xaxis: { title: "Theoretical quantiles" },
+                                yaxis: { title: "Sample quantiles" },
+                                legend: { orientation: "h", y: -0.25 } }}
+                              config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
+                          ) : <Empty />}
+                        </Card>
+                      )}
+
+                      {show("ecdf") && (
+                        <Card title={`ECDF — ${col}`} desc="Empirical cumulative distribution function">
+                          {charts.ecdf && charts.ecdf.x?.length ? (
+                            <Plot
+                              data={[{
+                                x: charts.ecdf.x,
+                                y: charts.ecdf.y,
+                                mode: "lines",
+                                type: "scatter",
+                                name: "ECDF",
+                                line: { color: C.accent, width: 2.5, shape: "hv" },
+                                fill: "tozeroy",
+                                fillcolor: `${C.accent}18`,
+                              }]}
+                              layout={{ ...BASE_LAYOUT,
+                                xaxis: { title: col },
+                                yaxis: { title: "Cumulative probability", range: [0, 1] } }}
+                              config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
+                          ) : <Empty />}
                         </Card>
                       )}
                     </div>
@@ -985,6 +1108,30 @@ export default function AnalysisPage() {
                       {show("pie") && charts.pie && (
                         <Card title={`Share — ${col}`} desc="Proportional breakdown by category">
                           <CatPie data={charts.pie} />
+                        </Card>
+                      )}
+
+                      {show("pareto") && (
+                        <Card title={`Pareto — ${col}`} desc="Frequency bars + cumulative % line (80/20 analysis)" wide>
+                          {charts.pareto && charts.pareto.labels?.length ? (
+                            <ResponsiveContainer width="100%" height={280}>
+                              <BarChart data={charts.pareto.labels.map((l, i) => ({
+                                label: l.length > 14 ? l.slice(0, 12) + "…" : l,
+                                value: charts.pareto.values[i],
+                                cumPct: charts.pareto.cumulative_pct[i],
+                              }))} margin={{ bottom: 44, right: 40 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                                <XAxis dataKey="label" tick={{ fontSize: 9 }} angle={-30} textAnchor="end" />
+                                <YAxis yAxisId="l" tick={{ fontSize: 10 }} />
+                                <YAxis yAxisId="r" orientation="right" domain={[0, 100]}
+                                  tick={{ fontSize: 10 }} tickFormatter={(v) => `${v}%`} />
+                                <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                                <Bar yAxisId="l" dataKey="value" fill={C.primary} opacity={0.85} radius={[4, 4, 0, 0]} />
+                                <Line yAxisId="r" type="monotone" dataKey="cumPct"
+                                  stroke={C.danger} strokeWidth={2} dot={false} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          ) : <Empty />}
                         </Card>
                       )}
                     </div>
