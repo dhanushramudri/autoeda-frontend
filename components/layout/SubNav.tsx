@@ -26,7 +26,7 @@ const NAV_ITEMS = [
   { label: "Charts",            href: "/charts",            id: "charts" },
   { label: "Pivot",             href: "/pivot",             id: "pivot" },
   { label: "Rules",             href: "/rules",             id: "rules" },
-  { label: "History",           href: "/history",           id: "history" },
+  // { label: "History",           href: "/history",           id: "history" },
 ];
 
 export function SubNav({ datasetId }: SubNavProps) {
