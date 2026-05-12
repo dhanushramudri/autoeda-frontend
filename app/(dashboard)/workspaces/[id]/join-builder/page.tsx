@@ -35,10 +35,10 @@ import { PageSpinner } from "@/components/shared/LoadingBar";
 import {
   GitMerge, Database, Plus, Trash2, X, Play, Code2, Copy,
   ChevronDown, ChevronUp, Search, Download, Undo2, Maximize2,
-  AlertCircle, CheckCircle2, Info, ChevronLeft, ChevronRight,
-  Settings, PanelLeftClose, PanelRightClose, PanelLeft, PanelRight,
-  Zap, Table2, Eye, EyeOff, Layers,
+  AlertCircle, CheckCircle2, ChevronLeft, ChevronRight,
+  Settings, Zap, Table2, Layers, Save, ExternalLink, Loader2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { Dataset } from "@/types";
 
 // ────────── Constants ──────────────────────────────────────────────────────
@@ -383,12 +383,13 @@ className={`w-full h-full flex items-center justify-center transition ${    side
 function JoinBuilderInner() {
   const { id: workspaceId } = useParams<{ id: string }>();
   const { fitView } = useReactFlow();
+  const router = useRouter();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<NodeData>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<EdgeData>([]);
   const [leftCollapsed, setLeftCollapsed] = useState(false);
   const [rightCollapsed, setRightCollapsed] = useState(false);
-  const [activeRightTab, setActiveRightTab] = useState<"config" | "results">("config");
+  const [resultsOpen, setResultsOpen] = useState(false);
 
   const nodesRef = useRef<Node<NodeData>[]>([]);
   const edgesRef = useRef<Edge<EdgeData>[]>([]);
@@ -416,11 +417,11 @@ function JoinBuilderInner() {
   useEffect(() => {
     if (selectedEdgeId && rightCollapsed) setRightCollapsed(false);
   }, [selectedEdgeId]);
+  const [showSqlInDrawer, setShowSqlInDrawer] = useState(false);
 
   const [suggestedKey, setSuggestedKey] = useState<{ nodeId: string; col: string } | null>(null);
   const [result, setResult] = useState<SqlResult | null>(null);
   const [generatedSql, setGeneratedSql] = useState("");
-  const [showSql, setShowSql] = useState(false);
   const [rowLimit, setRowLimit] = useState(1000);
   const [datasetSchemas, setDatasetSchemas] = useState<Record<string | number, string[]>>({});
   const [datasetSearch, setDatasetSearch] = useState("");
@@ -526,7 +527,6 @@ function JoinBuilderInner() {
       setSelectedEdgeId(edgeId);
       setEdgeConfig({ joinType: "INNER", conditions: initConditions });
       setSuggestedKey(null);
-      setActiveRightTab("config");
       if (rightCollapsed) setRightCollapsed(false);
     },
     [pushHistory, setEdges, rightCollapsed]
@@ -535,7 +535,6 @@ function JoinBuilderInner() {
   const onEdgeClick = useCallback((_: React.MouseEvent, edge: Edge<EdgeData>) => {
     setSelectedEdgeId(edge.id);
     setEdgeConfig({ joinType: edge.data?.joinType ?? "INNER", conditions: edge.data?.conditions ?? [] });
-    setActiveRightTab("config");
     if (rightCollapsed) setRightCollapsed(false);
   }, [rightCollapsed]);
 
@@ -591,12 +590,30 @@ function JoinBuilderInner() {
 
   const generateSqlMutation = useMutation({
     mutationFn: () => workspacesExtraApi.generateJoinSql(workspaceId, buildPayload()),
-    onSuccess: (res) => { setGeneratedSql(res.data.sql ?? ""); setShowSql(true); setActiveRightTab("results"); if (rightCollapsed) setRightCollapsed(false); },
+    onSuccess: (res) => { setGeneratedSql(res.data.sql ?? ""); setShowSqlInDrawer(true); setResult(null); setResultsOpen(true); },
   });
 
   const executeMutation = useMutation({
     mutationFn: () => workspacesExtraApi.executeJoin(workspaceId, { ...buildPayload(), limit: rowLimit }),
-    onSuccess: (res) => { setResult(res.data); setShowSql(false); setActiveRightTab("results"); if (rightCollapsed) setRightCollapsed(false); },
+    onSuccess: (res) => { setResult(res.data); setShowSqlInDrawer(false); setResultsOpen(true); },
+  });
+
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveName, setSaveName] = useState("");
+  const [savedDataset, setSavedDataset] = useState<{ dataset_id: number; name: string; job_id: string } | null>(null);
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      workspacesExtraApi.saveJoinAsDataset(workspaceId, {
+        ...buildPayload(),
+        name: saveName.trim(),
+        workspace_id: Number(workspaceId),
+      }),
+    onSuccess: (res) => {
+      setSavedDataset(res.data);
+      setShowSaveModal(false);
+      setSaveName("");
+    },
   });
 
   const exportCsv = () => {
@@ -722,7 +739,10 @@ function JoinBuilderInner() {
       </CollapsiblePanel>
 
       {/* ═════════════ CENTER CANVAS ═════════════ */}
-      <div className="flex-1 flex flex-col relative overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Canvas area */}
+        <div className="flex-1 relative overflow-hidden">
 
         {/* Floating top toolbar */}
         <div
@@ -768,13 +788,23 @@ function JoinBuilderInner() {
           </button>
 
           {result && (
-            <button
-              onClick={exportCsv}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
-            >
-              <Download className="w-3 h-3" />
-              CSV
-            </button>
+            <>
+              <button
+                onClick={exportCsv}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
+              >
+                <Download className="w-3 h-3" />
+                CSV
+              </button>
+              <button
+                onClick={() => { setSavedDataset(null); setShowSaveModal(true); }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+                style={{ background: "#7c3aed", color: "white" }}
+              >
+                <Save className="w-3 h-3" />
+                Save Dataset
+              </button>
+            </>
           )}
 
           {/* Ready indicator */}
@@ -828,7 +858,217 @@ function JoinBuilderInner() {
             </div>
           </div>
         )}
-      </div>
+
+        {/* Save success banner */}
+        {savedDataset && (
+          <div
+            className="absolute top-16 left-1/2 z-20 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl"
+            style={{
+              transform: "translateX(-50%)",
+              background: "rgba(240,253,244,0.97)",
+              backdropFilter: "blur(12px)",
+              border: "1px solid #86efac",
+              minWidth: 320,
+            }}
+          >
+            <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-[11px] font-bold text-green-800">Dataset saved!</p>
+              <p className="text-[10px] text-green-600 truncate">{savedDataset.name}</p>
+            </div>
+            <button
+              onClick={() => router.push(`/datasets/${savedDataset.dataset_id}/overview`)}
+              className="flex items-center gap-1 text-[10px] font-bold text-green-700 hover:text-green-900 transition-colors"
+            >
+              <ExternalLink className="w-3 h-3" /> Open
+            </button>
+            <button onClick={() => setSavedDataset(null)} className="p-0.5 rounded hover:bg-green-100">
+              <X className="w-3.5 h-3.5 text-green-400" />
+            </button>
+          </div>
+        )}
+        </div>{/* end canvas area */}
+
+        {/* ── Bottom results drawer ── */}
+        {(result || generatedSql) && (
+          <div
+            className="flex-shrink-0 flex flex-col bg-white overflow-hidden transition-all duration-300"
+            style={{
+              height: resultsOpen ? 300 : 0,
+              borderTop: resultsOpen ? "1px solid #e2e8f0" : "none",
+              boxShadow: resultsOpen ? "0 -4px 16px rgba(0,0,0,0.06)" : "none",
+            }}
+          >
+            {resultsOpen && (
+              <>
+                {/* Drawer header */}
+                <div
+                  className="flex items-center gap-3 px-4 h-10 flex-shrink-0"
+                  style={{ borderBottom: "1px solid #f1f5f9" }}
+                >
+                  <Table2 className="w-3.5 h-3.5 text-gray-400" />
+                  {result && !showSqlInDrawer ? (
+                    <>
+                      <span className="text-[11px] font-semibold text-gray-700">Results</span>
+                      <span
+                        className="text-[9px] px-2 py-0.5 rounded-full font-semibold"
+                        style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
+                      >
+                        {result.row_count.toLocaleString()} rows{result.truncated ? " (truncated)" : ""}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-[11px] font-semibold text-gray-700">Generated SQL</span>
+                  )}
+
+                  <div className="ml-auto flex items-center gap-1.5">
+                    {/* Row limit */}
+                    <span className="text-[9px] text-gray-400">Limit</span>
+                    <select
+                      value={rowLimit}
+                      onChange={(e) => setRowLimit(Number(e.target.value))}
+                      className="text-[10px] border border-gray-200 rounded-lg px-2 py-1 outline-none bg-white"
+                    >
+                      {[100, 500, 1000, 5000].map((v) => <option key={v} value={v}>{v.toLocaleString()}</option>)}
+                    </select>
+
+                    {generatedSql && (
+                      <button
+                        onClick={() => navigator.clipboard.writeText(generatedSql)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition"
+                        title="Copy SQL"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => setResultsOpen(false)}
+                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition"
+                      title="Close results"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Drawer body */}
+                <div className="flex-1 overflow-auto">
+                  {showSqlInDrawer && generatedSql ? (
+                    <pre
+                      className="p-4 text-[11px] text-green-300 font-mono whitespace-pre-wrap break-words leading-relaxed h-full"
+                      style={{ background: "#0f172a" }}
+                    >
+                      {generatedSql}
+                    </pre>
+                  ) : result?.error ? (
+                    <div
+                      className="m-4 p-3 rounded-xl text-[11px] flex gap-2"
+                      style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626" }}
+                    >
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>{result.error}</span>
+                    </div>
+                  ) : result ? (
+                    <SqlResultsTable columns={result.columns} rows={result.rows} />
+                  ) : null}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Drawer toggle tab — shown when results exist but drawer is closed */}
+        {(result || generatedSql) && !resultsOpen && (
+          <button
+            onClick={() => setResultsOpen(true)}
+            className="flex-shrink-0 flex items-center justify-center gap-2 h-9 w-full text-[11px] font-semibold text-gray-600 hover:bg-white transition-colors"
+            style={{ borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+            {result
+              ? `Results — ${result.row_count.toLocaleString()} rows`
+              : "Generated SQL"}
+            <ChevronUp className="w-3.5 h-3.5" />
+          </button>
+        )}
+      </div>{/* end center column */}
+
+      {/* ═════════════ SAVE MODAL ════════════════ */}
+      {showSaveModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowSaveModal(false); }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4"
+            style={{ border: "1px solid #e2e8f0" }}
+          >
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#f5f3ff" }}>
+                <Save className="w-5 h-5 text-violet-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-gray-900">Save as Dataset</h2>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {result?.row_count?.toLocaleString()} rows · {result?.columns?.length} columns
+                </p>
+              </div>
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="ml-auto p-1.5 rounded-lg hover:bg-gray-100 transition"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+
+            <label className="block text-[11px] font-semibold text-gray-700 mb-1.5">Dataset name</label>
+            <input
+              autoFocus
+              type="text"
+              value={saveName}
+              onChange={(e) => setSaveName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && saveName.trim()) saveMutation.mutate(); }}
+              placeholder="e.g. Customer Orders Joined"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-400 transition"
+            />
+
+            {saveMutation.isError && (
+              <p className="mt-2 text-[10px] text-red-600 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                {String((saveMutation.error as Error)?.message ?? "Save failed")}
+              </p>
+            )}
+
+            <p className="mt-3 text-[10px] text-gray-400 leading-relaxed">
+              The full join result will be saved and EDA analysis will run automatically.
+              You can track progress in the Datasets tab.
+            </p>
+
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => saveMutation.mutate()}
+                disabled={!saveName.trim() || saveMutation.isPending}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ background: "#7c3aed" }}
+              >
+                {saveMutation.isPending ? (
+                  <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
+                ) : (
+                  <><Save className="w-3.5 h-3.5" /> Save Dataset</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═════════════ RIGHT PANEL ═════════════ */}
       <CollapsiblePanel
@@ -839,275 +1079,147 @@ function JoinBuilderInner() {
         label="Configure"
         icon={<Settings className="w-4 h-4" />}
       >
-        {/* Tabs */}
-        <div
-          className="flex flex-shrink-0"
-          style={{ borderBottom: "1px solid #f1f5f9" }}
-        >
-          {(["config", "results"] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveRightTab(tab)}
-              className="flex-1 py-2.5 text-[11px] font-semibold transition-colors relative"
-              style={{
-                color: activeRightTab === tab ? "#2563eb" : "#94a3b8",
-                background: activeRightTab === tab ? "#eff6ff" : "transparent",
-              }}
-            >
-              {tab === "config" ? (
-                <span className="flex items-center justify-center gap-1.5">
-                  <Settings className="w-3 h-3" />
-                  Configure
-                  {selectedEdge && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  )}
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-1.5">
-                  <Table2 className="w-3 h-3" />
-                  Results
-                  {result && (
-                    <span className="text-[9px] bg-green-100 text-green-600 px-1 rounded-full">{result.row_count}</span>
-                  )}
-                </span>
-              )}
-              {activeRightTab === tab && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-t" />
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Config tab */}
-        {activeRightTab === "config" && (
-          <div className="flex-1 overflow-y-auto">
-            {selectedEdge ? (
-              <div className="px-4 py-3 space-y-4">
-                {/* Edge header */}
-                <div
-                  className="flex items-center justify-between p-3 rounded-xl"
-                  style={{ background: `${JOIN_META[edgeConfig.joinType].bg}`, border: `1px solid ${JOIN_META[edgeConfig.joinType].border}` }}
-                >
-                  <div>
-                    <p className="text-[10px] font-bold" style={{ color: JOIN_META[edgeConfig.joinType].color }}>
-                      {srcNode?.data.label} → {tgtNode?.data.label}
-                    </p>
-                    <p className="text-[9px] text-gray-500 mt-0.5">{JOIN_META[edgeConfig.joinType].desc}</p>
-                  </div>
-                  <button onClick={() => setSelectedEdgeId(null)} className="p-1 rounded-lg hover:bg-white/60">
-                    <X className="w-3.5 h-3.5 text-gray-400" />
-                  </button>
-                </div>
-
-                {/* Join type */}
+        <div className="flex-1 overflow-y-auto">
+          {selectedEdge ? (
+            <div className="px-4 py-3 space-y-4">
+              {/* Edge header */}
+              <div
+                className="flex items-center justify-between p-3 rounded-xl"
+                style={{ background: `${JOIN_META[edgeConfig.joinType].bg}`, border: `1px solid ${JOIN_META[edgeConfig.joinType].border}` }}
+              >
                 <div>
-                  <label className="text-[10px] font-bold text-gray-600 block mb-2 uppercase tracking-wider">Join Type</label>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {JOIN_TYPES.map((jt) => (
-                      <button
-                        key={jt}
-                        onClick={() => setEdgeConfig((c) => ({ ...c, joinType: jt }))}
-                        className="px-2 py-2 rounded-xl border transition-all text-left"
-                        style={{
-                          borderColor: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#e2e8f0",
-                          background: edgeConfig.joinType === jt ? JOIN_META[jt].bg : "white",
-                          boxShadow: edgeConfig.joinType === jt ? `0 0 0 1px ${JOIN_META[jt].color}33` : "none",
-                        }}
-                      >
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-[11px] font-bold" style={{ color: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#64748b" }}>{jt}</span>
-                          <span className="text-sm">{JOIN_META[jt].symbol}</span>
-                        </div>
-                        <p className="text-[8px] text-gray-400 leading-tight">{JOIN_META[jt].desc}</p>
-                      </button>
-                    ))}
-                  </div>
+                  <p className="text-[10px] font-bold" style={{ color: JOIN_META[edgeConfig.joinType].color }}>
+                    {srcNode?.data.label} → {tgtNode?.data.label}
+                  </p>
+                  <p className="text-[9px] text-gray-500 mt-0.5">{JOIN_META[edgeConfig.joinType].desc}</p>
                 </div>
-
-                {/* Conditions */}
-                <div>
-                  <label className="text-[10px] font-bold text-gray-600 block mb-2 uppercase tracking-wider">Join Keys</label>
-
-                  {matchingSuggestions.length > 0 && edgeConfig.conditions.length === 0 && (
-                    <div className="mb-2 p-2.5 rounded-xl" style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}>
-                      <p className="text-[9px] font-bold text-blue-700 mb-1.5 flex items-center gap-1">
-                        <Zap className="w-2.5 h-2.5" /> Smart suggestions
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {matchingSuggestions.map((col) => (
-                          <button
-                            key={col}
-                            onClick={() => setEdgeConfig((c) => ({ ...c, conditions: [{ sourceKey: col, targetKey: col }] }))}
-                            className="text-[9px] px-2 py-1 bg-white text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 font-mono font-semibold transition-colors"
-                          >
-                            {col}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    {edgeConfig.conditions.length === 0 ? (
-                      <p className="text-[9px] text-gray-400 italic py-2 text-center">
-                        No conditions yet — click a column in a table node or use suggestions above
-                      </p>
-                    ) : (
-                      edgeConfig.conditions.map((c, i) => (
-                        <div key={i} className="flex gap-1 items-center">
-                          <select
-                            value={c.sourceKey}
-                            onChange={(e) => updateCondition(i, "sourceKey", e.target.value)}
-                            className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition"
-                          >
-                            <option value="">Source…</option>
-                            {srcCols.map((col) => <option key={col} value={col}>{col}</option>)}
-                          </select>
-                          <span className="text-gray-300 text-xs">=</span>
-                          <select
-                            value={c.targetKey}
-                            onChange={(e) => updateCondition(i, "targetKey", e.target.value)}
-                            className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition"
-                          >
-                            <option value="">Target…</option>
-                            {tgtCols.map((col) => <option key={col} value={col}>{col}</option>)}
-                          </select>
-                          <button
-                            onClick={() => removeCondition(i)}
-                            className="p-1 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition flex-shrink-0"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={addCondition}
-                      className="flex-1 text-[10px] px-2.5 py-2 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center justify-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" /> Condition
-                    </button>
-                    <button
-                      onClick={applyEdgeConfig}
-                      className="flex-1 text-[10px] px-2.5 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => { deleteEdge(selectedEdge.id); setSelectedEdgeId(null); }}
-                  className="w-full text-[10px] px-3 py-2 text-red-500 border border-red-100 rounded-xl font-semibold hover:bg-red-50 transition flex items-center justify-center gap-1.5"
-                >
-                  <Trash2 className="w-3 h-3" /> Remove Join
+                <button onClick={() => setSelectedEdgeId(null)} className="p-1 rounded-lg hover:bg-white/60">
+                  <X className="w-3.5 h-3.5 text-gray-400" />
                 </button>
               </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full px-6 py-8 text-center">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                  style={{ background: "#f1f5f9" }}
-                >
-                  <Settings className="w-6 h-6 text-gray-300" />
-                </div>
-                <p className="text-[11px] font-semibold text-gray-400">No join selected</p>
-                <p className="text-[10px] text-gray-300 mt-1 leading-relaxed">
-                  Click on a join edge in the canvas to configure it
-                </p>
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* Results tab */}
-        {activeRightTab === "results" && (
-          <div className="flex-1 overflow-y-auto">
-            {generatedSql && showSql && (
-              <div className="px-4 py-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Generated SQL</p>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(generatedSql)}
-                    className="p-1 rounded hover:bg-gray-100 text-gray-400"
-                    title="Copy SQL"
-                  >
-                    <Copy className="w-3 h-3" />
-                  </button>
-                </div>
-                <div
-                  className="p-3 rounded-xl text-[9px] text-green-300 font-mono overflow-x-auto whitespace-pre-wrap break-words leading-relaxed"
-                  style={{ background: "#0f172a" }}
-                >
-                  {generatedSql}
-                </div>
-              </div>
-            )}
-
-            {result && !showSql && (
-              <div className="px-4 py-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Results</p>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="text-[9px] px-2 py-0.5 rounded-full font-semibold"
-                      style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
+              {/* Join type */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-600 block mb-2 uppercase tracking-wider">Join Type</label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {JOIN_TYPES.map((jt) => (
+                    <button
+                      key={jt}
+                      onClick={() => setEdgeConfig((c) => ({ ...c, joinType: jt }))}
+                      className="px-2 py-2 rounded-xl border transition-all text-left"
+                      style={{
+                        borderColor: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#e2e8f0",
+                        background: edgeConfig.joinType === jt ? JOIN_META[jt].bg : "white",
+                        boxShadow: edgeConfig.joinType === jt ? `0 0 0 1px ${JOIN_META[jt].color}33` : "none",
+                      }}
                     >
-                      {result.row_count} rows{result.truncated ? " ✂" : ""}
-                    </span>
-                  </div>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <span className="text-[11px] font-bold" style={{ color: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#64748b" }}>{jt}</span>
+                        <span className="text-sm">{JOIN_META[jt].symbol}</span>
+                      </div>
+                      <p className="text-[8px] text-gray-400 leading-tight">{JOIN_META[jt].desc}</p>
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                {result.error ? (
-                  <div
-                    className="p-3 rounded-xl text-[10px] flex gap-2"
-                    style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626" }}
-                  >
-                    <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                    <span>{result.error}</span>
-                  </div>
-                ) : (
-                  <div className="rounded-xl border border-gray-100 overflow-hidden shadow-sm">
-                    <SqlResultsTable columns={result.columns} rows={result.rows.slice(0, 50)} />
+              {/* Conditions */}
+              <div>
+                <label className="text-[10px] font-bold text-gray-600 block mb-2 uppercase tracking-wider">Join Keys</label>
+
+                {matchingSuggestions.length > 0 && edgeConfig.conditions.length === 0 && (
+                  <div className="mb-2 p-2.5 rounded-xl" style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}>
+                    <p className="text-[9px] font-bold text-blue-700 mb-1.5 flex items-center gap-1">
+                      <Zap className="w-2.5 h-2.5" /> Smart suggestions
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {matchingSuggestions.map((col) => (
+                        <button
+                          key={col}
+                          onClick={() => setEdgeConfig((c) => ({ ...c, conditions: [{ sourceKey: col, targetKey: col }] }))}
+                          className="text-[9px] px-2 py-1 bg-white text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 font-mono font-semibold transition-colors"
+                        >
+                          {col}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </div>
-            )}
 
-            {!result && !generatedSql && (
-              <div className="flex flex-col items-center justify-center h-full px-6 py-8 text-center">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                  style={{ background: "#f1f5f9" }}
-                >
-                  <Table2 className="w-6 h-6 text-gray-300" />
+                <div className="space-y-2">
+                  {edgeConfig.conditions.length === 0 ? (
+                    <p className="text-[9px] text-gray-400 italic py-2 text-center">
+                      No conditions yet — click a column in a table node or use suggestions above
+                    </p>
+                  ) : (
+                    edgeConfig.conditions.map((c, i) => (
+                      <div key={i} className="flex gap-1 items-center">
+                        <select
+                          value={c.sourceKey}
+                          onChange={(e) => updateCondition(i, "sourceKey", e.target.value)}
+                          className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition"
+                        >
+                          <option value="">Source…</option>
+                          {srcCols.map((col) => <option key={col} value={col}>{col}</option>)}
+                        </select>
+                        <span className="text-gray-300 text-xs">=</span>
+                        <select
+                          value={c.targetKey}
+                          onChange={(e) => updateCondition(i, "targetKey", e.target.value)}
+                          className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition"
+                        >
+                          <option value="">Target…</option>
+                          {tgtCols.map((col) => <option key={col} value={col}>{col}</option>)}
+                        </select>
+                        <button
+                          onClick={() => removeCondition(i)}
+                          className="p-1 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition flex-shrink-0"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <p className="text-[11px] font-semibold text-gray-400">No results yet</p>
-                <p className="text-[10px] text-gray-300 mt-1">Run a join to see results here</p>
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* Row limit footer */}
-        {activeRightTab === "results" && (
-          <div
-            className="px-4 py-2 flex-shrink-0 flex items-center gap-2"
-            style={{ borderTop: "1px solid #f1f5f9" }}
-          >
-            <span className="text-[9px] text-gray-400 font-medium">Row limit</span>
-            <select
-              value={rowLimit}
-              onChange={(e) => setRowLimit(Number(e.target.value))}
-              className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1 outline-none"
-            >
-              {[100, 500, 1000, 5000].map((v) => <option key={v} value={v}>{v.toLocaleString()}</option>)}
-            </select>
-          </div>
-        )}
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={addCondition}
+                    className="flex-1 text-[10px] px-2.5 py-2 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center justify-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Condition
+                  </button>
+                  <button
+                    onClick={applyEdgeConfig}
+                    className="flex-1 text-[10px] px-2.5 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={() => { deleteEdge(selectedEdge.id); setSelectedEdgeId(null); }}
+                className="w-full text-[10px] px-3 py-2 text-red-500 border border-red-100 rounded-xl font-semibold hover:bg-red-50 transition flex items-center justify-center gap-1.5"
+              >
+                <Trash2 className="w-3 h-3" /> Remove Join
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full px-6 py-8 text-center">
+              <div
+                className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
+                style={{ background: "#f1f5f9" }}
+              >
+                <Settings className="w-6 h-6 text-gray-300" />
+              </div>
+              <p className="text-[11px] font-semibold text-gray-400">No join selected</p>
+              <p className="text-[10px] text-gray-300 mt-1 leading-relaxed">
+                Click on a join edge in the canvas to configure it
+              </p>
+            </div>
+          )}
+        </div>
       </CollapsiblePanel>
     </div>
   );

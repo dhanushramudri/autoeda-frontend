@@ -180,6 +180,8 @@ export const workspacesExtraApi = {
     api.post(`/workspaces/${workspaceId}/join-builder/generate-sql`, data),
   executeJoin: (workspaceId: string, data: { nodes: unknown[]; edges: unknown[]; limit?: number }) =>
     api.post(`/workspaces/${workspaceId}/join-builder/execute`, data),
+  saveJoinAsDataset: (workspaceId: string, data: { nodes: unknown[]; edges: unknown[]; name: string; workspace_id: number }) =>
+    api.post(`/workspaces/${workspaceId}/join-builder/save-as-dataset`, data),
 };
 
 // Warehouse
