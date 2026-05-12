@@ -306,11 +306,14 @@ function CollapsiblePanel({
 }) {
   return (
     <div
-      className="flex flex-col border-gray-200 bg-white flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+      className="flex flex-col bg-white flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
       style={{
         width: collapsed ? 52 : width,
-        borderRight: side === "left" ? "1px solid #e2e8f0" : undefined,
-        borderLeft: side === "right" ? "1px solid #e2e8f0" : undefined,
+        borderRight: side === "left" ? "1px solid #dde3ec" : undefined,
+        borderLeft: side === "right" ? "1px solid #dde3ec" : undefined,
+        boxShadow: side === "left"
+          ? "4px 0 16px rgba(0,0,0,0.07)"
+          : "-4px 0 16px rgba(0,0,0,0.07)",
       }}
     >
       {/* Top Header */}
@@ -795,6 +798,7 @@ function JoinBuilderInner() {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
+          fitViewOptions={{ maxZoom: 0.75, padding: 0.3 }}
           connectionLineType={ConnectionLineType.Bezier}
           style={{ background: "transparent" }}
         >
