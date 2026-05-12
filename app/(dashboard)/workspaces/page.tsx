@@ -8,7 +8,7 @@ import { useWorkspaceStore } from "@/store/workspaceStore";
 import { useAuthStore } from "@/store/authStore";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Plus, FolderOpen, Users, Database, Clock, ChevronRight, X, Plug, Warehouse } from "lucide-react";
+import { Plus, FolderOpen, Users, Database, Clock, ChevronRight, X, Plug, Warehouse, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import type { Workspace } from "@/types";
@@ -95,77 +95,132 @@ function NewWorkspaceModal({ onClose }: { onClose: () => void }) {
 
 function WorkspaceCard({ workspace }: { workspace: Workspace }) {
   const { setCurrentWorkspace } = useWorkspaceStore();
+  const qc = useQueryClient();
   const wid = workspace.id;
+  const [showDelete, setShowDelete] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: () => workspacesApi.delete(wid),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+      setShowDelete(false);
+    },
+  });
 
   const handleClick = () => setCurrentWorkspace(workspace.id);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 hover:border-brand/30 hover:shadow-md transition group flex flex-col overflow-hidden">
-      {/* Main clickable area */}
-      <Link
-        href={`/workspaces/${wid}/datasets`}
-        onClick={handleClick}
-        className="p-5 flex-1 block"
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-            <FolderOpen className="w-5 h-5 text-brand" />
+    <>
+      <div className="bg-white rounded-xl border border-gray-200 hover:border-brand/30 hover:shadow-md transition group flex flex-col overflow-hidden">
+        {/* Main clickable area */}
+        <Link
+          href={`/workspaces/${wid}/datasets`}
+          onClick={handleClick}
+          className="p-5 flex-1 block"
+        >
+          <div className="flex items-start justify-between mb-3">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+              <FolderOpen className="w-5 h-5 text-brand" />
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-brand transition mt-1" />
           </div>
-          <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-brand transition mt-1" />
+
+          <h3 className="font-semibold text-gray-900 mb-0.5 truncate">{workspace.name}</h3>
+          {workspace.description && (
+            <p className="text-xs text-gray-400 mb-3 line-clamp-2">{workspace.description}</p>
+          )}
+
+          <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap mt-2">
+            <span className="flex items-center gap-1">
+              <Database className="w-3 h-3" />
+              {workspace.dataset_count ?? 0} datasets
+            </span>
+            <span className="flex items-center gap-1">
+              <Plug className="w-3 h-3" />
+              {(workspace as unknown as { source_count?: number }).source_count ?? 0} sources
+            </span>
+            <span className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              {workspace.member_count ?? 0} members
+            </span>
+            <span className="flex items-center gap-1 ml-auto">
+              <Clock className="w-3 h-3" />
+              {workspace.updated_at
+                ? formatDistanceToNow(new Date(workspace.updated_at), { addSuffix: true })
+                : " -- "}
+            </span>
+          </div>
+        </Link>
+
+        {/* Quick-access bar */}
+        <div className="border-t border-gray-100 flex divide-x divide-gray-100">
+          <Link
+            href={`/workspaces/${wid}/sources`}
+            onClick={handleClick}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-brand hover:bg-brand/10 transition"
+          >
+            <Plug className="w-3 h-3" /> Sources
+          </Link>
+          <Link
+            href={`/workspaces/${wid}/warehouse`}
+            onClick={handleClick}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition"
+          >
+            <Warehouse className="w-3 h-3" /> Warehouse
+          </Link>
+          <Link
+            href={`/workspaces/${wid}/join-builder`}
+            onClick={handleClick}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition"
+          >
+            <Database className="w-3 h-3" /> Join Builder
+          </Link>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              setShowDelete(true);
+            }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 transition border-l border-gray-100"
+          >
+            <Trash2 className="w-3 h-3" /> Delete
+          </button>
         </div>
-
-        <h3 className="font-semibold text-gray-900 mb-0.5 truncate">{workspace.name}</h3>
-        {workspace.description && (
-          <p className="text-xs text-gray-400 mb-3 line-clamp-2">{workspace.description}</p>
-        )}
-
-        <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap mt-2">
-          <span className="flex items-center gap-1">
-            <Database className="w-3 h-3" />
-            {workspace.dataset_count ?? 0} datasets
-          </span>
-          <span className="flex items-center gap-1">
-            <Plug className="w-3 h-3" />
-            {(workspace as unknown as { source_count?: number }).source_count ?? 0} sources
-          </span>
-          <span className="flex items-center gap-1">
-            <Users className="w-3 h-3" />
-            {workspace.member_count ?? 0} members
-          </span>
-          <span className="flex items-center gap-1 ml-auto">
-            <Clock className="w-3 h-3" />
-            {workspace.updated_at
-              ? formatDistanceToNow(new Date(workspace.updated_at), { addSuffix: true })
-              : " -- "}
-          </span>
-        </div>
-      </Link>
-
-      {/* Quick-access bar */}
-      <div className="border-t border-gray-100 flex divide-x divide-gray-100">
-        <Link
-          href={`/workspaces/${wid}/sources`}
-          onClick={handleClick}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-brand hover:bg-brand/10 transition"
-        >
-          <Plug className="w-3 h-3" /> Sources
-        </Link>
-        <Link
-          href={`/workspaces/${wid}/warehouse`}
-          onClick={handleClick}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition"
-        >
-          <Warehouse className="w-3 h-3" /> Warehouse
-        </Link>
-        <Link
-          href={`/workspaces/${wid}/join-builder`}
-          onClick={handleClick}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 text-[10px] font-medium text-gray-400 hover:text-purple-600 hover:bg-purple-50 transition"
-        >
-          <Database className="w-3 h-3" /> Join Builder
-        </Link>
       </div>
-    </div>
+
+      {/* Delete confirmation modal */}
+      {showDelete && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Delete Workspace?</h2>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Are you sure you want to delete <strong>{workspace.name}</strong>? This action cannot be undone and all datasets and data within this workspace will be permanently deleted.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDelete(false)}
+                className="flex-1 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending}
+                className="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
