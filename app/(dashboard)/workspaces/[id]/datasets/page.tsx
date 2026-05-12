@@ -151,7 +151,7 @@ const STATUS_COLOR = {
   error: "border-red-200 bg-red-50/40",
 };
 
-export function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: () => void }) {
+function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: () => void }) {
   const qc = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [entries, setEntries] = useState<FileEntry[]>([]);
