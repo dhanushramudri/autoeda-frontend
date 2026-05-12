@@ -74,7 +74,6 @@ const DATASET_GROUPS: NavGroup[] = [
 // 3. Join Builder  --  visual join designer
 // 4. Data Sources  --  external connections
 // 5. Analytics   --  workspace-level metrics
-// 6. Members     --  admin / infrequent
 
 const WORKSPACE_LINKS = [
   { label: "Warehouse",        href: "/warehouse",    icon: Warehouse },
