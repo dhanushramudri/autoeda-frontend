@@ -72,7 +72,6 @@ export function QualityGauge({ data }: { data: QualityScore }) {
         <DimBar label="Completeness" value={data.completeness} />
         <DimBar label="Consistency" value={data.consistency} />
         <DimBar label="Uniqueness" value={data.uniqueness} />
-        <DimBar label="Validity" value={data.validity} />
       </div>
     </div>
   );

@@ -78,10 +78,10 @@ const DATASET_GROUPS: NavGroup[] = [
 
 const WORKSPACE_LINKS = [
   { label: "Warehouse",        href: "/warehouse",    icon: Warehouse },
-  { label: "Compare Datasets", href: "/compare",      icon: GitBranch },
+  // { label: "Compare Datasets", href: "/compare",      icon: GitBranch },
   { label: "Join Builder",     href: "/join-builder", icon: Sliders },
   { label: "Data Sources",     href: "/sources",      icon: Plug },
-  { label: "Analytics",        href: "/analytics",    icon: BarChart2 },
+  // { label: "Analytics",        href: "/analytics",    icon: BarChart2 },
   { label: "Members",          href: "/members",      icon: Users },
 ];
 
