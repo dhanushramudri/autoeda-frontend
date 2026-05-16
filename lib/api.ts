@@ -165,6 +165,8 @@ export const datasetsApi = {
     api.get(`/datasets/${datasetId}/ai/narrative`),
   aiChat: (datasetId: string, message: string, history: { role: string; content: string }[], pageContext?: Record<string, unknown>) =>
     api.post(`/datasets/${datasetId}/ai/chat`, { message, history, page_context: pageContext ?? null }),
+  getAiTransformSuggestions: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/ai/transform-suggestions`),
   // SQL Editor
   sqlExecute: (datasetId: string, sql: string, limit = 1000) =>
     api.post(`/datasets/${datasetId}/sql/execute`, { sql, limit }),
