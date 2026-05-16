@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+
 import type { CorrelationResult } from "@/types";
+import { AskAiButton } from "@/components/ai/AskAiButton";
 
 interface Props {
   data: CorrelationResult;
@@ -27,6 +28,14 @@ export function CorrelationHeatmap({ data }: Props) {
 
   return (
     <div className="overflow-x-auto">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs text-gray-500">{columns.length} columns</p>
+        <AskAiButton
+          question="Explain the top correlations in this heatmap. Which pairs are strongly correlated, and does that cause any multicollinearity concerns?"
+          label="Explain correlations"
+          variant="chip"
+        />
+      </div>
       <div className="inline-block">
         {/* Column headers */}
         <div className="flex ml-[80px] mb-0.5">

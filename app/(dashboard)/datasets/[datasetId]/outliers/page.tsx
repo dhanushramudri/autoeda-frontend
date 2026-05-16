@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -10,6 +11,8 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { InsightList } from "@/components/shared/InsightCard";
 import { StatCard } from "@/components/shared/StatCard";
 import { DataTable } from "@/components/shared/DataTable";
+import { AskAiButton } from "@/components/ai/AskAiButton";
+import { useAiContextStore } from "@/store/aiContextStore";
 import {
   ScatterChart,
   Scatter,
@@ -51,6 +54,33 @@ export default function OutliersPage() {
     queryFn: () => datasetsApi.getOutliers(datasetId, method, activeCol).then((r) => r.data),
     enabled: !!activeCol || method === "isolation_forest",
   });
+
+  const setPageContext = useAiContextStore((s) => s.setPageContext);
+
+  useEffect(() => {
+    if (!data) return;
+    const worstCols = [...(data.columns ?? [])]
+      .sort((a: { outlier_pct: number }, b: { outlier_pct: number }) => b.outlier_pct - a.outlier_pct)
+      .slice(0, 3)
+      .map((c: { name: string; outlier_pct: number }) => `${c.name}: ${c.outlier_pct.toFixed(1)}%`)
+      .join(", ");
+    setPageContext({
+      page: "outliers",
+      label: `Outliers (${method}${activeCol ? ` → ${activeCol}` : ""})`,
+      details: {
+        method,
+        column: activeCol ?? "all",
+        total_outliers: data.total_outliers ?? 0,
+        worst_columns: worstCols || "none",
+      },
+      suggestedQuestions: [
+        `Should I remove or cap the outliers in ${activeCol ?? "these columns"}?`,
+        "What's the difference between IQR, Z-Score, and Isolation Forest?",
+        "How do these outliers affect model performance?",
+      ],
+    });
+    return () => setPageContext(null);
+  }, [data, method, activeCol, setPageContext]);
 
   const setParam = (key: string, val: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -149,8 +179,13 @@ export default function OutliersPage() {
             {/* Per-column breakdown */}
             {data.columns && data.columns.length > 0 && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="px-5 py-3 border-b border-gray-100">
+                <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gray-800">By Column</h3>
+                  <AskAiButton
+                    question={`I'm looking at outlier detection results using ${method}. What should I do about these outliers — remove, cap, or keep them?`}
+                    label="What should I do?"
+                    variant="chip"
+                  />
                 </div>
                 <DataTable
                   columns={[

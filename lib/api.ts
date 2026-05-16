@@ -163,8 +163,8 @@ export const datasetsApi = {
   // AI features
   getAiNarrative: (datasetId: string) =>
     api.get(`/datasets/${datasetId}/ai/narrative`),
-  aiChat: (datasetId: string, message: string, history: { role: string; content: string }[]) =>
-    api.post(`/datasets/${datasetId}/ai/chat`, { message, history }),
+  aiChat: (datasetId: string, message: string, history: { role: string; content: string }[], pageContext?: Record<string, unknown>) =>
+    api.post(`/datasets/${datasetId}/ai/chat`, { message, history, page_context: pageContext ?? null }),
   // SQL Editor
   sqlExecute: (datasetId: string, sql: string, limit = 1000) =>
     api.post(`/datasets/${datasetId}/sql/execute`, { sql, limit }),

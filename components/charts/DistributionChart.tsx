@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { DistributionResult } from "@/types";
+import { AskAiButton } from "@/components/ai/AskAiButton";
 
 interface Props {
   data: DistributionResult;
@@ -37,7 +38,14 @@ export function DistributionChart({ data, column }: Props) {
       {/* Histogram + KDE */}
       {chartData.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Distribution  --  {column}</h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold text-gray-700">Distribution — {column}</h4>
+            <AskAiButton
+              question={`Explain the distribution of the "${column}" column. Is it normal? Any skewness or outliers I should know about?`}
+              label="Explain this"
+              variant="chip"
+            />
+          </div>
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={chartData} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

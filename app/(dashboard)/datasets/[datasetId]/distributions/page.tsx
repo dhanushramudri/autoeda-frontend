@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -9,6 +10,7 @@ import { SubNav } from "@/components/layout/SubNav";
 import { DistributionChart } from "@/components/charts/DistributionChart";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { useAiContextStore } from "@/store/aiContextStore";
 import { BarChart2 } from "lucide-react";
 
 export default function DistributionsPage() {
@@ -16,6 +18,7 @@ export default function DistributionsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const selectedCol = searchParams.get("column") ?? "";
+  const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const { data: dataset } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
@@ -40,6 +43,30 @@ export default function DistributionsPage() {
     queryFn: () => datasetsApi.getDistributions(datasetId, activeCol).then((r) => r.data),
     enabled: !!activeCol,
   });
+
+  // Register page context for the AI panel
+  useEffect(() => {
+    if (!activeCol) return;
+    const colProfile = profile?.columns?.find((c: { name: string }) => c.name === activeCol);
+    setPageContext({
+      page: "distributions",
+      label: `Distributions → ${activeCol}`,
+      details: {
+        column: activeCol,
+        dtype: colProfile?.dtype ?? "unknown",
+        missing_pct: colProfile?.missing_pct ?? 0,
+        skewness: colProfile?.skewness ?? null,
+        mean: colProfile?.mean ?? null,
+        unique_count: colProfile?.unique_count ?? null,
+      },
+      suggestedQuestions: [
+        `Is the ${activeCol} column normally distributed?`,
+        `How should I handle the skewness in ${activeCol}?`,
+        `What does the distribution of ${activeCol} tell me?`,
+      ],
+    });
+    return () => setPageContext(null);
+  }, [activeCol, profile, setPageContext]);
 
   const setCol = (col: string) => {
     router.replace(`/datasets/${datasetId}/distributions?column=${encodeURIComponent(col)}`);

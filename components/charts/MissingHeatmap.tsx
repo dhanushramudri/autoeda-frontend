@@ -2,6 +2,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import type { MissingResult } from "@/types";
+import { AskAiButton } from "@/components/ai/AskAiButton";
 
 interface Props {
   data: MissingResult;
@@ -27,6 +28,13 @@ export function MissingHeatmap({ data }: Props) {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-end">
+        <AskAiButton
+          question="Looking at the missing value chart, which columns should I drop vs impute? What strategy do you recommend?"
+          label="How to fix missing values"
+          variant="chip"
+        />
+      </div>
       <ResponsiveContainer width="100%" height={Math.max(200, chartData.length * 28)}>
         <BarChart
           data={chartData}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import type { ColumnProfile, QualityScore, InsightCard } from "@/types";
 import { AiNarrative } from "@/components/ai/AiNarrative";
+import { useAiContextStore } from "@/store/aiContextStore";
 
 const TYPE_COLORS: Record<string, string> = {
   numeric: "bg-blue-100 text-brand",
@@ -101,6 +102,7 @@ export default function DatasetOverviewPage() {
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [searchCol, setSearchCol] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const { data: dataset, isLoading: datasetLoading } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
@@ -125,6 +127,31 @@ export default function DatasetOverviewPage() {
     queryFn: () => datasetsApi.getInsights(datasetId).then((r) => r.data as InsightCard[]),
     enabled: !!datasetId && dataset?.status === "ready",
   });
+
+  useEffect(() => {
+    if (!quality && !profile) return;
+    setPageContext({
+      page: "overview",
+      label: "Overview",
+      details: {
+        quality_score: quality?.overall ?? "?",
+        missing_pct: profile
+          ? (
+              (profile.columns ?? []).reduce((s: number, c: ColumnProfile) => s + (c.missing_count ?? 0), 0) /
+              Math.max(1, (profile.total_rows ?? 1) * (profile.total_columns ?? 1)) * 100
+            ).toFixed(1) + "%"
+          : "?",
+        duplicate_pct: profile?.duplicate_pct != null ? profile.duplicate_pct.toFixed(1) + "%" : "?",
+        top_issue: quality?.issues?.[0]?.description ?? "none",
+      },
+      suggestedQuestions: [
+        "What should I fix first in this dataset?",
+        "Is this dataset ready for machine learning?",
+        "Which columns need the most attention?",
+      ],
+    });
+    return () => setPageContext(null);
+  }, [quality, profile, setPageContext]);
 
   const isLoading = datasetLoading || qualityLoading || profileLoading;
   if (isLoading) return <><SubNav datasetId={datasetId} /><PageSpinner /></>;

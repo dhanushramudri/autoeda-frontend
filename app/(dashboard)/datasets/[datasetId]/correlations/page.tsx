@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -9,6 +10,7 @@ import { SubNav } from "@/components/layout/SubNav";
 import { CorrelationHeatmap } from "@/components/charts/CorrelationHeatmap";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { InsightList } from "@/components/shared/InsightCard";
+import { useAiContextStore } from "@/store/aiContextStore";
 
 const METHODS = ["pearson", "spearman", "kendall"] as const;
 
@@ -17,6 +19,7 @@ export default function CorrelationsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const method = (searchParams.get("method") as typeof METHODS[number]) ?? "pearson";
+  const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const { data: dataset } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
@@ -27,6 +30,35 @@ export default function CorrelationsPage() {
     queryKey: queryKeys.eda.correlations(datasetId, method),
     queryFn: () => datasetsApi.getCorrelations(datasetId, method).then((r) => r.data),
   });
+
+  // Top 3 strongest correlations for context (avoid dumping full matrix)
+  const topPairs = useMemo(() => {
+    if (!data?.matrix) return [];
+    const cols = Object.keys(data.matrix);
+    const pairs: { col1: string; col2: string; r: number }[] = [];
+    cols.forEach((c1, i) => cols.slice(i + 1).forEach((c2) => {
+      const r = data.matrix[c1]?.[c2];
+      if (r != null && c1 !== c2) pairs.push({ col1: c1, col2: c2, r: Math.abs(r) });
+    }));
+    return pairs.sort((a, b) => b.r - a.r).slice(0, 3);
+  }, [data]);
+
+  useEffect(() => {
+    setPageContext({
+      page: "correlations",
+      label: `Correlations (${method})`,
+      details: {
+        method,
+        top_pairs: topPairs.map((p) => `${p.col1}↔${p.col2}: ${p.r.toFixed(2)}`).join(", ") || "none yet",
+      },
+      suggestedQuestions: [
+        "Which columns are most strongly correlated?",
+        "Are any of these correlations problematic for modelling?",
+        "What does a high VIF score mean here?",
+      ],
+    });
+    return () => setPageContext(null);
+  }, [method, topPairs, setPageContext]);
 
   const setMethod = (m: string) => {
     router.replace(`/datasets/${datasetId}/correlations?method=${m}`);

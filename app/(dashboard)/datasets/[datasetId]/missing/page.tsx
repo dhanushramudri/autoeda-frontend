@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -10,9 +11,11 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { StatCard } from "@/components/shared/StatCard";
 import { DataTable } from "@/components/shared/DataTable";
 import { SubNav } from "@/components/layout/SubNav";
+import { useAiContextStore } from "@/store/aiContextStore";
 
 export default function MissingPage() {
   const { datasetId } = useParams<{ datasetId: string }>();
+  const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const { data: dataset } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
@@ -24,10 +27,30 @@ export default function MissingPage() {
     queryFn: () => datasetsApi.getMissing(datasetId).then((r) => r.data),
   });
 
+  const missingCols = data?.columns.filter((c: any) => c.count > 0) ?? [];
+
+  useEffect(() => {
+    if (!data) return;
+    const worst = missingCols.slice(0, 5).map((c: any) => `${c.name}: ${c.pct.toFixed(1)}%`).join(", ");
+    setPageContext({
+      page: "missing",
+      label: "Missing Values",
+      details: {
+        total_missing_pct: (data.missing_pct ?? 0).toFixed(1) + "%",
+        affected_columns: missingCols.length,
+        worst_columns: worst || "none",
+      },
+      suggestedQuestions: [
+        "How should I handle these missing values?",
+        "Which columns are safe to drop vs impute?",
+        "What imputation strategy works best here?",
+      ],
+    });
+    return () => setPageContext(null);
+  }, [data, setPageContext]);
+
   if (isLoading) return <PageSpinner />;
   if (!data) return null;
-
-  const missingCols = data.columns.filter((c: any) => c.count > 0);
 
   const tableData = missingCols
     .map((col: any) => ({
