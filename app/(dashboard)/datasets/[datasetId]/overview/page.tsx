@@ -19,6 +19,7 @@ import {
   CheckCircle, AlertCircle, Clock, Tag
 } from "lucide-react";
 import type { ColumnProfile, QualityScore, InsightCard } from "@/types";
+import { AiNarrative } from "@/components/ai/AiNarrative";
 
 const TYPE_COLORS: Record<string, string> = {
   numeric: "bg-blue-100 text-brand",
@@ -188,6 +189,9 @@ export default function DatasetOverviewPage() {
             </button>
           </div>
         </div>
+
+        {/* AI Narrative */}
+        <AiNarrative datasetId={datasetId} datasetReady={dataset.status === "ready"} />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

@@ -19,6 +19,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { AiNarrative } from "@/components/ai/AiNarrative";
 
 const EDA_LINKS = [
   { label: "Column Profile", href: "profile", desc: "Types, stats, and sample values for each column" },
@@ -88,6 +89,9 @@ export default function DatasetOverviewPage() {
           </div>
         </div>
       </div>
+
+      {/* AI Narrative */}
+      <AiNarrative datasetId={datasetId} datasetReady={dataset.status === "ready"} />
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">

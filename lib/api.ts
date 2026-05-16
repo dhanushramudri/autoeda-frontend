@@ -160,6 +160,11 @@ export const datasetsApi = {
     api.get(`/datasets/${datasetId}/pca`, { params: { n_components: nComponents } }),
   getScatter3d: (datasetId: string, x: string, y: string, z: string) =>
     api.get(`/datasets/${datasetId}/scatter3d`, { params: { x, y, z } }),
+  // AI features
+  getAiNarrative: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/ai/narrative`),
+  aiChat: (datasetId: string, message: string, history: { role: string; content: string }[]) =>
+    api.post(`/datasets/${datasetId}/ai/chat`, { message, history }),
   // SQL Editor
   sqlExecute: (datasetId: string, sql: string, limit = 1000) =>
     api.post(`/datasets/${datasetId}/sql/execute`, { sql, limit }),
