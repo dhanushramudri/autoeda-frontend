@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -22,7 +22,7 @@ import {
 import {
   BarChart2, GitMerge, Layers, Table2, AlertTriangle,
   Eye, EyeOff, RefreshCw, Info,
-  Hash, Type, Clock, Sigma, ChevronLeft, ChevronRight,
+  Hash, Type, Clock, Sigma,
 } from "lucide-react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -909,11 +909,6 @@ export default function AnalysisPage() {
     staleTime: 1000 * 60 * 10,
   });
 
-  const allCols = useMemo(() => {
-    if (!data) return [];
-    return [...data.numeric_cols, ...data.categorical_cols, ...data.datetime_cols];
-  }, [data]);
-
   const [activeTab, setActiveTab] = useState<AnalysisTab>("univariate");
   const [selectedCol, setSelectedCol] = useState<string>("");
   const [visibleCharts, setVisibleCharts] = useState<Set<ChartKey>>(
@@ -939,11 +934,6 @@ export default function AnalysisPage() {
     });
   }
   const show = (k: ChartKey) => visibleCharts.has(k);
-
-  // Column navigation
-  const selectedIdx = allCols.indexOf(selectedCol);
-  const prevCol = selectedIdx > 0 ? allCols[selectedIdx - 1] : null;
-  const nextCol = selectedIdx < allCols.length - 1 ? allCols[selectedIdx + 1] : null;
 
   // ── Bivariate state ──────────────────────────────────────────────────────────
   const [bivType, setBivType] = useState<"num_num" | "cat_cat" | "num_cat">("num_num");
@@ -1006,11 +996,11 @@ export default function AnalysisPage() {
   const colType = selectedCol && data ? data.column_types[selectedCol] : null;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col h-screen bg-slate-50">
       <SubNav datasetId={datasetId} />
 
       {data && (
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 overflow-hidden min-h-0">
           <Sidebar
             data={data}
             activeTab={activeTab} setActiveTab={setActiveTab}
@@ -1024,56 +1014,6 @@ export default function AnalysisPage() {
             {/* ══════════ UNIVARIATE TAB ══════════ */}
             {activeTab === "univariate" && (
               <div className="grid grid-cols-2 gap-4">
-
-                {/* Header with column navigation */}
-                <div className="col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-1">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <BarChart2 className="w-4 h-4 text-blue-600" />
-                      <h2 className="text-sm font-bold text-slate-800">Univariate Analysis</h2>
-                      {colType && (
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                          colType === "numeric"     ? "bg-blue-100 text-blue-700" :
-                          colType === "categorical" ? "bg-violet-100 text-violet-700" :
-                          "bg-cyan-100 text-cyan-700"
-                        }`}>{colType}</span>
-                      )}
-                      {data.sampled && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-50 text-amber-700 border border-amber-200">
-                          sampled {data.sample_size?.toLocaleString()} / {data.total_rows?.toLocaleString()} rows
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Prev / Next navigation */}
-                    {allCols.length > 1 && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-400 tabular-nums">
-                          {selectedIdx + 1} / {allCols.length}
-                        </span>
-                        <button
-                          onClick={() => prevCol && setSelectedCol(prevCol)}
-                          disabled={!prevCol}
-                          className="p-1 rounded-md border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition">
-                          <ChevronLeft className="w-4 h-4 text-slate-600" />
-                        </button>
-                        <button
-                          onClick={() => nextCol && setSelectedCol(nextCol)}
-                          disabled={!nextCol}
-                          className="p-1 rounded-md border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition">
-                          <ChevronRight className="w-4 h-4 text-slate-600" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  {selectedCol && (
-                    <p className="text-xs text-slate-500 mt-1">
-                      Showing charts for{" "}
-                      <span className="font-mono font-semibold text-slate-700">{selectedCol}</span>
-                      {" — select another column in the sidebar"}
-                    </p>
-                  )}
-                </div>
 
                 {/* ── Numeric column ── */}
                 {selectedCol && colType === "numeric" && (() => {
