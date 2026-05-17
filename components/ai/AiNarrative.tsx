@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { Sparkles, RefreshCw } from "lucide-react";
@@ -10,11 +11,13 @@ interface Props {
 }
 
 export function AiNarrative({ datasetId, datasetReady }: Props) {
+  const [triggered, setTriggered] = useState(false);
+
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["ai-narrative", datasetId],
     queryFn: () => datasetsApi.getAiNarrative(datasetId).then((r) => r.data),
-    enabled: datasetReady,
-    staleTime: 1000 * 60 * 10, // cache 10 min
+    enabled: datasetReady && triggered,
+    staleTime: 1000 * 60 * 10,
     retry: false,
   });
 
@@ -28,17 +31,27 @@ export function AiNarrative({ datasetId, datasetReady }: Props) {
         <h2 className="text-sm font-semibold text-violet-700 flex items-center gap-1.5">
           <Sparkles className="w-4 h-4" /> AI Summary
         </h2>
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="text-violet-400 hover:text-violet-600 transition disabled:opacity-40"
-          title="Regenerate"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
-        </button>
+        {triggered && (
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="text-violet-400 hover:text-violet-600 transition disabled:opacity-40"
+            title="Regenerate"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
+          </button>
+        )}
       </div>
 
-      {isLoading || isFetching ? (
+      {!triggered ? (
+        <button
+          onClick={() => setTriggered(true)}
+          className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-violet-600 bg-white border border-violet-200 rounded-lg hover:bg-violet-50 transition"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          Generate AI Summary
+        </button>
+      ) : isLoading || isFetching ? (
         <div className="space-y-2 animate-pulse">
           <div className="h-3 bg-violet-200/60 rounded w-full" />
           <div className="h-3 bg-violet-200/60 rounded w-5/6" />

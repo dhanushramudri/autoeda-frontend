@@ -120,10 +120,12 @@ export default function TransformStudioPage() {
     queryFn: () => datasetsApi.getProfile(datasetId).then((r) => r.data),
   });
 
+  const [suggestionsTriggered, setSuggestionsTriggered] = useState(false);
+
   const { data: suggestionsData, isLoading: suggestionsLoading, refetch: refetchSuggestions } = useQuery({
     queryKey: ["ai-transform-suggestions", datasetId],
     queryFn: () => datasetsApi.getAiTransformSuggestions(datasetId).then((r) => r.data),
-    enabled: !!datasetId && dataset?.status === "ready",
+    enabled: !!datasetId && dataset?.status === "ready" && suggestionsTriggered,
     staleTime: 1000 * 60 * 5,
     retry: false,
   });
@@ -192,17 +194,27 @@ export default function TransformStudioPage() {
             <h2 className="text-sm font-semibold text-violet-700 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4" /> AI Suggestions
             </h2>
-            <button
-              onClick={() => refetchSuggestions()}
-              disabled={suggestionsLoading}
-              className="text-violet-400 hover:text-violet-600 transition disabled:opacity-40"
-              title="Refresh suggestions"
-            >
-              <RefreshCw className={cn("w-3.5 h-3.5", suggestionsLoading && "animate-spin")} />
-            </button>
+            {suggestionsTriggered && (
+              <button
+                onClick={() => refetchSuggestions()}
+                disabled={suggestionsLoading}
+                className="text-violet-400 hover:text-violet-600 transition disabled:opacity-40"
+                title="Refresh suggestions"
+              >
+                <RefreshCw className={cn("w-3.5 h-3.5", suggestionsLoading && "animate-spin")} />
+              </button>
+            )}
           </div>
 
-          {suggestionsLoading ? (
+          {!suggestionsTriggered ? (
+            <button
+              onClick={() => setSuggestionsTriggered(true)}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-violet-600 bg-white border border-violet-200 rounded-lg hover:bg-violet-50 transition"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Generate AI Suggestions
+            </button>
+          ) : suggestionsLoading ? (
             <div className="flex items-center gap-2 text-xs text-violet-500">
               <Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyzing dataset...
             </div>
