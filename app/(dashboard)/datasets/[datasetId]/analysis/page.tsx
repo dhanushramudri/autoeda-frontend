@@ -22,10 +22,9 @@ import {
 import {
   BarChart2, GitMerge, Layers, Table2, AlertTriangle,
   Eye, EyeOff, RefreshCw, Info,
-  Hash, Type, Clock, Sigma,
+  Hash, Type, Clock, Sigma, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
-// ─── Plotly (SSR-safe) ────────────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false }) as any;
 
@@ -48,9 +47,8 @@ const PALETTE = [
   "#7C3AED", "#0D9488",
 ];
 
-// ─── Plotly base config ───────────────────────────────────────────────────────
 const BASE_LAYOUT: Partial<Layout> = {
-    margin: { l: 50, r: 20, t: 24, b: 50 },
+  margin: { l: 50, r: 20, t: 24, b: 50 },
   font: { size: 11, family: "'DM Sans', sans-serif" },
   paper_bgcolor: "transparent",
   plot_bgcolor:  "transparent",
@@ -60,7 +58,8 @@ const BASE_LAYOUT: Partial<Layout> = {
   yaxis: { gridcolor: "#F1F5F9", zerolinecolor: "#E2E8F0" },
 };
 
-const PLOT_CFG: Partial<Config> = {  displayModeBar: true,
+const PLOT_CFG: Partial<Config> = {
+  displayModeBar: true,
   displaylogo: false,
   modeBarButtonsToRemove: ["lasso2d", "select2d", "autoScale2d", "toImage"],
   responsive: true,
@@ -68,7 +67,7 @@ const PLOT_CFG: Partial<Config> = {  displayModeBar: true,
 
 const PLOT_STYLE = { width: "100%", height: "280px" };
 
-// ─── Shared empty state ───────────────────────────────────────────────────────
+// ─── Shared primitives ────────────────────────────────────────────────────────
 function Empty({ msg = "Insufficient data" }: { msg?: string }) {
   return (
     <div className="flex flex-col items-center justify-center h-40 gap-2 text-slate-300">
@@ -78,10 +77,7 @@ function Empty({ msg = "Insufficient data" }: { msg?: string }) {
   );
 }
 
-// ─── Stat pill ────────────────────────────────────────────────────────────────
-function Pill({
-  label, value, color = C.primary,
-}: { label: string; value: string | number; color?: string }) {
+function Pill({ label, value, color = C.primary }: { label: string; value: string | number; color?: string }) {
   return (
     <div className="flex flex-col items-center bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 min-w-[72px]">
       <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">{label}</span>
@@ -90,7 +86,6 @@ function Pill({
   );
 }
 
-// ─── Insight badge ────────────────────────────────────────────────────────────
 function Insight({ text, level = "warning" }: { text: string; level?: "warning" | "danger" | "info" }) {
   const map = {
     warning: "bg-amber-50 border-amber-200 text-amber-700",
@@ -106,34 +101,21 @@ function Insight({ text, level = "warning" }: { text: string; level?: "warning" 
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// UNIVARIATE — NUMERIC
+// NUMERIC CHART COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function HistKDE({ data, col }: { data: NumericCharts["histogram_kde"]; col: string }) {
   if (!data || !data.bins || data.bins.length === 0) return <Empty />;
-  
   const traces: Data[] = [
-    { 
-      x: data.bins || [], 
-      y: data.counts || [], 
-      type: "bar", 
-      name: "Frequency",
-      marker: { color: C.primary, opacity: 0.75 } 
-    },
+    { x: data.bins || [], y: data.counts || [], type: "bar", name: "Frequency",
+      marker: { color: C.primary, opacity: 0.75 } },
   ];
-  
   if (data.kde_x?.length && data.kde_y?.length) {
-    traces.push({ 
-      x: data.kde_x, 
-      y: data.kde_y, 
-      type: "scatter", 
-      mode: "lines",
-      name: "KDE", 
-      line: { color: C.danger, width: 2.5 }, 
-      yaxis: "y2" 
+    traces.push({
+      x: data.kde_x, y: data.kde_y, type: "scatter", mode: "lines",
+      name: "KDE", line: { color: C.danger, width: 2.5 }, yaxis: "y2",
     });
   }
-  
   const shapes: Partial<Shape>[] = [];
   if (data.mean != null) shapes.push({
     type: "line", x0: data.mean, x1: data.mean, y0: 0, y1: 1, yref: "paper",
@@ -143,7 +125,6 @@ function HistKDE({ data, col }: { data: NumericCharts["histogram_kde"]; col: str
     type: "line", x0: data.median, x1: data.median, y0: 0, y1: 1, yref: "paper",
     line: { color: C.success, width: 1.5, dash: "dot" },
   });
-  
   return (
     <Plot data={traces}
       layout={{ ...BASE_LAYOUT, shapes, xaxis: { title: col }, yaxis: { title: "Count" },
@@ -171,11 +152,78 @@ function BoxPlot({ data, col }: { data: NumericCharts["box"]; col: string }) {
   );
 }
 
-// Numeric stats summary row - REMOVED AS PER USER REQUEST
-// function NumericStatRow({ data, col }: { data: NumericCharts; col: string }) {
+function ViolinChart({ data, col }: { data: NumericCharts["violin"]; col: string }) {
+  if (!data?.y?.length) return <Empty />;
+  return (
+    <Plot
+      data={[{
+        type: "violin", y: data.y,
+        x: Array(data.y.length).fill(col),
+        name: col, box: { visible: true }, meanline: { visible: true },
+        line: { color: C.secondary }, fillcolor: C.secondary, opacity: 0.55,
+      } as any]}
+      layout={{ ...BASE_LAYOUT, yaxis: { title: col } }}
+      config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
+  );
+}
+
+function QQPlot({ data, col }: { data: NumericCharts["qq"]; col: string }) {
+  if (!data?.theoretical?.length) return <Empty />;
+  return (
+    <Plot
+      data={[
+        { x: data.theoretical, y: data.sample, mode: "markers", type: "scatter",
+          name: "Sample", marker: { color: C.primary, size: 4, opacity: 0.55 } },
+        { x: data.line_x, y: data.line_y, mode: "lines", type: "scatter",
+          name: "Normal line", line: { color: C.danger, width: 2 } },
+      ]}
+      layout={{ ...BASE_LAYOUT,
+        xaxis: { title: "Theoretical quantiles" },
+        yaxis: { title: "Sample quantiles" },
+        legend: { orientation: "h", y: -0.25 } }}
+      config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
+  );
+}
+
+function ECDFChart({ data, col }: { data: NumericCharts["ecdf"]; col: string }) {
+  if (!data?.x?.length) return <Empty />;
+  return (
+    <Plot
+      data={[{
+        x: data.x, y: data.y, mode: "lines", type: "scatter", name: "ECDF",
+        line: { color: C.accent, width: 2.5, shape: "hv" },
+        fill: "tozeroy", fillcolor: `${C.accent}18`,
+      }]}
+      layout={{ ...BASE_LAYOUT,
+        xaxis: { title: col },
+        yaxis: { title: "Cumulative probability", range: [0, 1] } }}
+      config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
+  );
+}
+
+function StripPlot({ data, col }: { data: NumericCharts["violin"]; col: string }) {
+  if (!data?.y?.length) return <Empty />;
+  const maxPoints = 2000;
+  const pts = data.y as number[];
+  const sample = pts.length > maxPoints
+    ? pts.filter((_, i) => i % Math.ceil(pts.length / maxPoints) === 0)
+    : pts;
+  return (
+    <Plot
+      data={[{
+        x: sample.map(() => col), y: sample,
+        type: "box", boxpoints: "all", jitter: 0.45, pointpos: 0,
+        marker: { color: C.accent, size: 3, opacity: 0.35 },
+        line: { color: "transparent" }, fillcolor: "transparent",
+        name: col, showlegend: false,
+      } as any]}
+      layout={{ ...BASE_LAYOUT, yaxis: { title: col }, xaxis: { title: "" } }}
+      config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
+  );
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// UNIVARIATE — CATEGORICAL
+// CATEGORICAL CHART COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function CatBar({ data, col }: { data: CategoricalCharts["bar"]; col: string }) {
@@ -194,8 +242,7 @@ function CatBar({ data, col }: { data: CategoricalCharts["bar"]; col: string }) 
           formatter={(v: number, _n, p) => [`${v.toLocaleString()} (${p.payload.pct?.toFixed(1)}%)`, col]}
           contentStyle={{ fontSize: 11, borderRadius: 8, border: `1px solid ${C.border}` }}
         />
-        <Bar dataKey="value" fill={C.primary} radius={6}
-          background={{ fill: "#F1F5F9" }} />
+        <Bar dataKey="value" fill={C.primary} radius={6} background={{ fill: "#F1F5F9" }} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -221,8 +268,26 @@ function CatPie({ data }: { data: CategoricalCharts["pie"] }) {
   );
 }
 
+function TreemapChart({ data, col }: { data: CategoricalCharts["bar"]; col: string }) {
+  if (!data?.labels?.length) return <Empty />;
+  return (
+    <Plot
+      data={[{
+        type: "treemap",
+        labels: data.labels,
+        values: data.values,
+        parents: Array(data.labels.length).fill(""),
+        textinfo: "label+percent parent",
+        hovertemplate: "%{label}: %{value:,}<br>%{percentParent:.1%}<extra></extra>",
+        marker: { colors: data.values, colorscale: "Blues", showscale: false },
+      } as any]}
+      layout={{ ...BASE_LAYOUT, margin: { l: 10, r: 10, t: 10, b: 10 } }}
+      config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
+  );
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// UNIVARIATE — DATETIME
+// DATETIME CHART COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function TimeSeriesLine({ data }: { data: DatetimeCharts["timeseries"] }) {
@@ -269,7 +334,7 @@ function SeasonalityGrid({ data }: { data: DatetimeCharts["seasonality"] }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ON-DEMAND BIVARIATE CHARTS
+// BIVARIATE CHART COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function BivNumNum({ data, col1, col2 }: { data: any; col1: string; col2: string }) {
@@ -279,9 +344,11 @@ function BivNumNum({ data, col1, col2 }: { data: any; col1: string; col2: string
       marker: { color: C.primary, size: 5, opacity: 0.45 } },
   ];
   if (data.line_x?.length) {
-    traces.push({ x: data.line_x, y: data.line_y, mode: "lines", type: "scatter",
+    traces.push({
+      x: data.line_x, y: data.line_y, mode: "lines", type: "scatter",
       name: `Trend (R²=${data.r2?.toFixed(2) ?? "?"})`,
-      line: { color: C.danger, width: 2, dash: "dash" } });
+      line: { color: C.danger, width: 2, dash: "dash" },
+    });
   }
   return (
     <>
@@ -342,7 +409,7 @@ function BivNumCat({ data }: { data: any }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MULTIVARIATE CHARTS
+// MULTIVARIATE CHART COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function PairPlot({ pairs }: { pairs: FullAnalysisResult["multi_column"]["scatter_pairs"] }) {
@@ -389,6 +456,33 @@ function Scatter3DPlot({ data }: { data: any }) {
       layout={{ ...BASE_LAYOUT, margin: { l: 0, r: 0, t: 10, b: 10 },
         scene: { xaxis: { title: data.x_col }, yaxis: { title: data.y_col }, zaxis: { title: data.z_col } } }}
       config={PLOT_CFG} style={{ width: "100%", height: "420px" }} useResizeHandler />
+  );
+}
+
+function BubbleChart({ data, xCol, yCol, sizeCol }: { data: any; xCol: string; yCol: string; sizeCol: string }) {
+  if (data?.error) return <Empty msg={data.error} />;
+  const sizes = data.z as number[];
+  if (!sizes?.length) return <Empty />;
+  const minZ = Math.min(...sizes);
+  const maxZ = Math.max(...sizes);
+  const range = maxZ - minZ || 1;
+  const normalizedSizes = sizes.map((v) => 4 + ((v - minZ) / range) * 28);
+  return (
+    <Plot
+      data={[{
+        x: data.x, y: data.y,
+        mode: "markers", type: "scatter",
+        marker: {
+          size: normalizedSizes, color: data.z,
+          colorscale: "Viridis", opacity: 0.6,
+          colorbar: { title: sizeCol, thickness: 10, len: 0.6, tickfont: { size: 9 } },
+        },
+        hovertemplate: `${xCol}: %{x}<br>${yCol}: %{y}<br>${sizeCol}: %{customdata}<extra></extra>`,
+        customdata: data.z,
+        showlegend: false,
+      } as any]}
+      layout={{ ...BASE_LAYOUT, xaxis: { title: xCol }, yaxis: { title: yCol } }}
+      config={PLOT_CFG} style={{ width: "100%", height: "380px" }} useResizeHandler />
   );
 }
 
@@ -439,20 +533,15 @@ function PCAPlot({ data }: { data: any }) {
 
 function CorrelationHeatmap({ data }: { data: FullAnalysisResult["multi_column"]["correlation"] }) {
   if (!data?.labels?.length) return <Empty msg="Need 2+ numeric columns" />;
-  
   const textData = (data.z as number[][]).map((row) =>
     row.map((v) => (v != null ? v.toFixed(2) : ""))
   );
-  
   return (
     <Plot
       data={[{
-        z: data.z, x: data.labels, y: data.labels,
-        type: "heatmap",
+        z: data.z, x: data.labels, y: data.labels, type: "heatmap",
         colorscale: [[0, C.danger], [0.5, "#ffffff"], [1, C.primary]],
-        zmin: -1, zmax: 1,
-        text: textData,
-        texttemplate: "%{text}",
+        zmin: -1, zmax: 1, text: textData, texttemplate: "%{text}",
         hovertemplate: "%{x} × %{y}: %{z:.3f}<extra></extra>",
         colorbar: { thickness: 12, len: 0.8, tickfont: { size: 10 } },
       } as any]}
@@ -462,7 +551,7 @@ function CorrelationHeatmap({ data }: { data: FullAnalysisResult["multi_column"]
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STAT TABLES
+// STAT TABLE COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function NormalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["normality_table"] }) {
@@ -549,10 +638,10 @@ function OutlierTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["outlie
 
 function CardinalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["cardinality"] }) {
   const FLAG: Record<string, { cls: string; label: string }> = {
-    id_like:         { cls: "bg-purple-100 text-purple-700",  label: "ID-like" },
-    constant:        { cls: "bg-slate-100 text-slate-500",    label: "Constant" },
-    binary:          { cls: "bg-sky-100 text-sky-700",        label: "Binary" },
-    low_cardinality: { cls: "bg-emerald-100 text-emerald-700",label: "Low-card" },
+    id_like:         { cls: "bg-purple-100 text-purple-700",   label: "ID-like" },
+    constant:        { cls: "bg-slate-100 text-slate-500",     label: "Constant" },
+    binary:          { cls: "bg-sky-100 text-sky-700",         label: "Binary" },
+    low_cardinality: { cls: "bg-emerald-100 text-emerald-700", label: "Low-card" },
     normal:          { cls: "bg-white text-slate-500 border border-slate-200", label: "Normal" },
   };
   return (
@@ -636,61 +725,63 @@ function MissingTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["missin
 type AnalysisTab = "univariate" | "bivariate" | "multivariate" | "quality";
 
 const TAB_META: { key: AnalysisTab; label: string; icon: React.ReactNode; desc: string }[] = [
-  { key: "univariate",   label: "Univariate",   icon: <BarChart2 className="w-4 h-4" />,  desc: "Single column distributions" },
-  { key: "bivariate",   label: "Bivariate",   icon: <GitMerge className="w-4 h-4" />,   desc: "Pair relationships" },
-  { key: "multivariate",label: "Multivariate", icon: <Layers className="w-4 h-4" />,     desc: "Multi-column patterns" },
-  { key: "quality",     label: "Data Quality", icon: <Table2 className="w-4 h-4" />,     desc: "Missing, outliers, normality" },
+  { key: "univariate",    label: "Univariate",   icon: <BarChart2 className="w-4 h-4" />, desc: "Single column distributions" },
+  { key: "bivariate",    label: "Bivariate",    icon: <GitMerge className="w-4 h-4" />,  desc: "Pair relationships" },
+  { key: "multivariate", label: "Multivariate", icon: <Layers className="w-4 h-4" />,    desc: "Multi-column patterns" },
+  { key: "quality",      label: "Data Quality", icon: <Table2 className="w-4 h-4" />,    desc: "Missing, outliers, normality" },
 ];
 
-type ChartKey = "histogram" | "box" | "violin" | "qq" | "ecdf"
-  | "bar" | "pie" | "pareto"
-  | "timeseries" | "seasonality"
-  | "scatter" | "grouped_box"
-  | "correlation" | "radar";
+type ChartKey =
+  | "histogram" | "box" | "violin" | "strip" | "qq" | "ecdf"
+  | "bar" | "pie" | "pareto" | "treemap"
+  | "timeseries" | "seasonality";
 
 const CHART_LABELS: Record<ChartKey, string> = {
-  histogram: "Histogram + KDE",
-  box:       "Box Plot",
-  violin:    "Violin Plot",
-  qq:        "QQ Plot",
-  ecdf:      "ECDF",
-  bar:       "Bar Chart",
-  pie:       "Pie / Donut",
-  pareto:    "Pareto Chart",
-  timeseries:"Time Series",
-  seasonality:"Seasonality",
-  scatter:   "Scatter + Trend",
-  grouped_box:"Grouped Box",
-  correlation:"Correlation Heatmap",
-  radar:     "Column Radar",
+  histogram:   "Histogram + KDE",
+  box:         "Box Plot",
+  violin:      "Violin Plot",
+  strip:       "Strip Plot",
+  qq:          "QQ Plot",
+  ecdf:        "ECDF",
+  bar:         "Bar Chart",
+  pie:         "Pie / Donut",
+  pareto:      "Pareto Chart",
+  treemap:     "Treemap",
+  timeseries:  "Time Series",
+  seasonality: "Seasonality",
 };
+
+const NUMERIC_CHARTS: ChartKey[] = ["histogram", "box", "violin", "strip", "qq", "ecdf"];
+const CAT_CHARTS: ChartKey[]     = ["bar", "pie", "pareto", "treemap"];
+const DT_CHARTS: ChartKey[]      = ["timeseries", "seasonality"];
 
 function Sidebar({
   data, activeTab, setActiveTab,
-  visibleCols, toggleCol,
+  selectedCol, setSelectedCol,
   visibleCharts, toggleChart,
 }: {
   data: FullAnalysisResult;
   activeTab: AnalysisTab; setActiveTab: (t: AnalysisTab) => void;
-  visibleCols: Set<string>; toggleCol: (c: string) => void;
+  selectedCol: string; setSelectedCol: (c: string) => void;
   visibleCharts: Set<ChartKey>; toggleChart: (k: ChartKey) => void;
 }) {
-  const allCols = [...data.numeric_cols, ...data.categorical_cols, ...data.datetime_cols];
-  const allOn = allCols.every((c) => visibleCols.has(c));
   const TYPE_ICON: Record<string, React.ReactNode> = {
     numeric:     <Hash className="w-2.5 h-2.5 text-blue-500" />,
     categorical: <Type className="w-2.5 h-2.5 text-violet-500" />,
     datetime:    <Clock className="w-2.5 h-2.5 text-cyan-500" />,
   };
 
-  // Charts relevant per tab
-  const tabCharts: Record<AnalysisTab, ChartKey[]> = {
-    univariate:   ["histogram", "box", "violin", "qq", "ecdf", "bar", "pie", "pareto"],
-    bivariate:    [],
-    multivariate: [],
-    quality:      [],
-  };
-  const chartsForTab = tabCharts[activeTab];
+  const colType = selectedCol ? data.column_types[selectedCol] : null;
+  const chartsForColType = colType === "numeric" ? NUMERIC_CHARTS
+    : colType === "categorical" ? CAT_CHARTS
+    : colType === "datetime" ? DT_CHARTS
+    : [];
+
+  const sections = [
+    { label: "Numeric",      cols: data.numeric_cols,     type: "numeric" },
+    { label: "Categorical",  cols: data.categorical_cols, type: "categorical" },
+    { label: "Datetime",     cols: data.datetime_cols,    type: "datetime" },
+  ].filter((s) => s.cols.length > 0);
 
   return (
     <aside className="w-60 flex-shrink-0 border-r border-slate-200 bg-white flex flex-col overflow-hidden">
@@ -712,36 +803,44 @@ function Sidebar({
         ))}
       </div>
 
-      {/* Columns filter */}
-      <div className="px-3 py-2 border-b border-slate-100 flex-shrink-0">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Columns</p>
-          <button onClick={() => allCols.forEach((c) => { if (allOn === visibleCols.has(c)) toggleCol(c); })}
-            className="text-[10px] text-blue-600 hover:underline">
-            {allOn ? "Hide all" : "Show all"}
-          </button>
+      {/* Column selector — univariate tab only */}
+      {activeTab === "univariate" && (
+        <div className="px-3 py-2 border-b border-slate-100 overflow-y-auto flex-1 min-h-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Columns</p>
+          {sections.map(({ label, cols, type }) => (
+            <div key={type} className="mb-3">
+              <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-wider px-1 mb-1">
+                {label} ({cols.length})
+              </p>
+              {cols.map((col) => (
+                <button
+                  key={col}
+                  onClick={() => setSelectedCol(col)}
+                  className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-all ${
+                    selectedCol === col
+                      ? "bg-blue-50 text-blue-700"
+                      : "text-slate-600 hover:bg-slate-50"
+                  }`}>
+                  <span className="flex-shrink-0">
+                    {TYPE_ICON[type] ?? <Sigma className="w-2.5 h-2.5 text-slate-400" />}
+                  </span>
+                  <span className="text-[11px] truncate font-medium">{col}</span>
+                  {selectedCol === col && (
+                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 flex-shrink-0" />
+                  )}
+                </button>
+              ))}
+            </div>
+          ))}
         </div>
-        <div className="max-h-48 overflow-y-auto space-y-0.5">
-          {allCols.map((col) => {
-            const t = data.column_types[col];
-            return (
-              <label key={col} className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-slate-50 cursor-pointer">
-                <input type="checkbox" checked={visibleCols.has(col)}
-                  onChange={() => toggleCol(col)} className="accent-blue-600 w-3 h-3" />
-                <span className="flex-shrink-0">{TYPE_ICON[t] ?? <Sigma className="w-2.5 h-2.5 text-slate-400" />}</span>
-                <span className="text-[11px] text-slate-700 truncate">{col}</span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
+      )}
 
       {/* Chart type toggles */}
-      {chartsForTab.length > 0 && (
-        <div className="px-3 py-2 flex-1 overflow-y-auto">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Chart Types</p>
+      {activeTab === "univariate" && chartsForColType.length > 0 && (
+        <div className="px-3 py-2 border-t border-slate-100 flex-shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Chart Types</p>
           <div className="space-y-0.5">
-            {chartsForTab.map((k) => (
+            {chartsForColType.map((k) => (
               <label key={k} className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-slate-50 cursor-pointer">
                 <input type="checkbox" checked={visibleCharts.has(k)}
                   onChange={() => toggleChart(k)} className="accent-blue-600 w-3 h-3" />
@@ -758,6 +857,7 @@ function Sidebar({
 // ═══════════════════════════════════════════════════════════════════════════════
 // CARD WRAPPER
 // ═══════════════════════════════════════════════════════════════════════════════
+
 function Card({
   title, desc, insight, insightLevel, wide, children,
 }: {
@@ -796,101 +896,59 @@ function TabHeader({ label, count }: { label: string; count?: number }) {
   );
 }
 
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // MAIN PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
+
 export default function AnalysisPage() {
   const { datasetId } = useParams<{ datasetId: string }>();
-  console.log("🔍 [AnalysisPage] Initializing with datasetId:", datasetId);
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.eda.analysis(datasetId),
-    queryFn: () => {
-      console.log("📡 [AnalysisPage] Fetching analysis data for dataset:", datasetId);
-      return datasetsApi.getAnalysis(datasetId).then((r) => {
-        console.log("✅ [AnalysisPage] Analysis data received:", r.data);
-        return r.data as FullAnalysisResult;
-      });
-    },
+    queryFn: () => datasetsApi.getAnalysis(datasetId).then((r) => r.data as FullAnalysisResult),
     staleTime: 1000 * 60 * 10,
   });
 
   const allCols = useMemo(() => {
     if (!data) return [];
-    const cols = [...data.numeric_cols, ...data.categorical_cols, ...data.datetime_cols];
-    console.log("📊 [AnalysisPage] Column breakdown:", {
-      numeric: data.numeric_cols.length,
-      categorical: data.categorical_cols.length,
-      datetime: data.datetime_cols.length,
-      total: cols.length,
-      numeric_cols: data.numeric_cols,
-      categorical_cols: data.categorical_cols,
-      datetime_cols: data.datetime_cols,
-    });
-    console.log("📈 [AnalysisPage] Numeric charts available:", Object.keys(data.numeric_charts));
-    console.log("📊 [AnalysisPage] Categorical charts available:", Object.keys(data.categorical_charts));
-    console.log("📅 [AnalysisPage] Datetime charts available:", Object.keys(data.datetime_charts));
-    return cols;
+    return [...data.numeric_cols, ...data.categorical_cols, ...data.datetime_cols];
   }, [data]);
 
   const [activeTab, setActiveTab] = useState<AnalysisTab>("univariate");
-const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set());
-
+  const [selectedCol, setSelectedCol] = useState<string>("");
   const [visibleCharts, setVisibleCharts] = useState<Set<ChartKey>>(
-    new Set(["histogram", "box", "violin", "qq", "ecdf", "bar", "pie", "pareto", "timeseries", "seasonality"] as ChartKey[])
+    new Set([
+      "histogram", "box", "violin", "strip", "qq", "ecdf",
+      "bar", "pie", "pareto", "treemap",
+      "timeseries", "seasonality",
+    ] as ChartKey[])
   );
 
-  console.log("✨ [AnalysisPage] Initial chart visibility:", Array.from(visibleCharts));
-
-
-  // Ensure all univariate charts are shown by default
   useEffect(() => {
-    const univariateCharts: ChartKey[] = ["histogram", "box", "violin", "qq", "ecdf", "bar", "pie", "pareto"];
-    console.log("🎨 [AnalysisPage] Ensuring univariate charts are visible:", univariateCharts);
-    setVisibleCharts((prev) => {
-      const newSet = new Set(prev);
-      univariateCharts.forEach(chart => {
-        if (!newSet.has(chart)) {
-          console.log(`  ➕ Adding chart: ${chart}`);
-          newSet.add(chart);
-        }
-      });
-      console.log("📋 [AnalysisPage] Final visible charts:", Array.from(newSet));
-      return newSet;
-    });
-  }, []);
+    if (data && !selectedCol) {
+      const first = data.numeric_cols[0] ?? data.categorical_cols[0] ?? data.datetime_cols[0] ?? "";
+      setSelectedCol(first);
+    }
+  }, [data, selectedCol]);
 
-function toggleCol(col: string) {
-  setHiddenCols((p) => { 
-    const n = new Set(p); 
-    n.has(col) ? n.delete(col) : n.add(col);
-    return n;
-  });
-}
   function toggleChart(k: ChartKey) {
-    console.log(`🔀 [AnalysisPage] Toggling chart: ${k}`);
-    setVisibleCharts((p) => { 
-      const n = new Set(p); 
+    setVisibleCharts((p) => {
+      const n = new Set(p);
       n.has(k) ? n.delete(k) : n.add(k);
-      console.log(`  Visible charts after toggle:`, Array.from(n));
       return n;
     });
   }
+  const show = (k: ChartKey) => visibleCharts.has(k);
 
-  const show = (k: ChartKey) => {
-    const visible = visibleCharts.has(k);
-    console.log(`👁️ [show("${k}")] -> ${visible}`);
-    return visible;
-  };
-const colOn = (c: string) => !hiddenCols.has(c);
-
+  // Column navigation
+  const selectedIdx = allCols.indexOf(selectedCol);
+  const prevCol = selectedIdx > 0 ? allCols[selectedIdx - 1] : null;
+  const nextCol = selectedIdx < allCols.length - 1 ? allCols[selectedIdx + 1] : null;
 
   // ── Bivariate state ──────────────────────────────────────────────────────────
   const [bivType, setBivType] = useState<"num_num" | "cat_cat" | "num_cat">("num_num");
   const [bivCol1, setBivCol1] = useState("");
   const [bivCol2, setBivCol2] = useState("");
-
   const bivEnabled = !!bivCol1 && !!bivCol2 && bivCol1 !== bivCol2;
   const { data: bivData, isFetching: bivLoading } = useQuery({
     queryKey: ["eda", "bivariate", datasetId, bivCol1, bivCol2, bivType],
@@ -903,14 +961,6 @@ const colOn = (c: string) => !hiddenCols.has(c);
   const [s3x, setS3x] = useState("");
   const [s3y, setS3y] = useState("");
   const [s3z, setS3z] = useState("");
-
-  const { data: pcaData, isFetching: pcaLoading } = useQuery({
-    queryKey: ["eda", "pca", datasetId],
-    queryFn: () => datasetsApi.getPCA(datasetId).then((r) => r.data),
-    enabled: (data?.numeric_cols?.length ?? 0) >= 2,
-    staleTime: 1000 * 60 * 10,
-  });
-
   const s3Enabled = !!s3x && !!s3y && !!s3z && new Set([s3x, s3y, s3z]).size === 3;
   const { data: s3Data, isFetching: s3Loading } = useQuery({
     queryKey: ["eda", "scatter3d", datasetId, s3x, s3y, s3z],
@@ -918,8 +968,14 @@ const colOn = (c: string) => !hiddenCols.has(c);
     enabled: s3Enabled,
     staleTime: 1000 * 60 * 10,
   });
+  const { data: pcaData, isFetching: pcaLoading } = useQuery({
+    queryKey: ["eda", "pca", datasetId],
+    queryFn: () => datasetsApi.getPCA(datasetId).then((r) => r.data),
+    enabled: (data?.numeric_cols?.length ?? 0) >= 2,
+    staleTime: 1000 * 60 * 10,
+  });
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  // ── Loading / error states ────────────────────────────────────────────────────
   if (isLoading) return (
     <div className="flex flex-col min-h-screen bg-slate-50">
       <SubNav datasetId={datasetId} />
@@ -947,7 +1003,8 @@ const colOn = (c: string) => !hiddenCols.has(c);
     </div>
   );
 
-  // ─────────────────────────────────────────────────────────────────────────────
+  const colType = selectedCol && data ? data.column_types[selectedCol] : null;
+
   return (
     <div className="flex flex-col min-h-screen bg-slate-50">
       <SubNav datasetId={datasetId} />
@@ -957,7 +1014,7 @@ const colOn = (c: string) => !hiddenCols.has(c);
           <Sidebar
             data={data}
             activeTab={activeTab} setActiveTab={setActiveTab}
-           visibleCols={new Set(allCols.filter(c => !hiddenCols.has(c)))} toggleCol={toggleCol}
+            selectedCol={selectedCol} setSelectedCol={setSelectedCol}
             visibleCharts={visibleCharts} toggleChart={toggleChart}
           />
 
@@ -968,158 +1025,186 @@ const colOn = (c: string) => !hiddenCols.has(c);
             {activeTab === "univariate" && (
               <div className="grid grid-cols-2 gap-4">
 
-                {/* Section header */}
-                <div className="col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-5 mb-1">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <BarChart2 className="w-4 h-4 text-blue-600" />
-                    <h2 className="text-sm font-bold text-slate-800">Univariate Analysis</h2>
+                {/* Header with column navigation */}
+                <div className="col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-1">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <BarChart2 className="w-4 h-4 text-blue-600" />
+                      <h2 className="text-sm font-bold text-slate-800">Univariate Analysis</h2>
+                      {colType && (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                          colType === "numeric"     ? "bg-blue-100 text-blue-700" :
+                          colType === "categorical" ? "bg-violet-100 text-violet-700" :
+                          "bg-cyan-100 text-cyan-700"
+                        }`}>{colType}</span>
+                      )}
+                      {data.sampled && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] bg-amber-50 text-amber-700 border border-amber-200">
+                          sampled {data.sample_size?.toLocaleString()} / {data.total_rows?.toLocaleString()} rows
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Prev / Next navigation */}
+                    {allCols.length > 1 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-slate-400 tabular-nums">
+                          {selectedIdx + 1} / {allCols.length}
+                        </span>
+                        <button
+                          onClick={() => prevCol && setSelectedCol(prevCol)}
+                          disabled={!prevCol}
+                          className="p-1 rounded-md border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition">
+                          <ChevronLeft className="w-4 h-4 text-slate-600" />
+                        </button>
+                        <button
+                          onClick={() => nextCol && setSelectedCol(nextCol)}
+                          disabled={!nextCol}
+                          className="p-1 rounded-md border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition">
+                          <ChevronRight className="w-4 h-4 text-slate-600" />
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-xs text-slate-500">Analyzing individual variables to understand their distributions and characteristics</p>
+                  {selectedCol && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      Showing charts for{" "}
+                      <span className="font-mono font-semibold text-slate-700">{selectedCol}</span>
+                      {" — select another column in the sidebar"}
+                    </p>
+                  )}
                 </div>
 
-
-                {/* Numeric Variables */}
-                {data.numeric_cols.filter(colOn).length > 0 && (
-                  <div className="col-span-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 mt-2">
-                    Numeric Variables
-                  </div>
-                )}
-
-                {data.numeric_cols.filter(colOn).map((col) => {
-                  const charts = data.numeric_charts[col];
-                  if (!charts) {
-                    console.log(`⚠️ [RENDER] No chart data for column: ${col}`);
-                    return null;
-                  }
-                  console.log(`📍 [RENDER] Rendering column: ${col}`);
+                {/* ── Numeric column ── */}
+                {selectedCol && colType === "numeric" && (() => {
+                  const charts = data.numeric_charts[selectedCol];
+                  if (!charts) return (
+                    <div className="col-span-2"><Empty msg={`No chart data for ${selectedCol}`} /></div>
+                  );
                   const highSkew = Math.abs(charts.skewness ?? 0) > 1;
+                  const missingInfo = data.stat_cards.missing_bar.find((r) => r.column === selectedCol);
                   return (
-                    <div key={col} className="contents">
-                      <TabHeader label={col} />
+                    <>
+                      {/* Stats pills */}
+                      <div className="col-span-2 flex gap-2 flex-wrap">
+                        {[
+                          { label: "Mean",    value: charts.histogram_kde.mean?.toFixed(4) ?? "--" },
+                          { label: "Median",  value: charts.histogram_kde.median?.toFixed(4) ?? "--" },
+                          { label: "Min",     value: charts.box.min?.toFixed(4) ?? "--" },
+                          { label: "Max",     value: charts.box.max?.toFixed(4) ?? "--" },
+                          { label: "Q1",      value: charts.box.q1?.toFixed(4) ?? "--" },
+                          { label: "Q3",      value: charts.box.q3?.toFixed(4) ?? "--" },
+                          {
+                            label: "Skewness",
+                            value: charts.skewness?.toFixed(3) ?? "--",
+                            color: Math.abs(charts.skewness ?? 0) > 1 ? C.danger :
+                                   Math.abs(charts.skewness ?? 0) > 0.5 ? C.warning : C.muted,
+                          },
+                          { label: "Kurtosis", value: charts.kurtosis?.toFixed(3) ?? "--" },
+                          {
+                            label: "Missing",
+                            value: `${missingInfo?.missing_pct?.toFixed(1) ?? "0"}%`,
+                            color: (missingInfo?.missing_pct ?? 0) > 5 ? C.warning : C.muted,
+                          },
+                        ].map(({ label, value, color }) => (
+                          <Pill key={label} label={label} value={value} color={color ?? C.primary} />
+                        ))}
+                      </div>
 
                       {show("histogram") && (
-                        <Card title={`Histogram + KDE — ${col}`}
+                        <Card title={`Histogram + KDE — ${selectedCol}`}
                           desc="Frequency distribution with kernel density estimate, mean (dashed) & median (dotted)"
                           insight={highSkew ? `Skewness ${charts.skewness?.toFixed(2)} — distribution is ${(charts.skewness ?? 0) > 0 ? "right" : "left"}-skewed` : undefined}
                           insightLevel={Math.abs(charts.skewness ?? 0) > 2 ? "danger" : "warning"}>
-                          <HistKDE data={charts.histogram_kde} col={col} />
+                          <HistKDE data={charts.histogram_kde} col={selectedCol} />
                         </Card>
                       )}
 
                       {show("box") && (
-                        <Card title={`Box Plot — ${col}`} desc="IQR box with whiskers and outlier dots">
-                          <BoxPlot data={charts.box} col={col} />
+                        <Card title={`Box Plot — ${selectedCol}`} desc="IQR box with whiskers and outlier dots">
+                          <BoxPlot data={charts.box} col={selectedCol} />
                         </Card>
                       )}
 
                       {show("violin") && (
-                        <Card title={`Violin Plot — ${col}`} desc="Full KDE distribution shape">
-                          {charts.violin && charts.violin.y?.length ? (
-                            <Plot
-                              data={[{
-                                type: "violin",
-                                y: charts.violin.y,
-                                x: Array(charts.violin.y.length).fill(col),
-                                name: col,
-                                box: { visible: true },
-                                meanline: { visible: true },
-                                line: { color: C.secondary },
-                                fillcolor: C.secondary,
-                                opacity: 0.55,
-                              } as any]}
-                              layout={{ ...BASE_LAYOUT, yaxis: { title: col } }}
-                              config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
-                          ) : <Empty />}
+                        <Card title={`Violin Plot — ${selectedCol}`} desc="Full KDE distribution shape with embedded box plot">
+                          <ViolinChart data={charts.violin} col={selectedCol} />
+                        </Card>
+                      )}
+
+                      {show("strip") && (
+                        <Card title={`Strip Plot — ${selectedCol}`} desc="Individual data points with jitter to reveal density">
+                          <StripPlot data={charts.violin} col={selectedCol} />
                         </Card>
                       )}
 
                       {show("qq") && (
-                        <Card title={`QQ Plot — ${col}`}
+                        <Card title={`QQ Plot — ${selectedCol}`}
                           desc="Sample vs. theoretical normal quantiles"
                           insight={charts.normality?.is_normal === false
                             ? `Not normally distributed (p = ${charts.normality.p_value?.toFixed(4)})` : undefined}
                           insightLevel="warning">
-                          {charts.qq && charts.qq.theoretical?.length ? (
-                            <Plot
-                              data={[
-                                { x: charts.qq.theoretical, y: charts.qq.sample, mode: "markers", type: "scatter",
-                                  name: "Sample", marker: { color: C.primary, size: 4, opacity: 0.55 } },
-                                { x: charts.qq.line_x, y: charts.qq.line_y, mode: "lines", type: "scatter",
-                                  name: "Normal line", line: { color: C.danger, width: 2 } },
-                              ]}
-                              layout={{ ...BASE_LAYOUT,
-                                xaxis: { title: "Theoretical quantiles" },
-                                yaxis: { title: "Sample quantiles" },
-                                legend: { orientation: "h", y: -0.25 } }}
-                              config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
-                          ) : <Empty />}
+                          <QQPlot data={charts.qq} col={selectedCol} />
                         </Card>
                       )}
 
                       {show("ecdf") && (
-                        <Card title={`ECDF — ${col}`} desc="Empirical cumulative distribution function">
-                          {charts.ecdf && charts.ecdf.x?.length ? (
-                            <Plot
-                              data={[{
-                                x: charts.ecdf.x,
-                                y: charts.ecdf.y,
-                                mode: "lines",
-                                type: "scatter",
-                                name: "ECDF",
-                                line: { color: C.accent, width: 2.5, shape: "hv" },
-                                fill: "tozeroy",
-                                fillcolor: `${C.accent}18`,
-                              }]}
-                              layout={{ ...BASE_LAYOUT,
-                                xaxis: { title: col },
-                                yaxis: { title: "Cumulative probability", range: [0, 1] } }}
-                              config={PLOT_CFG} style={PLOT_STYLE} useResizeHandler />
-                          ) : <Empty />}
+                        <Card title={`ECDF — ${selectedCol}`} desc="Empirical cumulative distribution function">
+                          <ECDFChart data={charts.ecdf} col={selectedCol} />
                         </Card>
                       )}
-                    </div>
+                    </>
                   );
-                })}
+                })()}
 
-                {/* Categorical Variables */}
-                {data.categorical_cols.filter(colOn).length > 0 && (
-                  <div className="col-span-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 mt-2">
-                    Categorical Variables
-                  </div>
-                )}
-
-                {data.categorical_cols.filter(colOn).map((col) => {
-                  const charts = data.categorical_charts[col];
-                  if (!charts) return null;
+                {/* ── Categorical column ── */}
+                {selectedCol && colType === "categorical" && (() => {
+                  const charts = data.categorical_charts[selectedCol];
+                  if (!charts) return (
+                    <div className="col-span-2"><Empty msg={`No chart data for ${selectedCol}`} /></div>
+                  );
                   const total = charts.bar.total_categories;
                   return (
-                    <div key={col} className="contents">
-                      <TabHeader label={col} />
+                    <>
+                      <div className="col-span-2 flex gap-2 flex-wrap">
+                        <Pill label="Categories" value={total} />
+                        <Pill label="Top value"  value={charts.bar.labels[0] ?? "--"} color={C.secondary} />
+                        <Pill label="Top freq"   value={`${charts.bar.percentages[0]?.toFixed(1) ?? "--"}%`} color={C.secondary} />
+                        <Pill label="Other"      value={charts.bar.other_count > 0 ? `+${charts.bar.other_count}` : "0"} color={C.muted} />
+                      </div>
 
                       {show("bar") && (
-                        <Card title={`Frequency — ${col}`}
+                        <Card title={`Frequency — ${selectedCol}`}
                           desc={`Top ${Math.min(total, 20)} of ${total} categories by count`}
                           insight={total > 50 ? `High cardinality: ${total} unique values` : undefined}
                           insightLevel="warning">
-                          <CatBar data={charts.bar} col={col} />
+                          <CatBar data={charts.bar} col={selectedCol} />
                         </Card>
                       )}
 
                       {show("pie") && charts.pie && (
-                        <Card title={`Share — ${col}`} desc="Proportional breakdown by category">
+                        <Card title={`Share — ${selectedCol}`} desc="Proportional breakdown by category">
                           <CatPie data={charts.pie} />
                         </Card>
                       )}
 
+                      {show("treemap") && (
+                        <Card title={`Treemap — ${selectedCol}`} desc="Category frequency as proportional rectangles">
+                          <TreemapChart data={charts.bar} col={selectedCol} />
+                        </Card>
+                      )}
+
                       {show("pareto") && (
-                        <Card title={`Pareto — ${col}`} desc="Frequency bars + cumulative % line (80/20 analysis)" wide>
-                          {charts.pareto && charts.pareto.labels?.length ? (
+                        <Card title={`Pareto — ${selectedCol}`} desc="Frequency bars + cumulative % line (80/20 analysis)" wide>
+                          {charts.pareto?.labels?.length ? (
                             <ResponsiveContainer width="100%" height={280}>
-                              <BarChart data={charts.pareto.labels.map((l, i) => ({
-                                label: l.length > 14 ? l.slice(0, 12) + "…" : l,
-                                value: charts.pareto.values[i],
-                                cumPct: charts.pareto.cumulative_pct[i],
-                              }))} margin={{ bottom: 44, right: 40 }}>
+                              <BarChart
+                                data={charts.pareto.labels.map((l, i) => ({
+                                  label: l.length > 14 ? l.slice(0, 12) + "…" : l,
+                                  value: charts.pareto.values[i],
+                                  cumPct: charts.pareto.cumulative_pct[i],
+                                }))}
+                                margin={{ bottom: 44, right: 40 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
                                 <XAxis dataKey="label" tick={{ fontSize: 9 }} angle={-30} textAnchor="end" />
                                 <YAxis yAxisId="l" tick={{ fontSize: 10 }} />
@@ -1134,38 +1219,38 @@ const colOn = (c: string) => !hiddenCols.has(c);
                           ) : <Empty />}
                         </Card>
                       )}
-                    </div>
+                    </>
                   );
-                })}
+                })()}
 
-                {/* Datetime columns */}
-                {data.datetime_cols.filter(colOn).length > 0 && (
-                  <div className="col-span-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 mt-2">
-                    Datetime Variables
-                  </div>
-                )}
-
-                {data.datetime_cols.filter(colOn).map((col) => {
-                  const charts = data.datetime_charts[col];
-                  if (!charts) return null;
+                {/* ── Datetime column ── */}
+                {selectedCol && colType === "datetime" && (() => {
+                  const charts = data.datetime_charts[selectedCol];
+                  if (!charts) return (
+                    <div className="col-span-2"><Empty msg={`No chart data for ${selectedCol}`} /></div>
+                  );
                   return (
-                    <div key={col} className="contents">
-                      <TabHeader label={col} />
-                      <Card title={`Time Series — ${col}`}
-                        desc="Event count over time (auto-aggregated)" wide>
-                        <TimeSeriesLine data={charts.timeseries} />
-                      </Card>
-                      <Card title={`Seasonality — ${col}`}
-                        desc="Count by hour of day, day of week, and month" wide>
-                        <SeasonalityGrid data={charts.seasonality} />
-                      </Card>
-                    </div>
+                    <>
+                      {show("timeseries") && (
+                        <Card title={`Time Series — ${selectedCol}`}
+                          desc="Event count over time (auto-aggregated)" wide>
+                          <TimeSeriesLine data={charts.timeseries} />
+                        </Card>
+                      )}
+                      {show("seasonality") && (
+                        <Card title={`Seasonality — ${selectedCol}`}
+                          desc="Count by hour of day, day of week, and month" wide>
+                          <SeasonalityGrid data={charts.seasonality} />
+                        </Card>
+                      )}
+                    </>
                   );
-                })}
+                })()}
 
-                {allCols.filter(colOn).length === 0 && (
-                  <div className="col-span-2">
-                    <Empty msg="All columns are hidden — toggle them on in the sidebar" />
+                {!selectedCol && (
+                  <div className="col-span-2 bg-white rounded-xl border border-dashed border-slate-200 p-12 text-center">
+                    <BarChart2 className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                    <p className="text-sm text-slate-400">Select a column from the sidebar to view charts</p>
                   </div>
                 )}
               </div>
@@ -1174,7 +1259,6 @@ const colOn = (c: string) => !hiddenCols.has(c);
             {/* ══════════ BIVARIATE TAB ══════════ */}
             {activeTab === "bivariate" && (
               <div className="max-w-3xl space-y-5">
-                {/* Header + type selector + column pickers */}
                 <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-0.5">
                     <GitMerge className="w-4 h-4 text-blue-600" />
@@ -1185,9 +1269,9 @@ const colOn = (c: string) => !hiddenCols.has(c);
                   <p className="text-xs font-semibold text-slate-600 mb-2">Select Analysis Type</p>
                   <div className="flex gap-2 flex-wrap mb-5">
                     {([
-                      { key: "num_num" as const,  label: "Numerical vs Numerical" },
-                      { key: "cat_cat" as const,  label: "Categorical vs Categorical" },
-                      { key: "num_cat" as const,  label: "Numerical vs Categorical" },
+                      { key: "num_num" as const, label: "Numerical × Numerical" },
+                      { key: "cat_cat" as const, label: "Categorical × Categorical" },
+                      { key: "num_cat" as const, label: "Numerical × Categorical" },
                     ]).map((t) => (
                       <button key={t.key}
                         onClick={() => { setBivType(t.key); setBivCol1(""); setBivCol2(""); }}
@@ -1232,20 +1316,17 @@ const colOn = (c: string) => !hiddenCols.has(c);
                   </div>
                 </div>
 
-                {/* Chart result */}
                 {(!bivCol1 || !bivCol2) && (
                   <div className="bg-white rounded-xl border border-dashed border-slate-200 p-10 text-center">
                     <GitMerge className="w-6 h-6 text-slate-300 mx-auto mb-2" />
                     <p className="text-sm text-slate-400">Select two columns above to visualise their relationship</p>
                   </div>
                 )}
-
                 {bivCol1 && bivCol2 && bivLoading && (
                   <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400 text-sm animate-pulse">
                     Computing…
                   </div>
                 )}
-
                 {bivCol1 && bivCol2 && !bivLoading && bivData && (
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div className="px-4 pt-3 pb-2 border-b border-slate-100 flex items-center justify-between">
@@ -1274,7 +1355,7 @@ const colOn = (c: string) => !hiddenCols.has(c);
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                     <div className="px-4 pt-3 pb-2 border-b border-slate-100">
                       <p className="text-xs font-bold text-slate-800">Pearson Correlation Matrix</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Pairwise linear correlation − 1 (red) to +1 (blue)</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Pairwise linear correlation −1 (red) to +1 (blue)</p>
                     </div>
                     <div className="p-4"><CorrelationHeatmap data={data.multi_column.correlation} /></div>
                   </div>
@@ -1292,15 +1373,15 @@ const colOn = (c: string) => !hiddenCols.has(c);
                   </div>
                 </section>
 
-                {/* 3D Scatter */}
+                {/* 3D Scatter + Bubble — shared column pickers */}
                 <section>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">3D Scatter Plot</h3>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">3D Scatter & Bubble Chart</h3>
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
                     <div className="flex gap-3 mb-4 flex-wrap">
                       {([
                         { label: "X Axis", val: s3x, set: setS3x },
                         { label: "Y Axis", val: s3y, set: setS3y },
-                        { label: "Z Axis", val: s3z, set: setS3z },
+                        { label: "Z / Size", val: s3z, set: setS3z },
                       ] as { label: string; val: string; set: (v: string) => void }[]).map(({ label, val, set }) => (
                         <div key={label} className="flex-1 min-w-[140px]">
                           <label className="text-xs font-semibold text-slate-600 block mb-1">{label}</label>
@@ -1312,15 +1393,29 @@ const colOn = (c: string) => !hiddenCols.has(c);
                         </div>
                       ))}
                     </div>
+
                     {!s3Enabled && (
                       <div className="border border-dashed border-slate-200 rounded-lg p-8 text-center text-slate-400 text-sm">
-                        Select three different numeric columns to render the 3D scatter
+                        Select three different numeric columns to render charts
                       </div>
                     )}
                     {s3Enabled && s3Loading && (
                       <div className="p-8 text-center text-slate-400 text-sm animate-pulse">Computing…</div>
                     )}
-                    {s3Enabled && !s3Loading && s3Data && <Scatter3DPlot data={s3Data} />}
+                    {s3Enabled && !s3Loading && s3Data && (
+                      <div className="space-y-6">
+                        <div>
+                          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">3D Scatter Plot</p>
+                          <Scatter3DPlot data={s3Data} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                            Bubble Chart — size encodes <span className="font-mono">{s3z}</span>
+                          </p>
+                          <BubbleChart data={s3Data} xCol={s3x} yCol={s3y} sizeCol={s3z} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </section>
 
@@ -1338,7 +1433,6 @@ const colOn = (c: string) => !hiddenCols.has(c);
                     </div>
                   </div>
                 </section>
-
               </div>
             )}
 
@@ -1347,8 +1441,7 @@ const colOn = (c: string) => !hiddenCols.has(c);
               <div className="grid grid-cols-2 gap-4">
                 <TabHeader label="Missing Values" />
                 <Card title="Missing Value Summary"
-                  desc="Columns with missing data, sorted by percentage"
-                  wide
+                  desc="Columns with missing data, sorted by percentage" wide
                   insight={data.missing_charts.bar.some((r) => (r.missing_pct ?? 0) > 30)
                     ? "Some columns have >30% missing values. Consider imputation or removal."
                     : undefined}
@@ -1358,8 +1451,7 @@ const colOn = (c: string) => !hiddenCols.has(c);
 
                 <TabHeader label="Normality Tests" />
                 <Card title="Normality Tests (Shapiro-Wilk / D'Agostino K²)"
-                  desc="Shapiro-Wilk for n < 5000, D'Agostino K² otherwise. p < 0.05 = non-normal."
-                  wide
+                  desc="Shapiro-Wilk for n < 5000, D'Agostino K² otherwise. p < 0.05 = non-normal." wide
                   insight={(() => {
                     const nonNorm = data.stat_cards.normality_table.filter((r) => r.is_normal === false);
                     return nonNorm.length ? `${nonNorm.length} column(s) are non-normal: ${nonNorm.map((r) => r.column).slice(0, 3).join(", ")}` : undefined;
@@ -1370,8 +1462,7 @@ const colOn = (c: string) => !hiddenCols.has(c);
 
                 <TabHeader label="Outlier Detection" />
                 <Card title="Outlier Summary (IQR Method)"
-                  desc="Outliers defined as values outside Q1 − 1.5×IQR and Q3 + 1.5×IQR"
-                  wide
+                  desc="Outliers defined as values outside Q1 − 1.5×IQR and Q3 + 1.5×IQR" wide
                   insight={(() => {
                     const severe = data.stat_cards.outlier_summary.filter((r) => (r.outlier_pct ?? 0) > 10);
                     return severe.length ? `${severe.length} column(s) have >10% outliers: ${severe.map((r) => r.column).join(", ")}` : undefined;
@@ -1392,11 +1483,10 @@ const colOn = (c: string) => !hiddenCols.has(c);
                   insight={(data.stat_cards.duplicates.duplicate_pct ?? 0) > 5
                     ? `${data.stat_cards.duplicates.duplicate_pct?.toFixed(1)}% duplicate rows detected`
                     : undefined}
-                  insightLevel="warning"
-                  wide>
+                  insightLevel="warning" wide>
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { label: "Total Rows",  value: data.stat_cards.duplicates.total_rows.toLocaleString(),     color: C.primary },
+                      { label: "Total Rows",  value: data.stat_cards.duplicates.total_rows.toLocaleString(),      color: C.primary },
                       { label: "Duplicates",  value: data.stat_cards.duplicates.duplicate_count.toLocaleString(), color: (data.stat_cards.duplicates.duplicate_pct ?? 0) > 5 ? C.danger : C.muted },
                       { label: "Dup %",       value: `${data.stat_cards.duplicates.duplicate_pct?.toFixed(2) ?? "0"}%`, color: (data.stat_cards.duplicates.duplicate_pct ?? 0) > 5 ? C.danger : C.success },
                     ].map(({ label, value, color }) => (
