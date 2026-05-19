@@ -700,9 +700,6 @@ export default function DatasetsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setShowJoin(true)} className="flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition">
-            <GitMerge className="w-4 h-4" /> Join
-          </button>
           <button onClick={() => setShowUpload(true)} className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] transition shadow-sm">
             <Plus className="w-4 h-4" /> Add Dataset
           </button>

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sourcesApi } from "@/lib/api";
 import {
   ArrowLeft, Database, Cloud, Globe, FileText,
@@ -271,6 +271,8 @@ export default function NewSourcePage() {
     onError: () => setTestResult({ ok: false, message: "Request failed" }),
   });
 
+  const qc = useQueryClient();
+
   const saveMut = useMutation({
     mutationFn: () => {
       const fieldDefs = SOURCE_FIELDS[selectedType!] ?? [];
@@ -290,7 +292,10 @@ export default function NewSourcePage() {
         config,
       });
     },
-    onSuccess: () => router.push(`/workspaces/${workspaceId}/sources`),
+    onSuccess: () => {
+       qc.invalidateQueries({ queryKey: ["sources", workspaceId] });
+      router.push(`/workspaces/${workspaceId}/sources`);
+    },
   });
 
   const fieldDefs      = selectedType ? (SOURCE_FIELDS[selectedType] ?? []) : [];

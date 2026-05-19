@@ -134,10 +134,10 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
     )}>
 
       {/* -- Logo & Toggle -- */}
-      <div className="px-4 py-3 border-b border-sidebar-border flex items-center justify-between">
+      <div className="px-4 py-4 border-b border-sidebar-border flex items-center justify-between">
         {sidebarOpen && (
           <Link href="/workspaces">
-            <img src="/logo.png" alt="AutoEDA" className="h-8 w-auto object-contain" />
+            <img src="/logo.png" alt="AutoEDA" className="h-12 w-auto object-contain" />
           </Link>
         )}
         <button
@@ -182,7 +182,8 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
 {/* -- 2. Datasets ---------------------------------------------- */}
 
 <div className="px-3 mt-2" data-tour="datasets-section">
-  <button
+  <Link
+    href={`/workspaces/${workspaceId}/datasets`}
     onClick={() => setDatasetsExpanded((p) => !p)}
     className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition justify-center sm:justify-start"
     title="Datasets"
@@ -213,7 +214,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
         )}
       />
     )}
-  </button>
+  </Link>
 </div>
 
 {datasetsExpanded && (
