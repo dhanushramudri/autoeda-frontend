@@ -134,26 +134,32 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
     )}>
 
       {/* -- Logo & Toggle -- */}
-      <div className="px-4 py-4 border-b border-sidebar-border flex items-center justify-between">
+      <div className="px-3 py-3 border-b border-sidebar-border flex items-center gap-2">
+        <Link href="/workspaces" className="flex-1 flex items-center min-w-0">
+          {sidebarOpen ? (
+            <img src="/logo.png" alt="AutoEDA" className="h-8 w-auto object-contain object-left" />
+          ) : (
+            <img
+              src="/icon.png"
+              alt="AutoEDA"
+              className="w-8 h-8 object-contain mx-auto"
+            />
+          )}
+        </Link>
+
         {sidebarOpen && (
-          <Link href="/workspaces">
-            <img src="/logo.png" alt="AutoEDA" className="h-12 w-auto object-contain" />
-          </Link>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="flex-shrink-0 p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground"
+            title="Collapse sidebar"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
         )}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60 hover:text-sidebar-foreground"
-          title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
-        >
-          <ChevronLeft className={cn(
-            "w-4 h-4 transition-transform",
-            sidebarOpen ? "rotate-0" : "rotate-180"
-          )} />
-        </button>
       </div>
 
       {/* -- Nav -- */}
-      <nav className="flex-1 overflow-y-auto py-2 scrollbar-thin">
+      <nav className="flex-1 overflow-y-auto py-4 scrollbar-thin">
 
         {/* -- 1. All Workspaces ------------------------------------------- */}
         {workspaceId && (
@@ -161,7 +167,8 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
             <Link
               href="/workspaces"
               className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors justify-center sm:justify-start",
+                    "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+    sidebarOpen ? "justify-start" : "justify-center",
                 pathname === "/workspaces"
                   ? "bg-brand/10 text-brand font-semibold"
                   : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
@@ -182,12 +189,15 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
 {/* -- 2. Datasets ---------------------------------------------- */}
 
 <div className="px-3 mt-2" data-tour="datasets-section">
-  <Link
-    href={`/workspaces/${workspaceId}/datasets`}
-    onClick={() => setDatasetsExpanded((p) => !p)}
-    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition justify-center sm:justify-start"
-    title="Datasets"
-  >
+    <Link
+      href={`/workspaces/${workspaceId}/datasets`}
+      onClick={() => setDatasetsExpanded((p) => !p)}
+      className={cn(
+        "w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition",
+        sidebarOpen ? "justify-start" : "justify-center"
+      )}
+      title="Datasets"
+    >
     <Database className="w-3.5 h-3.5 text-sidebar-foreground/60" />
 
     {sidebarOpen && (
@@ -326,7 +336,8 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
                     href={href}
                     data-tour={tourAttr}
                     className={cn(
-                      "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors justify-center sm:justify-start",
+"flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+sidebarOpen ? "justify-start" : "justify-center",
                       isActive
                         ? "bg-brand/10 text-brand font-semibold"
                         : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
@@ -348,7 +359,8 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
         <Link
           href="/settings"
           className={cn(
-            "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors justify-center sm:justify-start",
+"flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+sidebarOpen ? "justify-start" : "justify-center",
             pathname === "/settings"
               ? "bg-brand/10 text-brand font-semibold"
               : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
@@ -360,8 +372,8 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
         </Link>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10 justify-center sm:justify-start"
-          title="Sign out"
+          className={cn("w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10",
+sidebarOpen ? "justify-start" : "justify-center")} title="Sign out"
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
           {sidebarOpen && <span>Sign out</span>}

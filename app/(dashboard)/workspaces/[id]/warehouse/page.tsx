@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
@@ -264,6 +264,7 @@ export default function WarehousePage() {
   const [showCatalog, setShowCatalog] = useState(true);
   const [catalogSearch, setCatalogSearch] = useState("");
   const editorRef = useRef<unknown>(null);
+  const runQueryRef = useRef<() => Promise<void>>(async () => {});
 
   const { data: catalogData, isLoading: catalogLoading, refetch: refetchCatalog } = useQuery({
     queryKey: ["warehouse-catalog", workspaceId],
@@ -301,6 +302,10 @@ export default function WarehousePage() {
       setLoading(false);
     }
   }, [sql, workspaceId, limit]);
+
+  useEffect(() => {
+    runQueryRef.current = runQuery;
+  }, [runQuery]);
 
   const runExplain = useCallback(async () => {
     if (!sql.trim()) return;
@@ -459,7 +464,7 @@ export default function WarehousePage() {
               const monaco = (window as any).monaco;
               if (monaco) {
                 const keybinding = monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter;
-                editor.addCommand(keybinding, runQuery);
+                editor.addCommand(keybinding, () => runQueryRef.current());
               }
             }}
             options={{
