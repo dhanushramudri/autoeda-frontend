@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -11,7 +11,7 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { useAiContextStore } from "@/store/aiContextStore";
 import {
   Wand2, Download, Trash2, Plus, CheckCircle, Sparkles,
-  Loader2, ChevronDown, ChevronRight,
+  Loader2, ChevronDown, ChevronRight, GripVertical,
   AlertTriangle, SendHorizonal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -138,13 +138,21 @@ export default function TransformStudioPage() {
   const datetimeCols = profile?.columns.filter((c: { semantic_type: string }) => c.semantic_type === "datetime").map((c: { name: string }) => c.name) ?? [];
   const textCols = profile?.columns.filter((c: { semantic_type: string }) => c.semantic_type === "text").map((c: { name: string }) => c.name) ?? [];
 
+  const dragIdx = useRef<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
   const addOp = (op: TransformOp) => { setOps((p) => [...p, op]); setResult(null); };
   const removeOp = (i: number) => { setOps((p) => p.filter((_, idx) => idx !== i)); setResult(null); };
-  const moveOp = (i: number, dir: -1 | 1) => {
-    const j = i + dir;
-    if (j < 0 || j >= ops.length) return;
-    setOps((p) => { const a = [...p]; [a[i], a[j]] = [a[j], a[i]]; return a; });
-  };
+  const reorderOps = useCallback((from: number, to: number) => {
+    if (from === to) return;
+    setOps((p) => {
+      const a = [...p];
+      const [item] = a.splice(from, 1);
+      a.splice(to, 0, item);
+      return a;
+    });
+    setResult(null);
+  }, []);
 
   const applyMutation = useMutation({
     mutationFn: () => datasetsApi.transform(datasetId, ops),
@@ -404,19 +412,37 @@ export default function TransformStudioPage() {
               {ops.length === 0 ? (
                 <div className="bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 py-10 text-center">
                   <Wand2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">Add operations or click AI suggestions</p>
+                  <p className="text-sm text-gray-400">Add operations from the left panel</p>
                 </div>
               ) : (
                 <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
                   {ops.map((op, i) => (
-                    <div key={i} className={cn("flex items-start gap-2 rounded-lg border px-3 py-2.5", OP_COLORS[op.type] ?? "bg-gray-50 text-gray-700 border-gray-200")}>
-                      <div className="flex flex-col gap-0.5 mt-0.5">
-                        <button onClick={() => moveOp(i, -1)} disabled={i === 0} className="disabled:opacity-20 hover:opacity-70 transition"><ChevronRight className="w-3 h-3 -rotate-90" /></button>
-                        <button onClick={() => moveOp(i, 1)} disabled={i === ops.length - 1} className="disabled:opacity-20 hover:opacity-70 transition"><ChevronRight className="w-3 h-3 rotate-90" /></button>
-                      </div>
-                      <span className="text-xs font-medium flex-shrink-0 opacity-50 mt-0.5">{i + 1}.</span>
-                      <span className="flex-1 text-xs leading-snug">{opLabel(op)}</span>
-                      <button onClick={() => removeOp(i)} className="flex-shrink-0 hover:opacity-70 transition mt-0.5">
+                    <div
+                      key={i}
+                      draggable
+                      onDragStart={() => { dragIdx.current = i; }}
+                      onDragOver={(e) => { e.preventDefault(); setDragOverIdx(i); }}
+                      onDragLeave={() => setDragOverIdx(null)}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (dragIdx.current !== null) reorderOps(dragIdx.current, i);
+                        setDragOverIdx(null);
+                        dragIdx.current = null;
+                      }}
+                      onDragEnd={() => { setDragOverIdx(null); dragIdx.current = null; }}
+                      className={cn(
+                        "flex items-center gap-2 rounded-lg border px-3 py-2.5 select-none transition",
+                        OP_COLORS[op.type] ?? "bg-gray-50 text-gray-700 border-gray-200",
+                        dragOverIdx === i ? "ring-2 ring-brand/50 ring-offset-1 scale-[1.01]" : "cursor-grab active:cursor-grabbing active:opacity-60"
+                      )}
+                    >
+                      <GripVertical className="w-3.5 h-3.5 flex-shrink-0 opacity-30" />
+                      <span className="text-xs font-medium flex-shrink-0 opacity-40 w-4">{i + 1}.</span>
+                      <span className="flex-1 text-xs leading-snug truncate">{opLabel(op)}</span>
+                      <button
+                        onClick={() => removeOp(i)}
+                        className="flex-shrink-0 hover:opacity-70 transition"
+                      >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
