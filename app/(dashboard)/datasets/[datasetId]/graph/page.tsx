@@ -144,8 +144,8 @@ export default function RelationshipGraphPage() {
       nodes.forEach((n) => {
         n.vx = (n.vx ?? 0) * 0.8;
         n.vy = (n.vy ?? 0) * 0.8;
-        n.x = Math.max(30, Math.min(W - 30, (n.x ?? 0) + (n.vx ?? 0)));
-        n.y = Math.max(30, Math.min(H - 30, (n.y ?? 0) + (n.vy ?? 0)));
+        n.x = Math.max(60, Math.min(W - 60, (n.x ?? 0) + (n.vx ?? 0)));
+        n.y = Math.max(30, Math.min(H - 40, (n.y ?? 0) + (n.vy ?? 0)));
       });
     };
 
@@ -174,9 +174,9 @@ export default function RelationshipGraphPage() {
         ctx.stroke();
 
         ctx.fillStyle = "#374151";
-        ctx.font = "10px Inter, sans-serif";
+        ctx.font = "11px Inter, sans-serif";
         ctx.textAlign = "center";
-        ctx.fillText(n.id.slice(0, 12), n.x ?? 0, (n.y ?? 0) + 20);
+        ctx.fillText(n.id, n.x ?? 0, (n.y ?? 0) + 22);
       });
     };
 

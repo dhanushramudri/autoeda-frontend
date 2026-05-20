@@ -21,6 +21,7 @@ const NAV_ITEMS = [
   { label: "Time Series",       href: "/timeseries",        id: "timeseries" },
   { label: "Text",              href: "/text",              id: "text" },
   { label: "Graph",             href: "/graph",             id: "graph" },
+  { label: "Hypotheses",        href: "/hypotheses",        id: "hypotheses" },
   { label: "Transform",         href: "/transform",         id: "transform" },
   { label: "SQL",               href: "/sql",               id: "sql" },
   { label: "Charts",            href: "/charts",            id: "charts" },

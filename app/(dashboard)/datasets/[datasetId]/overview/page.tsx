@@ -15,8 +15,7 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ColumnDetailPanel } from "@/components/shared/ColumnDetailPanel";
 import {
   AlertTriangle, Zap, Download, RefreshCw,
-  BarChart2, Hash, Percent, ChevronRight,
-  CheckCircle, AlertCircle, Clock, Tag
+  ChevronRight, CheckCircle
 } from "lucide-react";
 import type { ColumnProfile, QualityScore, InsightCard } from "@/types";
 import { AiNarrative } from "@/components/ai/AiNarrative";
@@ -95,6 +94,8 @@ function ColumnCard({ col, datasetId, onClick }: { col: ColumnProfile; datasetId
   );
 }
 
+// ── Main page ─────────────────────────────────────────────────────────────────
+
 export default function DatasetOverviewPage() {
   const params = useParams();
   const router = useRouter();
@@ -128,6 +129,7 @@ export default function DatasetOverviewPage() {
     enabled: !!datasetId && dataset?.status === "ready",
   });
 
+
   useEffect(() => {
     if (!quality && !profile) return;
     setPageContext({
@@ -158,7 +160,6 @@ export default function DatasetOverviewPage() {
   if (!dataset) return <EmptyState title="No data" description="Could not load dataset overview" />;
 
   const memoryMb = profile?.memory_mb ?? 0;
-  const duplicatePct = profile?.duplicate_pct ?? 0;
   const columns: ColumnProfile[] = profile?.columns ?? [];
 
   const totalMissing = columns.reduce((s, c) => s + (c.missing_count ?? 0), 0);

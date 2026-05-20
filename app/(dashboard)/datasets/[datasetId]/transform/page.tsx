@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -11,8 +11,8 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { useAiContextStore } from "@/store/aiContextStore";
 import {
   Wand2, Download, Trash2, Plus, CheckCircle, Sparkles,
-  Loader2, GripVertical, ChevronDown, ChevronRight,
-  AlertTriangle, RefreshCw,
+  Loader2, ChevronDown, ChevronRight,
+  AlertTriangle, SendHorizonal,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,13 +40,6 @@ type TransformOp =
   | { type: "bin"; column: string; bins: number; strategy: "cut" | "qcut"; new_name?: string }
   | { type: "extract_datetime"; column: string; parts: string[] }
   | { type: "text_clean"; column: string; strip?: boolean; lowercase?: boolean; uppercase?: boolean; replace_from?: string; replace_to?: string; remove_special?: boolean };
-
-interface AiSuggestion {
-  priority: number;
-  label: string;
-  reason: string;
-  op: Record<string, unknown>;
-}
 
 // ── Label builder ─────────────────────────────────────────────────────────────
 function opLabel(op: TransformOp): string {
@@ -108,6 +101,7 @@ export default function TransformStudioPage() {
   const [ops, setOps] = useState<TransformOp[]>([]);
   const [result, setResult] = useState<{ rows: number; columns: number; errors: { op: string; error: string }[] } | null>(null);
   const [activeTab, setActiveTab] = useState<"missing" | "columns" | "clean" | "feature">("missing");
+  const [nlOpen, setNlOpen] = useState(false);
   const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const { data: dataset } = useQuery({
@@ -120,15 +114,23 @@ export default function TransformStudioPage() {
     queryFn: () => datasetsApi.getProfile(datasetId).then((r) => r.data),
   });
 
-  const [suggestionsTriggered, setSuggestionsTriggered] = useState(false);
 
-  const { data: suggestionsData, isLoading: suggestionsLoading, refetch: refetchSuggestions } = useQuery({
-    queryKey: ["ai-transform-suggestions", datasetId],
-    queryFn: () => datasetsApi.getAiTransformSuggestions(datasetId).then((r) => r.data),
-    enabled: !!datasetId && dataset?.status === "ready" && suggestionsTriggered,
-    staleTime: 1000 * 60 * 5,
-    retry: false,
+  // ── NL Transform ──
+  const [nlPrompt, setNlPrompt] = useState("");
+  const [nlPreview, setNlPreview] = useState<{ op: Record<string, unknown>; explanation: string } | null>(null);
+  const [nlError, setNlError] = useState("");
+  const nlInputRef = useRef<HTMLTextAreaElement>(null);
+
+  const nlMutation = useMutation({
+    mutationFn: () => datasetsApi.nlTransform(datasetId, nlPrompt),
+    onSuccess: (res) => { setNlPreview(res.data); setNlError(""); },
+    onError: (err: unknown) => {
+      const msg = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? "Could not generate step";
+      setNlError(msg);
+      setNlPreview(null);
+    },
   });
+
 
   const allCols = profile?.columns.map((c: { name: string }) => c.name) ?? [];
   const numericCols = profile?.columns.filter((c: { semantic_type: string }) => ["numeric"].includes(c.semantic_type)).map((c: { name: string }) => c.name) ?? [];
@@ -163,7 +165,6 @@ export default function TransformStudioPage() {
     return () => setPageContext(null);
   }, [ops.length, dataset?.name, setPageContext]);
 
-  const suggestions: AiSuggestion[] = suggestionsData?.suggestions ?? [];
 
   if (isLoading) return <><SubNav datasetId={datasetId} /><PageSpinner /></>;
 
@@ -188,55 +189,91 @@ export default function TransformStudioPage() {
           </div>
         </div>
 
-        {/* ── AI Suggestions ── */}
-        <div className="bg-gradient-to-r from-violet-50 to-blue-50 border border-violet-200 rounded-xl p-4 mb-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-violet-700 flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4" /> AI Suggestions
-            </h2>
-            {suggestionsTriggered && (
-              <button
-                onClick={() => refetchSuggestions()}
-                disabled={suggestionsLoading}
-                className="text-violet-400 hover:text-violet-600 transition disabled:opacity-40"
-                title="Refresh suggestions"
-              >
-                <RefreshCw className={cn("w-3.5 h-3.5", suggestionsLoading && "animate-spin")} />
-              </button>
-            )}
-          </div>
+        {/* ── NL Transform Prompt (collapsible) ── */}
+        <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-xl mb-4 overflow-hidden">
+          <button
+            onClick={() => setNlOpen((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-indigo-100/40 transition"
+          >
+            <span className="text-sm font-semibold text-indigo-700 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4" /> Describe a transformation
+            </span>
+            {nlOpen
+              ? <ChevronDown className="w-4 h-4 text-indigo-400" />
+              : <ChevronRight className="w-4 h-4 text-indigo-400" />}
+          </button>
 
-          {!suggestionsTriggered ? (
-            <button
-              onClick={() => setSuggestionsTriggered(true)}
-              className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-violet-600 bg-white border border-violet-200 rounded-lg hover:bg-violet-50 transition"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              Generate AI Suggestions
-            </button>
-          ) : suggestionsLoading ? (
-            <div className="flex items-center gap-2 text-xs text-violet-500">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyzing dataset...
-            </div>
-          ) : suggestions.length === 0 ? (
-            <p className="text-xs text-violet-400 italic">No suggestions available. Dataset may not be profiled yet.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-              {suggestions.map((s, i) => (
-                <div key={i} className="bg-white rounded-lg border border-violet-100 p-3 flex flex-col gap-2">
-                  <p className="text-xs font-semibold text-gray-800">{s.label}</p>
-                  <p className="text-xs text-gray-500 flex-1">{s.reason}</p>
-                  <button
-                    onClick={() => addOp({ ...s.op, type: s.op.type } as TransformOp)}
-                    className="text-xs px-2.5 py-1 bg-violet-600 hover:bg-violet-700 text-white rounded-md transition flex items-center gap-1 self-start"
-                  >
-                    <Plus className="w-3 h-3" /> Add to pipeline
-                  </button>
+          {nlOpen && (
+            <div className="px-4 pb-4">
+              <p className="text-xs text-indigo-500 mb-3">
+                Tell the AI what to do in plain English — it will generate the exact pipeline step.
+              </p>
+              <div className="flex gap-2 items-start">
+                <textarea
+                  ref={nlInputRef}
+                  value={nlPrompt}
+                  onChange={(e) => { setNlPrompt(e.target.value); setNlPreview(null); setNlError(""); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (nlPrompt.trim() && !nlMutation.isPending) nlMutation.mutate();
+                    }
+                  }}
+                  placeholder={`e.g. "fill missing age with median", "create revenue_per_user = revenue / users", "drop duplicate rows"`}
+                  rows={2}
+                  className="flex-1 text-sm border border-indigo-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white resize-none placeholder:text-indigo-300"
+                />
+                <button
+                  onClick={() => nlMutation.mutate()}
+                  disabled={!nlPrompt.trim() || nlMutation.isPending}
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium disabled:opacity-50 transition"
+                >
+                  {nlMutation.isPending
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <SendHorizonal className="w-4 h-4" />}
+                </button>
+              </div>
+
+              {nlError && (
+                <p className="mt-2 text-xs text-red-600 flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" /> {nlError}
+                </p>
+              )}
+
+              {nlPreview && (
+                <div className="mt-3 bg-white border border-indigo-100 rounded-lg p-3 space-y-2">
+                  <p className="text-xs text-gray-600">{nlPreview.explanation}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={cn(
+                      "text-xs px-2 py-1 rounded-md border font-mono",
+                      OP_COLORS[(nlPreview.op as { type: string }).type] ?? "bg-gray-50 text-gray-700 border-gray-200"
+                    )}>
+                      {opLabel(nlPreview.op as TransformOp)}
+                    </span>
+                    <button
+                      onClick={() => {
+                        addOp(nlPreview.op as TransformOp);
+                        setNlPreview(null);
+                        setNlPrompt("");
+                        setNlOpen(false);
+                      }}
+                      className="flex items-center gap-1 text-xs px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition"
+                    >
+                      <Plus className="w-3 h-3" /> Add to pipeline
+                    </button>
+                    <button
+                      onClick={() => { setNlPreview(null); setNlPrompt(""); }}
+                      className="text-xs text-gray-400 hover:text-gray-600 transition"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </div>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
           {/* ── Operation Builder (3 cols) ── */}

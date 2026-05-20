@@ -167,6 +167,10 @@ export const datasetsApi = {
     api.post(`/datasets/${datasetId}/ai/chat`, { message, history, page_context: pageContext ?? null }),
   getAiTransformSuggestions: (datasetId: string) =>
     api.get(`/datasets/${datasetId}/ai/transform-suggestions`),
+  nlTransform: (datasetId: string, prompt: string) =>
+    api.post(`/datasets/${datasetId}/ai/nl-transform`, { prompt }),
+  getHypotheses: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/ai/hypotheses`),
   // SQL Editor
   sqlExecute: (datasetId: string, sql: string, limit = 1000) =>
     api.post(`/datasets/${datasetId}/sql/execute`, { sql, limit }),
