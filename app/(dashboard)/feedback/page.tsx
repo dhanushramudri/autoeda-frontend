@@ -129,7 +129,6 @@ function DetailModal({ row, onClose, onViewMedia }: {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
             <span className="font-medium text-gray-700 dark:text-gray-300">{row.user_email ?? "Unknown"}</span>
             {row.rating && <StarRating value={row.rating} />}
-            {row.page && <span className="text-gray-400 truncate max-w-[220px]" title={row.page}>{row.page}</span>}
           </div>
 
           {/* Message */}
@@ -249,7 +248,6 @@ export default function FeedbackPage() {
                 <SortTh label="Rating" k="rating" />
                 <th className="px-4 py-3 text-left font-semibold text-gray-500">Subject</th>
                 <th className="px-4 py-3 text-left font-semibold text-gray-500">Message</th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-500">Page</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -280,9 +278,6 @@ export default function FeedbackPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-500 max-w-xs">
                     <span className="line-clamp-1">{row.message}</span>
-                  </td>
-                  <td className="px-4 py-3 text-gray-400 max-w-[140px] truncate" title={row.page ?? ""}>
-                    {row.page ?? "—"}
                   </td>
                 </tr>
               ))}
