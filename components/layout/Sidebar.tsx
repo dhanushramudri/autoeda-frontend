@@ -135,17 +135,19 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
 
       {/* -- Logo & Toggle -- */}
       <div className="px-3 py-3 border-b border-sidebar-border flex items-center gap-2">
-        <Link href="/workspaces" className="flex-1 flex items-center min-w-0">
-          {sidebarOpen ? (
+        {sidebarOpen ? (
+          <Link href="/workspaces" className="flex-1 flex items-center min-w-0">
             <img src="/logo.png" alt="AutoEDA" className="h-8 w-auto object-contain object-left" />
-          ) : (
-            <img
-              src="/icon.png"
-              alt="AutoEDA"
-              className="w-8 h-8 object-contain mx-auto"
-            />
-          )}
-        </Link>
+          </Link>
+        ) : (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex-1 flex items-center justify-center"
+            title="Expand sidebar"
+          >
+            <img src="/icon.png" alt="AutoEDA" className="w-8 h-8 object-contain" />
+          </button>
+        )}
 
         {sidebarOpen && (
           <button
