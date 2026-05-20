@@ -9,7 +9,7 @@ import {
   Sliders, ChevronDown, LogOut, Settings, Users,
   FileSearch, TrendingUp, AlertTriangle, Layers,
   Type, Network, Wand2, Plug, Warehouse, ShieldCheck,
-  Code2, PieChart, ChevronLeft,
+  Code2, PieChart, ChevronLeft, MessageSquarePlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dataset } from "@/types";
@@ -358,6 +358,22 @@ sidebarOpen ? "justify-start" : "justify-center",
 
       {/* -- Bottom -- */}
       <div className="border-t border-sidebar-border px-3 py-3 space-y-0.5">
+        {/* Feedback */}
+        <Link
+          href="/feedback"
+          className={cn(
+            "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+            sidebarOpen ? "justify-start" : "justify-center",
+            pathname === "/feedback"
+              ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30"
+              : "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+          )}
+          title="Feedback"
+        >
+          <MessageSquarePlus className="w-3.5 h-3.5 flex-shrink-0" />
+          {sidebarOpen && <span>Feedback</span>}
+        </Link>
+
         <Link
           href="/settings"
           className={cn(
@@ -381,6 +397,7 @@ sidebarOpen ? "justify-start" : "justify-center")} title="Sign out"
           {sidebarOpen && <span>Sign out</span>}
         </button>
       </div>
+
     </aside>
   );
 }

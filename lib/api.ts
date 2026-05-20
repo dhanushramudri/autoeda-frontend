@@ -2,6 +2,7 @@ import axios, { AxiosError } from "axios";
 import type { ApiError } from "@/types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+export const UPLOADS_BASE = API_BASE.replace(/\/api\/v1$/, "");
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -245,4 +246,12 @@ export const sourcesApi = {
 export const jobsApi = {
   get: (jobId: string) => api.get(`/jobs/${jobId}`),
   list: () => api.get("/jobs/"),
+};
+
+// Feedback
+export const feedbackApi = {
+  // Unset Content-Type so the browser sets multipart/form-data with the correct boundary
+  submit: (data: FormData) =>
+    api.post("/feedback", data, { headers: { "Content-Type": undefined } }),
+  list: () => api.get("/feedback"),
 };
