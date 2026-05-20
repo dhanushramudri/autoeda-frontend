@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { NLQueryBar } from "@/components/shared/NLQueryBar";
 import { useTour } from "@/hooks/useTourContext";
 import { tourSteps } from "@/lib/tourSteps";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 export function Topbar() {
   const router = useRouter();
@@ -99,6 +100,8 @@ export function Topbar() {
       <div className="flex-1 flex justify-center">
         <NLQueryBar />
       </div>
+
+      <NotificationBell workspaceId={currentWorkspaceId ?? undefined} />
 
       {/* Tour button */}
       <button
