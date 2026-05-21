@@ -158,7 +158,7 @@ export interface CorrelationResult {
   top_pairs: CorrelationPair[];
   vif?: Array<{ column: string; vif: number }> | null;
   cramers_v?: Record<string, Record<string, number | null>> | null;
-  insights?: Array<{ title?: string; message: string; level?: string }> | null;
+  insights?: InsightCard[] | null;
 }
 
 export interface OutlierResult {
