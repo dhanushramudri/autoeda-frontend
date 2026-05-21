@@ -210,7 +210,7 @@ export function NLQueryBar({ datasetId }: NLQueryBarProps) {
   return (
     <>
       {/* Trigger */}
-<button
+{/* <button
   onClick={() => setOpen(true)}
   className="group w-full max-w-md h-11 flex items-center gap-3 px-4 bg-white border border-gray-200 rounded-xl hover:border-brand/30 hover:shadow-sm transition-all text-left"
 >
@@ -224,7 +224,7 @@ export function NLQueryBar({ datasetId }: NLQueryBarProps) {
     <Command className="w-2.5 h-2.5" />
     K
   </kbd>
-</button>
+</button> */}
 
       {/* Palette */}
       <AnimatePresence>

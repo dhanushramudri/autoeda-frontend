@@ -1,20 +1,22 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bell, Upload, Trash2, MessageSquare, X } from "lucide-react";
+import { Bell, Upload, Trash2, MessageSquare, AtSign, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotifications, type AppNotification } from "@/hooks/useNotifications";
 
 const TYPE_ICON: Record<string, React.ElementType> = {
-  dataset_created:   Upload,
-  dataset_deleted:   Trash2,
+  dataset_created:    Upload,
+  dataset_deleted:    Trash2,
   feedback_submitted: MessageSquare,
+  comment_mention:    AtSign,
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  dataset_created:   "text-emerald-500 bg-emerald-50",
-  dataset_deleted:   "text-red-400 bg-red-50",
+  dataset_created:    "text-emerald-500 bg-emerald-50",
+  dataset_deleted:    "text-red-400 bg-red-50",
   feedback_submitted: "text-amber-500 bg-amber-50",
+  comment_mention:    "text-brand bg-brand/10",
 };
 
 function relativeTime(ms: number): string {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import type {
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   LineChart, Line, CartesianGrid, PieChart, Pie, Cell, Legend,
+  AreaChart, Area, ScatterChart, Scatter as RScatter,
 } from "recharts";
 import {
   BarChart2, GitMerge, Layers, Table2, AlertTriangle,
@@ -998,6 +999,25 @@ export default function AnalysisPage() {
     staleTime: 1000 * 60 * 10,
   });
 
+  // ── Custom chart state ────────────────────────────────────────────────────────
+  const [customType, setCustomType] = useState<"bar" | "line" | "area" | "scatter">("scatter");
+  const [customX, setCustomX] = useState("");
+  const [customY, setCustomY] = useState("");
+  const { data: previewData, isFetching: previewLoading } = useQuery({
+    queryKey: queryKeys.datasets.preview(datasetId),
+    queryFn: () => datasetsApi.preview(datasetId).then((r) => r.data),
+    enabled: !!customX && !!customY,
+    staleTime: 1000 * 60 * 10,
+  });
+  const customRows = useMemo(() => {
+    if (!previewData?.rows || !customX || !customY) return [];
+    const limit = customType === "scatter" ? 500 : 150;
+    return (previewData.rows as Record<string, unknown>[]).slice(0, limit).map((row) => ({
+      x: customType === "scatter" ? (Number(row[customX]) || 0) : String(row[customX] ?? ""),
+      y: Number(row[customY]) || 0,
+    }));
+  }, [previewData, customX, customY, customType]);
+
   // ── Loading / error states ────────────────────────────────────────────────────
   if (isLoading) return (
     <div className="flex flex-col min-h-screen bg-slate-50">
@@ -1315,6 +1335,151 @@ export default function AnalysisPage() {
                     </div>
                   </div>
                 )}
+
+                {/* ── Custom Chart Builder ── */}
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <BarChart2 className="w-4 h-4 text-violet-600" />
+                    <h2 className="text-sm font-bold text-slate-800">Custom Chart Builder</h2>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-4">Free-form X/Y chart from preview data (up to 500 rows)</p>
+
+                  {/* Chart type selector */}
+                  <div className="flex gap-2 flex-wrap mb-4">
+                    {(["scatter", "bar", "line", "area"] as const).map((t) => (
+                      <button
+                        key={t}
+                        onClick={() => setCustomType(t)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold border capitalize transition ${
+                          customType === t
+                            ? "bg-violet-600 text-white border-violet-600 shadow-sm"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:bg-violet-50"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Column pickers */}
+                  <div className="flex gap-4 mb-5">
+                    <div className="flex-1">
+                      <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                        X Axis {customType === "scatter" ? "(numeric)" : "(any)"}
+                      </label>
+                      <select
+                        value={customX}
+                        onChange={(e) => setCustomX(e.target.value)}
+                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      >
+                        <option value="">Select column…</option>
+                        {(customType === "scatter"
+                          ? data.numeric_cols
+                          : [...data.numeric_cols, ...data.categorical_cols, ...data.datetime_cols]
+                        ).map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs font-semibold text-slate-600 block mb-1.5">Y Axis (numeric)</label>
+                      <select
+                        value={customY}
+                        onChange={(e) => setCustomY(e.target.value)}
+                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      >
+                        <option value="">Select column…</option>
+                        {data.numeric_cols.filter((c) => c !== customX).map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Chart output */}
+                  {(!customX || !customY) && (
+                    <div className="border border-dashed border-slate-200 rounded-lg p-8 text-center text-slate-400 text-sm">
+                      Select X and Y columns to render the chart
+                    </div>
+                  )}
+                  {customX && customY && previewLoading && (
+                    <div className="border border-slate-100 rounded-lg p-8 text-center text-slate-400 text-sm animate-pulse">
+                      Loading preview data…
+                    </div>
+                  )}
+                  {customX && customY && !previewLoading && customRows.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {customX} → {customY}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {customRows.length} rows · preview data
+                        </span>
+                      </div>
+
+                      {customType === "scatter" && (
+                        <ResponsiveContainer width="100%" height={280}>
+                          <ScatterChart margin={{ top: 8, right: 16, bottom: 24, left: 8 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                            <XAxis dataKey="x" type="number" name={customX} tick={{ fontSize: 10 }}
+                              label={{ value: customX, position: "insideBottom", offset: -14, fontSize: 10, fill: C.muted }} />
+                            <YAxis dataKey="y" type="number" name={customY} tick={{ fontSize: 10 }}
+                              label={{ value: customY, angle: -90, position: "insideLeft", fontSize: 10, fill: C.muted }} />
+                            <Tooltip
+                              cursor={{ strokeDasharray: "3 3" }}
+                              contentStyle={{ fontSize: 11, borderRadius: 8, border: `1px solid ${C.border}` }}
+                              formatter={(v: number, n: string) => [v, n === "y" ? customY : customX]}
+                            />
+                            <RScatter data={customRows} fill={C.secondary} opacity={0.5} r={3} />
+                          </ScatterChart>
+                        </ResponsiveContainer>
+                      )}
+
+                      {customType === "bar" && (
+                        <ResponsiveContainer width="100%" height={280}>
+                          <BarChart data={customRows} margin={{ bottom: 36, right: 8 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                            <XAxis dataKey="x" tick={{ fontSize: 9 }} angle={-30} textAnchor="end"
+                              interval={Math.max(0, Math.floor(customRows.length / 20) - 1)} />
+                            <YAxis tick={{ fontSize: 10 }} />
+                            <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                              formatter={(v: number) => [v, customY]} />
+                            <Bar dataKey="y" fill={C.primary} opacity={0.85} radius={[3, 3, 0, 0]} />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )}
+
+                      {customType === "line" && (
+                        <ResponsiveContainer width="100%" height={280}>
+                          <LineChart data={customRows} margin={{ bottom: 36, right: 8 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                            <XAxis dataKey="x" tick={{ fontSize: 9 }} angle={-30} textAnchor="end"
+                              interval={Math.max(0, Math.floor(customRows.length / 20) - 1)} />
+                            <YAxis tick={{ fontSize: 10 }} />
+                            <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                              formatter={(v: number) => [v, customY]} />
+                            <Line type="monotone" dataKey="y" stroke={C.accent} strokeWidth={2}
+                              dot={false} activeDot={{ r: 4 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      )}
+
+                      {customType === "area" && (
+                        <ResponsiveContainer width="100%" height={280}>
+                          <AreaChart data={customRows} margin={{ bottom: 36, right: 8 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                            <XAxis dataKey="x" tick={{ fontSize: 9 }} angle={-30} textAnchor="end"
+                              interval={Math.max(0, Math.floor(customRows.length / 20) - 1)} />
+                            <YAxis tick={{ fontSize: 10 }} />
+                            <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }}
+                              formatter={(v: number) => [v, customY]} />
+                            <Area type="monotone" dataKey="y" stroke={C.secondary} strokeWidth={2}
+                              fill={C.secondary} fillOpacity={0.13} dot={false} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

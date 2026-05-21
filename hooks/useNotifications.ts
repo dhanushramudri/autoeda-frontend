@@ -27,6 +27,10 @@ function formatMessage(evt: Record<string, unknown>): string {
       const sub = evt.subject ? `: "${evt.subject}"` : "";
       return `${actor} submitted ${evt.feedback_type} feedback${sub}`;
     }
+    case "comment_mention": {
+      const sub = evt.subject ? ` in "${evt.subject}"` : "";
+      return `${actor} mentioned you${sub}`;
+    }
     default:
       return String(evt.type ?? "Unknown event");
   }

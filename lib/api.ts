@@ -250,8 +250,17 @@ export const jobsApi = {
 
 // Feedback
 export const feedbackApi = {
-  // Unset Content-Type so the browser sets multipart/form-data with the correct boundary
   submit: (data: FormData) =>
     api.post("/feedback", data, { headers: { "Content-Type": undefined } }),
   list: () => api.get("/feedback"),
+  vote: (id: number) => api.post(`/feedback/${id}/vote`),
+  getComments: (id: number) => api.get(`/feedback/${id}/comments`),
+  addComment: (id: number, content: string, parentId?: number | null) =>
+    api.post(`/feedback/${id}/comments`, { content, parent_id: parentId ?? null }),
+  deleteComment: (id: number, commentId: number) =>
+    api.delete(`/feedback/${id}/comments/${commentId}`),
+  voteComment: (id: number, commentId: number, voteType: "like" | "dislike") =>
+    api.post(`/feedback/${id}/comments/${commentId}/vote`, { vote_type: voteType }),
+  updateStatus: (id: number, status: string) =>
+    api.patch(`/feedback/${id}`, { status }),
 };

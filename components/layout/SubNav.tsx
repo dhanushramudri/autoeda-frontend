@@ -4,9 +4,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Code2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { usePresence } from "@/hooks/usePresence";
-import { PresenceAvatars } from "@/components/shared/PresenceAvatars";
-import { useWorkspaceStore } from "@/store/workspaceStore";
 
 interface SubNavProps {
   datasetId: string;
@@ -16,10 +13,7 @@ const NAV_ITEMS = [
   { label: "Overview",          href: "",                   id: "overview" },
   { label: "Analysis",          href: "/analysis",          id: "analysis" },
   { label: "Profile",           href: "/profile",           id: "profile" },
-  { label: "Missing",           href: "/missing",           id: "missing" },
-  { label: "Distributions",     href: "/distributions",     id: "distributions" },
   { label: "Correlations",      href: "/correlations",      id: "correlations" },
-  { label: "Outliers",          href: "/outliers",          id: "outliers" },
   { label: "Feature Importance",href: "/feature-importance",id: "feature-importance" },
   { label: "Time Series",       href: "/timeseries",        id: "timeseries" },
   { label: "Text",              href: "/text",              id: "text" },
@@ -27,7 +21,6 @@ const NAV_ITEMS = [
   { label: "Hypotheses",        href: "/hypotheses",        id: "hypotheses" },
   { label: "Transform",         href: "/transform",         id: "transform" },
   { label: "SQL",               href: "/sql",               id: "sql" },
-  { label: "Charts",            href: "/charts",            id: "charts" },
   { label: "Pivot",             href: "/pivot",             id: "pivot" },
   { label: "Rules",             href: "/rules",             id: "rules" },
   // { label: "History",           href: "/history",           id: "history" },
@@ -35,9 +28,6 @@ const NAV_ITEMS = [
 
 export function SubNav({ datasetId }: SubNavProps) {
   const pathname = usePathname();
-  const { currentWorkspaceId } = useWorkspaceStore();
-  const { presence } = usePresence(currentWorkspaceId ?? undefined, datasetId);
-  const viewers = presence[datasetId] ?? [];
 
   const isActive = (itemId: string): boolean => {
     if (itemId === "overview") return pathname === `/datasets/${datasetId}`;
@@ -88,12 +78,6 @@ export function SubNav({ datasetId }: SubNavProps) {
           })}
         </div>
 
-        {/* Presence avatars — pinned to the right, never scrolls */}
-        {viewers.length > 0 && (
-          <div className="flex-shrink-0 pl-3 ml-2 border-l border-gray-100">
-            <PresenceAvatars users={viewers} />
-          </div>
-        )}
       </div>
     </nav>
   );

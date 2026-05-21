@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import {
   LayoutDashboard, Database, BarChart2, GitBranch,
@@ -10,9 +10,12 @@ import {
   FileSearch, TrendingUp, AlertTriangle, Layers,
   Type, Network, Wand2, Plug, Warehouse, ShieldCheck,
   Code2, PieChart, ChevronLeft, MessageSquarePlus,
+  HelpCircle, ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dataset } from "@/types";
+import { useTour } from "@/hooks/useTourContext";
+import { tourSteps } from "@/lib/tourSteps";
 
 // -- Dataset sub-nav  --  grouped by priority -------------------------------------
 // Group 1: Explore  (highest value  --  first stop for any new dataset)
@@ -117,15 +120,37 @@ interface SidebarProps {
 
 export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: SidebarProps) {
   const pathname  = usePathname();
+  const router    = useRouter();
+  const user      = useAuthStore((s) => s.user);
   const clearAuth = useAuthStore((s) => s.clearAuth);
+  const { startTour } = useTour();
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
   const [expandedDataset, setExpandedDataset] = useState<string | null>(activeDatasetId ?? null);
   const [datasetsExpanded, setDatasetsExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node))
+        setUserMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const handleLogout = () => {
     clearAuth();
-    window.location.href = "/login";
+    router.push("/login");
   };
+
+  const userInitials = (
+    user?.full_name
+      ? user.full_name.split(" ").map((p) => p[0]).slice(0, 2).join("")
+      : user?.email?.[0] ?? "U"
+  ).toUpperCase();
 
   return (
     <aside className={cn(
@@ -364,6 +389,7 @@ sidebarOpen ? "justify-start" : "justify-center",
 
       {/* -- Bottom -- */}
       <div className="border-t border-sidebar-border px-3 py-3 space-y-0.5">
+
         {/* Feedback */}
         <Link
           href="/feedback"
@@ -371,8 +397,8 @@ sidebarOpen ? "justify-start" : "justify-center",
             "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
             sidebarOpen ? "justify-start" : "justify-center",
             pathname === "/feedback"
-              ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30"
-              : "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+              ? "bg-amber-50 text-amber-700"
+              : "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
           )}
           title="Feedback"
         >
@@ -380,28 +406,82 @@ sidebarOpen ? "justify-start" : "justify-center",
           {sidebarOpen && <span>Feedback</span>}
         </Link>
 
-        <Link
-          href="/settings"
-          className={cn(
-"flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
-sidebarOpen ? "justify-start" : "justify-center",
-            pathname === "/settings"
-              ? "bg-brand/10 text-brand font-semibold"
-              : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-          )}
-          title="Settings"
-        >
-          <Settings className="w-3.5 h-3.5 flex-shrink-0" />
-          {sidebarOpen && <span>Settings</span>}
-        </Link>
+        {/* Tour */}
         <button
-          onClick={handleLogout}
-          className={cn("w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors text-sidebar-foreground/50 hover:text-red-400 hover:bg-red-500/10",
-sidebarOpen ? "justify-start" : "justify-center")} title="Sign out"
+          onClick={() => startTour(tourSteps)}
+          className={cn(
+            "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+            sidebarOpen ? "justify-start" : "justify-center",
+            "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
+          )}
+          title="Tour Guide"
         >
-          <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-          {sidebarOpen && <span>Sign out</span>}
+          <HelpCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          {sidebarOpen && <span>Tour Guide</span>}
         </button>
+
+        {/* User card */}
+        <div className="relative pt-1 mt-1 border-t border-sidebar-border/50" ref={userMenuRef}>
+
+          {/* User popover — opens above */}
+          {userMenuOpen && (
+            <div className={cn(
+              "absolute bottom-full mb-2 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1.5 z-50 animate-fade-in",
+              sidebarOpen ? "left-0 right-0" : "left-0 w-52"
+            )}>
+              <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-800">
+                <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+                  {user?.full_name ?? "User"}
+                </p>
+                <p className="text-[10px] text-gray-400 truncate mt-0.5">{user?.email}</p>
+              </div>
+              <button
+                onClick={() => { router.push("/settings"); setUserMenuOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                <Settings className="w-3.5 h-3.5 opacity-60" />
+                Settings
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                Sign out
+              </button>
+            </div>
+          )}
+
+          {/* Trigger button */}
+          <button
+            onClick={() => setUserMenuOpen((v) => !v)}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-sidebar-accent transition-colors",
+              sidebarOpen ? "justify-start" : "justify-center"
+            )}
+            title={user?.full_name ?? user?.email ?? "Account"}
+          >
+            <div className="w-7 h-7 rounded-full bg-brand flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0">
+              {userInitials}
+            </div>
+            {sidebarOpen && (
+              <>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-xs font-medium text-sidebar-foreground truncate leading-tight">
+                    {user?.full_name ?? user?.email}
+                  </p>
+                  {user?.is_admin && (
+                    <p className="text-[10px] text-brand leading-tight">Admin</p>
+                  )}
+                </div>
+                <ChevronUp className={cn(
+                  "w-3.5 h-3.5 text-sidebar-foreground/40 transition-transform flex-shrink-0",
+                  !userMenuOpen && "rotate-180"
+                )} />
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
     </aside>

@@ -6,26 +6,32 @@ import { workspacesApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Workspace } from "@/types";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check, HelpCircle } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NLQueryBar } from "@/components/shared/NLQueryBar";
-import { useTour } from "@/hooks/useTourContext";
-import { tourSteps } from "@/lib/tourSteps";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { usePresence } from "@/hooks/usePresence";
+import { OnlineAvatars } from "@/components/shared/PresenceAvatars";
 
 export function Topbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
   const { currentWorkspaceId, setCurrentWorkspace } = useWorkspaceStore();
-  const { startTour } = useTour();
+
+  const datasetId = pathname?.match(/\/datasets\/([^/]+)/)?.[1];
+  const { presence } = usePresence(currentWorkspaceId ?? undefined, datasetId);
+
+  // All unique online users across all datasets, excluding self
+  const onlineUsers = Object.values(presence)
+    .flat()
+    .filter((u, i, arr) => arr.findIndex((x) => x.email === u.email) === i)
+    .filter((u) => u.email !== user?.email);
 
   const [wsOpen, setWsOpen] = useState(false);
-  const [userOpen, setUserOpen] = useState(false);
   const wsRef = useRef<HTMLDivElement>(null);
-  const userRef = useRef<HTMLDivElement>(null);
 
   const { data: workspaces } = useQuery({
     queryKey: queryKeys.workspaces.list(),
@@ -37,7 +43,6 @@ export function Topbar() {
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (wsRef.current && !wsRef.current.contains(e.target as Node)) setWsOpen(false);
-      if (userRef.current && !userRef.current.contains(e.target as Node)) setUserOpen(false);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -47,11 +52,6 @@ export function Topbar() {
     setCurrentWorkspace(id);
     router.push(`/workspaces/${id}/datasets`);
     setWsOpen(false);
-  };
-
-  const handleLogout = () => {
-    clearAuth();
-    router.push("/login");
   };
 
   return (
@@ -101,62 +101,13 @@ export function Topbar() {
         <NLQueryBar />
       </div>
 
+      {/* Online teammates */}
+      {onlineUsers.length > 0 && (
+        <OnlineAvatars users={onlineUsers} />
+      )}
+
       <NotificationBell workspaceId={currentWorkspaceId ?? undefined} />
 
-      {/* Tour button */}
-      <button
-        onClick={() => startTour(tourSteps)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition text-sm font-medium"
-        title="Start guided tour"
-        data-tour="tour-button"
-      >
-        <HelpCircle className="w-4 h-4" />
-        <span className="hidden sm:inline">Tour</span>
-      </button>
-
-      {/* User menu */}
-      <div className="relative" ref={userRef} data-tour="user-menu">
-        <button
-          onClick={() => setUserOpen((v) => !v)}
-          className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition"
-        >
-          <div className="w-7 h-7 rounded-full bg-brand flex items-center justify-center text-white text-xs font-semibold">
-            {user?.full_name?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "U"}
-          </div>
-          <div className="text-left hidden sm:block">
-            <p className="text-xs font-medium text-gray-800 leading-tight">
-              {user?.full_name ?? user?.email}
-            </p>
-            {user?.is_admin && (
-              <p className="text-[10px] text-brand">Admin</p>
-            )}
-          </div>
-          <ChevronDown className="w-3.5 h-3.5 text-gray-400 hidden sm:block" />
-        </button>
-
-        {userOpen && (
-          <div className="absolute right-0 top-full mt-1 w-52 bg-white rounded-xl shadow-lg border border-gray-200 z-50 py-1.5 animate-fade-in">
-            <div className="px-4 py-2 border-b border-gray-100">
-              <p className="text-sm font-medium text-gray-800 truncate">
-                {user?.full_name ?? "User"}
-              </p>
-              <p className="text-xs text-gray-500 truncate">{user?.email}</p>
-            </div>
-            <button
-              onClick={() => { router.push("/settings"); setUserOpen(false); }}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition"
-            >
-              Settings
-            </button>
-            <button
-              onClick={handleLogout}
-              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition"
-            >
-              Sign out
-            </button>
-          </div>
-        )}
-      </div>
     </header>
   );
 }

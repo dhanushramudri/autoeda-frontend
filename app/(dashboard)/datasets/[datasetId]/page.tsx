@@ -91,7 +91,7 @@ export default function DatasetOverviewPage() {
       </div>
 
       {/* AI Narrative */}
-      <AiNarrative datasetId={datasetId} datasetReady={dataset.status === "ready"} />
+      {/* <AiNarrative datasetId={datasetId} datasetReady={dataset.status === "ready"} /> */}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">

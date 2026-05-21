@@ -26,6 +26,61 @@ interface Props {
   max?: number;
 }
 
+/** Topbar variant — larger avatars, green online dot, no label */
+export function OnlineAvatars({ users, max = 5 }: Props) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  if (!users.length) return null;
+
+  const visible  = users.slice(0, max);
+  const overflow = users.length - max;
+
+  return (
+    <div className="flex items-center gap-2">
+      {/* subtle divider */}
+      <div className="h-5 w-px bg-gray-200" />
+
+      <div className="flex items-center -space-x-2">
+        {visible.map((u, i) => (
+          <div
+            key={u.email}
+            className="relative"
+            onMouseEnter={() => setHoveredIdx(i)}
+            onMouseLeave={() => setHoveredIdx(null)}
+          >
+            {/* Avatar */}
+            <div
+              className="w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-white text-[10px] font-semibold cursor-default shadow-sm"
+              style={{ backgroundColor: colorFor(u.email) }}
+            >
+              {initials(u)}
+            </div>
+            {/* Green online dot */}
+            <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 border-[1.5px] border-white" />
+
+            {/* Tooltip */}
+            {hoveredIdx === i && (
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2.5 py-1.5 bg-gray-900 text-white rounded-lg whitespace-nowrap z-[999] pointer-events-none shadow-xl">
+                <p className="text-[11px] font-medium">{u.name || u.email}</p>
+                <p className="text-[9px] text-gray-400 mt-0.5">Online</p>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900" />
+              </div>
+            )}
+          </div>
+        ))}
+
+        {overflow > 0 && (
+          <div className="w-7 h-7 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-gray-500 text-[10px] font-semibold shadow-sm">
+            +{overflow}
+          </div>
+        )}
+      </div>
+
+      <div className="h-5 w-px bg-gray-200" />
+    </div>
+  );
+}
+
+/** Inline variant (kept for any future use) */
 export function PresenceAvatars({ users, max = 4 }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   if (!users.length) return null;
@@ -57,17 +112,12 @@ export function PresenceAvatars({ users, max = 4 }: Props) {
             )}
           </div>
         ))}
-
         {overflow > 0 && (
           <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-gray-600 text-[9px] font-semibold flex-shrink-0">
             +{overflow}
           </div>
         )}
       </div>
-
-      <span className="ml-2 text-[10px] text-gray-400 hidden sm:block">
-        {users.length === 1 ? "1 viewing" : `${users.length} viewing`}
-      </span>
     </div>
   );
 }
