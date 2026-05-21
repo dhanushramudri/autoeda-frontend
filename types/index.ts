@@ -176,9 +176,25 @@ export interface OutlierResult {
 export interface FeatureImportanceResult {
   target: string;
   problem_type: string;
+  n_samples: number;
+  n_features: number;
+  model_score: number | null;
+  class_distribution: Record<string, unknown> | null;
   importances: Array<{ feature: string; importance: number; method: string }>;
   mutual_info: Array<{ feature: string; score: number }>;
   correlations: Array<{ feature: string; correlation: number }>;
+  anova: Array<{ feature: string; f_score: number; p_value: number | null }>;
+  feature_meta: Array<{
+    feature: string;
+    missing_pct: number;
+    unique_count: number;
+    dtype: string;
+    combined_rank: number;
+    recommendation: "keep_strong" | "keep" | "consider_drop" | "drop";
+  }>;
+  top_features: string[];
+  drop_candidates: string[];
+  warnings: Array<{ type: string; message: string; severity: "info" | "warning" | "danger" }>;
   error?: string | null;
 }
 
