@@ -246,12 +246,19 @@ function ModelScoreCard({ data }: { data: FIResult }) {
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 
 function OverviewTab({ data }: { data: FIResult }) {
-  const topMeta = data.feature_meta.slice(0, 8);
-  const maxRF = Math.max(...data.importances.map(i => i.importance), 0.0001);
-  const maxSHAP = data.shap_values.length
-    ? Math.max(...data.shap_values.map(s => s.mean_abs_shap), 0.0001)
-    : 0;
+const featureMeta = data.feature_meta ?? [];
+const topMeta = featureMeta.slice(0, 8);
+const importances = data.importances ?? [];
 
+const maxRF = Math.max(
+  ...importances.map(i => i.importance),
+  0.0001
+);
+const shapValues = data.shap_values ?? [];
+
+const maxSHAP = shapValues.length
+  ? Math.max(...shapValues.map(s => s.mean_abs_shap), 0.0001)
+  : 0;
   return (
     <div className="space-y-6">
       {/* Leakage alert */}
@@ -422,7 +429,7 @@ function OverviewTab({ data }: { data: FIResult }) {
           <div className="bg-white border border-gray-200 rounded-xl p-5">
             <h3 className="text-sm font-bold text-gray-800 mb-4">Correlation with Target</h3>
             <div className="space-y-2">
-              {data.correlations.slice(0, 8).map((item, i) => {
+              {(data.correlations ?? []).slice(0, 8).map((item, i) => {
                 const abs = Math.abs(item.correlation);
                 const isPos = item.correlation >= 0;
                 return (
@@ -479,8 +486,12 @@ function RankingsTab({ data }: { data: FIResult }) {
   const maxRF   = useMemo(() => Math.max(...data.feature_meta.map(f => f.rf_importance ?? 0), 0.0001), [data]);
   const maxMI   = useMemo(() => Math.max(...data.feature_meta.map(f => f.mi_score ?? 0), 0.0001), [data]);
   const maxAnova= useMemo(() => Math.max(...data.feature_meta.map(f => f.anova_f ?? 0), 0.0001), [data]);
-  const maxPerm = useMemo(() => Math.max(...data.feature_meta.map(f => f.permutation_importance ?? 0), 0.0001), [data]);
-  const maxShap = useMemo(() => Math.max(...data.feature_meta.map(f => f.shap_value ?? 0), 0.0001), [data]);
+const featureMeta = data.feature_meta ?? [];
+
+const maxPerm = useMemo(() =>
+  Math.max(...featureMeta.map(f => f.permutation_importance ?? 0), 0.0001),
+[featureMeta]); 
+ const maxShap = useMemo(() => Math.max(...data.feature_meta.map(f => f.shap_value ?? 0), 0.0001), [data]);
 
   const sorted = useMemo(() => {
     const q = search.toLowerCase();
@@ -687,11 +698,11 @@ function ChartsTab({ data }: { data: FIResult }) {
     const raw = (() => {
       switch (method) {
         case "rf":          return data.importances.map(d => ({ name: d.feature, value: d.importance }));
-        case "permutation": return data.permutation_importances.map(d => ({ name: d.feature, value: d.importance, std: d.std }));
-        case "shap":        return data.shap_values.map(d => ({ name: d.feature, value: d.mean_abs_shap }));
-        case "mi":          return data.mutual_info.map(d => ({ name: d.feature, value: d.score }));
-        case "correlation": return data.correlations.map(d => ({ name: d.feature, value: Math.abs(d.correlation), raw: d.correlation }));
-        case "anova":       return data.anova.map(d => ({ name: d.feature, value: d.f_score }));
+        case "permutation":   return (data.permutation_importances ?? []).map(d => ({ name: d.feature, value: d.importance, std: d.std }));
+        case "shap":        return (data.shap_values ?? []).map(d => ({ name: d.feature, value: d.mean_abs_shap }));
+        case "mi":          return (data.mutual_info ?? []).map(d => ({ name: d.feature, value: d.score }));
+        case "correlation": return (data.correlations ?? []).map(d => ({ name: d.feature, value: Math.abs(d.correlation), raw: d.correlation }));
+        case "anova":       return (data.anova ?? []).map(d => ({ name: d.feature, value: d.f_score }));
         default:            return [];
       }
     })();
@@ -1062,7 +1073,7 @@ function InteractionsTab({ data }: { data: FIResult }) {
   // Build matrix data
   const features = Array.from(new Set(top.flatMap(t => [t.feature_a, t.feature_b]))).slice(0, 8);
   const matrixMap: Record<string, number> = {};
-  data.interactions.forEach(t => {
+        (data.interactions ?? []).forEach(t => {
     matrixMap[`${t.feature_a}|${t.feature_b}`] = t.interaction_score;
     matrixMap[`${t.feature_b}|${t.feature_a}`] = t.interaction_score;
   });
