@@ -246,6 +246,8 @@ function ModelScoreCard({ data }: { data: FIResult }) {
 // ── Overview Tab ──────────────────────────────────────────────────────────────
 
 function OverviewTab({ data }: { data: FIResult }) {
+    const leakageSuspects = data.leakage_suspects ?? [];  
+  const redundantGroups = data.redundant_groups ?? []; 
 const featureMeta = data.feature_meta ?? [];
 const topMeta = featureMeta.slice(0, 8);
 const importances = data.importances ?? [];
@@ -262,13 +264,13 @@ const maxSHAP = shapValues.length
   return (
     <div className="space-y-6">
       {/* Leakage alert */}
-      {data.leakage_suspects.length > 0 && (
+      {leakageSuspects.length > 0 && (
         <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex gap-3">
           <Zap className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-bold text-red-800">Possible Data Leakage Detected</p>
             <div className="mt-1.5 space-y-1">
-              {data.leakage_suspects.map(s => (
+              {leakageSuspects.map(s => (
                 <div key={s.feature} className="flex items-start gap-2">
                   <span className={cn(
                     "px-1.5 py-0.5 rounded text-[9px] font-bold flex-shrink-0 mt-0.5",
@@ -279,7 +281,7 @@ const maxSHAP = shapValues.length
               ))}
             </div>
             <AskAiButton
-              question={`I found possible data leakage in features: ${data.leakage_suspects.map(s => s.feature).join(", ")}. How do I verify and fix this before training?`}
+              question={`I found possible data leakage in features: ${leakageSuspects.map(s => s.feature).join(", ")}. How do I verify and fix this before training?`}
               label="How to fix leakage?"
               variant="chip"
             />
@@ -288,15 +290,15 @@ const maxSHAP = shapValues.length
       )}
 
       {/* Redundant feature groups */}
-      {data.redundant_groups.length > 0 && (
+      {redundantGroups.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
           <GitCompare className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-amber-800 mb-2">
-              {data.redundant_groups.length} Redundant Feature Group{data.redundant_groups.length > 1 ? "s" : ""} (high inter-correlation)
+              {redundantGroups.length} Redundant Feature Group{redundantGroups.length > 1 ? "s" : ""} (high inter-correlation)
             </p>
             <div className="flex flex-wrap gap-2">
-              {data.redundant_groups.slice(0, 4).map((g, i) => (
+              {redundantGroups.slice(0, 4).map((g, i) => (
                 <div key={i} className="flex items-center gap-1 bg-white border border-amber-200 rounded-lg px-2 py-1">
                   {g.features.map((f, j) => (
                     <span key={f} className="flex items-center gap-1">
@@ -325,7 +327,7 @@ const maxSHAP = shapValues.length
           {
             label: "Features Analysed",
             value: data.n_features,
-            sub: `${data.drop_candidates.length} weak · ${data.leakage_suspects.length} leaky`,
+            sub: `${data.drop_candidates.length} weak · ${leakageSuspects.length} leaky`,
             color: "#1D4ED8",
           },
           {
@@ -623,7 +625,7 @@ const maxPerm = useMemo(() =>
                   <td className="px-3 py-2 text-gray-300 tabular-nums font-mono text-[10px]">{idx + 1}</td>
                   <td className="px-3 py-2 font-mono font-semibold text-gray-800 max-w-[160px]">
                     <div className="flex items-center gap-1.5">
-                      {data.leakage_suspects.find(s => s.feature === fm.feature) && (
+                      {(data.leakage_suspects ?? []).find(s => s.feature === fm.feature) && (
                         <span title="Possible leakage">
                           <Zap className="w-3 h-3 text-red-500 flex-shrink-0" />
                         </span>
@@ -1204,9 +1206,9 @@ function InsightsTab({ data }: { data: FIResult }) {
       }
     }
 
-    if (data.leakage_suspects.length > 0) {
-      const high = data.leakage_suspects.filter(s => s.severity === "high");
-      items.push({ level: "danger", title: `${data.leakage_suspects.length} possible leakage suspect(s)`, body: `${high.length > 0 ? `High-risk: ${high.map(s => s.feature).join(", ")}. ` : ""}These features may cause inflated scores in testing but fail in production. Verify carefully.` });
+    if ((data.leakage_suspects ?? []).length > 0) {
+      const high = (data.leakage_suspects ?? []).filter(s => s.severity === "high");
+      items.push({ level: "danger", title: `${(data.leakage_suspects ?? []).length} possible leakage suspect(s)`, body: `${high.length > 0 ? `High-risk: ${high.map(s => s.feature).join(", ")}. ` : ""}These features may cause inflated scores in testing but fail in production. Verify carefully.` });
     }
 
     if (data.importances.length >= 2) {
@@ -1228,9 +1230,9 @@ function InsightsTab({ data }: { data: FIResult }) {
       items.push({ level: "success", title: `${agreed.length} feature(s) confirmed important by multiple methods`, body: `${agreed.slice(0, 4).map(f => f.feature).join(", ")}${agreed.length > 4 ? "…" : ""} — high confidence, prioritise in model.` });
     }
 
-    if (data.redundant_groups.length > 0) {
-      const allRedundant = data.redundant_groups.flatMap(g => g.features);
-      items.push({ level: "warning", title: `${data.redundant_groups.length} redundant feature group(s) detected`, body: `${allRedundant.slice(0, 4).join(", ")} are highly correlated with each other. Keep the best one per group; drop the rest to reduce multicollinearity.` });
+    if ((data.redundant_groups ?? []).length > 0) {
+      const allRedundant = (data.redundant_groups ?? []).flatMap(g => g.features);
+      items.push({ level: "warning", title: `${(data.redundant_groups ?? []).length} redundant feature group(s) detected`, body: `${allRedundant.slice(0, 4).join(", ")} are highly correlated with each other. Keep the best one per group; drop the rest to reduce multicollinearity.` });
     }
 
     if (data.drop_candidates.length > 0) {
@@ -1283,7 +1285,7 @@ function InsightsTab({ data }: { data: FIResult }) {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-xs text-gray-400">{insights.length} auto-generated insights based on all methods</p>
         <AskAiButton
-          question={`Based on the feature importance analysis for target "${data.target}" (problem type: ${data.problem_type}, OOB score: ${data.model_score != null ? (data.model_score * 100).toFixed(1) + "%" : "N/A"}, top features: ${data.top_features.slice(0, 3).join(", ")}, leakage suspects: ${data.leakage_suspects.map(s => s.feature).join(", ") || "none"}, redundant groups: ${data.redundant_groups.length}), give me a comprehensive feature selection strategy with code examples.`}
+          question={`Based on the feature importance analysis for target "${data.target}" (problem type: ${data.problem_type}, OOB score: ${data.model_score != null ? (data.model_score * 100).toFixed(1) + "%" : "N/A"}, top features: ${data.top_features.slice(0, 3).join(", ")}, leakage suspects: ${(data.leakage_suspects ?? []).map(s => s.feature).join(", ") || "none"}, redundant groups: ${(data.redundant_groups ?? []).length}), give me a comprehensive feature selection strategy with code examples.`}
           label="Full AI analysis"
           variant="chip"
         />
@@ -1313,8 +1315,8 @@ function InsightsTab({ data }: { data: FIResult }) {
             { done: data.top_features.length > 0,                                   text: `Identify strong predictors: ${data.top_features.slice(0, 3).join(", ") || "—"}` },
             { done: data.drop_candidates.length > 0,                                text: `Remove low-importance features (${data.drop_candidates.length} candidates found)` },
             { done: data.model_score != null,                                        text: `Baseline score established: ${data.model_score != null ? (data.model_score * 100).toFixed(1) + "%" : "run model"}` },
-            { done: data.leakage_suspects.length === 0,                             text: `Verify no data leakage (${data.leakage_suspects.length} suspects found)` },
-            { done: data.redundant_groups.length === 0,                             text: `Resolve redundant feature groups (${data.redundant_groups.length} found)` },
+            { done: (data.leakage_suspects ?? []).length === 0, text: `Verify no data leakage (${(data.leakage_suspects ?? []).length} suspects found)` },
+            { done: (data.redundant_groups ?? []).length === 0, text: `Resolve redundant feature groups (${(data.redundant_groups ?? []).length} found)` },
             { done: data.feature_meta.every(f => f.missing_pct < 5),               text: "Handle missing values in features" },
             { done: data.stability?.length > 0 && data.stability.every(s => s.cv < 0.5), text: "Verify feature importance stability across samples" },
             { done: false,                                                           text: "Validate selected features with cross-validation" },
@@ -1384,8 +1386,8 @@ export default function FeatureImportancePage() {
         cv_score: data.cv_score_mean,
         top_features: data.top_features.join(", "),
         drop_candidates: data.drop_candidates.join(", "),
-        leakage_suspects: data.leakage_suspects.map(s => s.feature).join(", "),
-        redundant_groups: data.redundant_groups.length,
+        leakage_suspects: (data.leakage_suspects ?? []).map(s => s.feature).join(", "),
+redundant_groups: (data.redundant_groups ?? []).length,
         n_features: data.n_features,
         n_samples: data.n_samples,
       },
@@ -1401,7 +1403,7 @@ export default function FeatureImportancePage() {
   }, [data, setPageContext]);
 
   const hasNewFeatures = data && (
-    data.shap_values.length > 0 ||
+      (data.shap_values ?? []).length > 0 ||
     data.stability?.length > 0 ||
     data.interactions?.length > 0
   );
