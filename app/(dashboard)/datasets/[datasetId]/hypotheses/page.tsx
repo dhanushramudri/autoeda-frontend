@@ -65,7 +65,7 @@ async function validateAssumptionWithBackend(
   datasetId: string,
   assumption: string,
   source: string = "user"
-): Promise<Omit<UserAssumption, "id" | "text" | "status">> {
+): Promise<Omit<UserAssumption, "id" | "text">> {
   const response = await datasetsApi.validateAssumption(datasetId, assumption, source);
   const data = response.data;
 
