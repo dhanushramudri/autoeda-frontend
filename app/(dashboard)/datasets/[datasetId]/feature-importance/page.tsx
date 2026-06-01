@@ -333,10 +333,10 @@ const maxSHAP = shapValues.length
           {
             label: "Top Feature",
             value: data.top_features[0] ?? "—",
-            sub: data.shap_values[0]
-              ? `SHAP: ${fmt(data.shap_values[0].mean_abs_shap, 3)}`
-              : data.importances[0]
-              ? `RF: ${fmt(data.importances[0].importance, 3)}`
+            sub: (data.shap_values ?? [])[0]
+              ? `SHAP: ${fmt((data.shap_values ?? [])[0].mean_abs_shap, 3)}`
+              : (data.importances ?? [])[0]
+              ? `RF: ${fmt((data.importances ?? [])[0].importance, 3)}`
               : "",
             color: "#059669",
             mono: true,
