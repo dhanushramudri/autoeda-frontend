@@ -179,6 +179,9 @@ export const datasetsApi = {
     api.post(`/datasets/${datasetId}/sql/explain`, { sql }),
   sqlSchema: (datasetId: string) =>
     api.get(`/datasets/${datasetId}/sql/schema`),
+  // Assumptions / Validation
+  validateAssumption: (datasetId: string, assumption: string, source: string = "user") =>
+    api.post(`/datasets/${datasetId}/assumptions/validate`, { assumption, source }),
 };
 
 // Workspaces extra
