@@ -2,8 +2,8 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Code2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Lightbulb } from "lucide-react";
 
 interface SubNavProps {
   datasetId: string;
@@ -23,7 +23,6 @@ const NAV_ITEMS = [
   { label: "SQL",               href: "/sql",               id: "sql" },
   { label: "Pivot",             href: "/pivot",             id: "pivot" },
   { label: "Rules",             href: "/rules",             id: "rules" },
-  // { label: "History",           href: "/history",           id: "history" },
 ];
 
 export function SubNav({ datasetId }: SubNavProps) {
@@ -41,23 +40,23 @@ export function SubNav({ datasetId }: SubNavProps) {
         <div className="flex-1 flex items-center gap-1 overflow-x-auto scrollbar-hide min-w-0">
           {NAV_ITEMS.map((item) => {
             const active = isActive(item.id);
-            const isSql = item.id === "sql";
+            const isHypotheses = item.id === "hypotheses";
 
-            if (isSql) {
+            if (isHypotheses) {
               return (
-                <Link
-                  key={item.id}
-                  href={`/datasets/${datasetId}${item.href}`}
-                  className={cn(
-                    "flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold whitespace-nowrap transition-colors border",
-                    active
-                      ? "bg-violet-600 text-white border-violet-600 shadow-sm"
-                      : "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100"
-                  )}
-                >
-                  <Code2 className="w-3.5 h-3.5 flex-shrink-0" />
-                  SQL
-                </Link>
+                  <Link
+                        key={item.id}
+                        href={`/datasets/${datasetId}${item.href}`}
+                        className={cn(
+                          "flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold whitespace-nowrap transition-colors border",
+                          active
+                            ? "bg-violet-600 text-white border-violet-600 shadow-sm"
+                            : "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100"
+                        )}
+                      >
+                        <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" />
+                        {item.label}
+                  </Link>
               );
             }
 
@@ -77,7 +76,6 @@ export function SubNav({ datasetId }: SubNavProps) {
             );
           })}
         </div>
-
       </div>
     </nav>
   );
