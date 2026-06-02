@@ -47,10 +47,38 @@ const JOIN_TYPES = ["INNER", "LEFT", "RIGHT", "FULL"] as const;
 type JoinType = typeof JOIN_TYPES[number];
 
 const JOIN_META: Record<JoinType, { color: string; bg: string; border: string; desc: string; symbol: string; gradient: string }> = {
-  INNER: { color: "#3b82f6", bg: "#eff6ff", border: "#bfdbfe", desc: "Only matching rows from both tables", symbol: "⋈", gradient: "from-blue-500 to-blue-600" },
-  LEFT:  { color: "#8b5cf6", bg: "#f5f3ff", border: "#ddd6fe", desc: "All left rows + matching right rows", symbol: "⟕", gradient: "from-violet-500 to-violet-600" },
-  RIGHT: { color: "#10b981", bg: "#f0fdf4", border: "#a7f3d0", desc: "All right rows + matching left rows", symbol: "⟵", gradient: "from-emerald-500 to-emerald-600" },
-  FULL:  { color: "#f59e0b", bg: "#fffbeb", border: "#fde68a", desc: "All rows from both tables", symbol: "⟷", gradient: "from-amber-500 to-amber-600" },
+  INNER: { 
+    color: "hsl(var(--primary))", 
+    bg: "hsl(var(--primary) / 0.08)", 
+    border: "hsl(var(--primary) / 0.20)", 
+    desc: "Only matching rows from both tables", 
+    symbol: "⋈", 
+    gradient: "from-[hsl(var(--primary))] to-[hsl(var(--primary) / 0.8)]" 
+  },
+  LEFT:  { 
+    color: "#8b5cf6", 
+    bg: "#f5f3ff", 
+    border: "#ddd6fe", 
+    desc: "All left rows + matching right rows", 
+    symbol: "⟕", 
+    gradient: "from-violet-500 to-violet-600" 
+  },
+  RIGHT: { 
+    color: "#06b6d4", 
+    bg: "#f0f9ff", 
+    border: "#a5f3fc", 
+    desc: "All right rows + matching left rows", 
+    symbol: "⟵", 
+    gradient: "from-cyan-500 to-cyan-600" 
+  },
+  FULL:  { 
+    color: "#f59e0b", 
+    bg: "#fffbeb", 
+    border: "#fde68a", 
+    desc: "All rows from both tables", 
+    symbol: "⟷", 
+    gradient: "from-amber-500 to-amber-600" 
+  },
 };
 
 // ────────── Types ──────────────────────────────────────────────────────────
@@ -89,7 +117,7 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         maxWidth: 250,
         background: "white",
         boxShadow: selected
-          ? `0 0 0 2px #3b82f6, 0 20px 40px rgba(59,130,246,0.15)`
+          ? `0 0 0 2px hsl(var(--primary)), 0 20px 40px hsl(var(--primary) / 0.15)`
           : `0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)`,
         transition: "box-shadow 0.2s",
       }}
@@ -113,14 +141,14 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         className="px-3 py-2.5 flex items-center gap-2"
         style={{
           background: selected
-            ? "linear-gradient(135deg, #eff6ff, #dbeafe)"
+            ? "hsl(var(--primary) / 0.08)"
             : "linear-gradient(135deg, #f8fafc, #f1f5f9)",
           borderBottom: "1px solid rgba(0,0,0,0.06)",
         }}
       >
         <div
           className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-          style={{ background: selected ? "#3b82f6" : "#64748b" }}
+          style={{ background: selected ? "hsl(var(--primary))" : "#64748b" }}
         >
           <Table2 className="w-3 h-3 text-white" />
         </div>
@@ -172,7 +200,7 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
                   className="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors"
                   style={{ background: "#cbd5e1" }}
                 />
-                <span className="text-[10px] font-mono text-gray-500 group-hover:text-blue-600 truncate transition-colors">{col}</span>
+                <span className="text-[10px] font-mono text-gray-500 group-hover:text-[hsl(var(--primary))] truncate transition-colors">{col}</span>
               </button>
             ))}
             {filtered.length > 30 && (
@@ -191,7 +219,7 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         style={{ borderTop: "1px solid rgba(0,0,0,0.04)", background: "#fafafa" }}
       >
         <span className="text-[9px] text-gray-400">
-          <span className="text-blue-400 font-semibold">→</span> drag to connect
+          <span style={{ color: "hsl(var(--primary))" }} className="font-semibold">→</span> drag to connect
         </span>
         <span className="text-[9px] text-gray-400">click col to key</span>
       </div>
@@ -203,9 +231,9 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         id="right"
         style={{
           width: 16, height: 16,
-          background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+          background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.8))",
           border: "3px solid white",
-          boxShadow: "0 0 0 2px #3b82f6",
+          boxShadow: "0 0 0 2px hsl(var(--primary))",
           right: -9,
         }}
       />
@@ -309,8 +337,8 @@ function CollapsiblePanel({
       className="flex flex-col bg-white flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
       style={{
         width: collapsed ? 52 : width,
-        borderRight: side === "left" ? "1px solid #dde3ec" : undefined,
-        borderLeft: side === "right" ? "1px solid #dde3ec" : undefined,
+        borderRight: side === "left" ? "1px solid hsl(var(--sidebar-border))" : undefined,
+        borderLeft: side === "right" ? "1px solid hsl(var(--sidebar-border))" : undefined,
         boxShadow: side === "left"
           ? "4px 0 16px rgba(0,0,0,0.07)"
           : "-4px 0 16px rgba(0,0,0,0.07)",
@@ -318,32 +346,41 @@ function CollapsiblePanel({
     >
       {/* Top Header */}
       <div
-className={`h-12 flex items-center justify-between px-3 border-b flex-shrink-0 ${
-  side === "left"
-    ? "bg-gradient-to-r from-blue-800 to-blue-600 border-blue-700"
-    : "bg-white border-gray-100"
-}`}      >
+        className={`h-12 flex items-center justify-between px-3 border-b flex-shrink-0 ${
+          side === "left"
+            ? "bg-gradient-to-r border-b"
+            : "bg-white border-gray-100"
+        }`}
+        style={{
+          background: side === "left" 
+            ? "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))"
+            : "white",
+          borderBottomColor: side === "left" ? "hsl(var(--primary) / 0.3)" : "hsl(var(--sidebar-border))",
+        }}
+      >
         {!collapsed ? (
           <>
             <div className="flex items-center gap-2">
-<div className={side === "left" ? "text-white" : "text-gray-500"}>
-  {icon}
-</div>              <span
-  className={`text-[11px] font-semibold ${
-    side === "left" ? "text-white" : "text-gray-700"
-  }`}
->
+              <div style={{ color: side === "left" ? "white" : "hsl(var(--sidebar-foreground))" }}>
+                {icon}
+              </div>
+              <span
+                className={`text-[11px] font-semibold ${
+                  side === "left" ? "text-white" : "text-gray-700"
+                }`}
+              >
                 {label}
               </span>
             </div>
 
             <button
               onClick={onToggle}
-className={`p-1.5 rounded-lg transition ${
-  side === "left"
-    ? "hover:bg-white/10"
-    : "hover:bg-gray-100"
-}`}            >
+              className={`p-1.5 rounded-lg transition ${
+                side === "left"
+                  ? "hover:bg-white/10"
+                  : "hover:bg-gray-100"
+              }`}
+            >
               {side === "left" ? (
                 <ChevronLeft className="w-4 h-4 text-white" />
               ) : (
@@ -352,19 +389,23 @@ className={`p-1.5 rounded-lg transition ${
             </button>
           </>
         ) : (
-<button
-  onClick={onToggle}
-className={`w-full h-full flex items-center justify-center transition ${    side === "left"
-      ? "bg-gradient-to-b from-blue-800 to-blue-700 hover:from-blue-700 hover:to-blue-600"
-      : "hover:bg-gray-50"
-  }`}
->
-{side === "left" ? (
-  <Database className="w-4 h-4 text-white/90" />
-) : (
-  <Settings className="w-4 h-4 text-gray-400" />
-)}
-</button>
+          <button
+            onClick={onToggle}
+            className={`w-full h-full flex items-center justify-center transition ${
+              side === "left"
+                ? "bg-gradient-to-b hover:opacity-80"
+                : "hover:bg-gray-50"
+            }`}
+            style={side === "left" ? {
+              background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))",
+            } : {}}
+          >
+            {side === "left" ? (
+              <Database className="w-4 h-4 text-white/90" />
+            ) : (
+              <Settings className="w-4 h-4 text-gray-400" />
+            )}
+          </button>
         )}
       </div>
 
@@ -517,7 +558,7 @@ function JoinBuilderInner() {
         ...conn,
         id: edgeId,
         type: "joinEdge",
-        markerEnd: { type: MarkerType.ArrowClosed, color: "#3b82f6" },
+        markerEnd: { type: MarkerType.ArrowClosed, color: "hsl(var(--primary))" },
         data: { joinType: "INNER", conditions: initConditions },
         source: conn.source!,
         target: conn.target!,
@@ -652,20 +693,17 @@ function JoinBuilderInner() {
         label="Tables"
         icon={<Database className="w-4 h-4" />}
       >
-        {/* Header */}
-
-
         {/* Status bar */}
-        <div className="px-3 py-2 flex-shrink-0 flex gap-2" style={{ borderBottom: "1px solid #f1f5f9" }}>
-          <div className="flex-1 rounded-lg bg-blue-50 border border-blue-100 px-2 py-1 text-center">
-            <div className="text-sm font-bold text-blue-600">{nodes.length}</div>
-            <div className="text-[9px] text-blue-400 font-medium">Tables</div>
+        <div className="px-3 py-2 flex-shrink-0 flex gap-2 border-b border-gray-100">
+          <div className="flex-1 rounded-lg border px-2 py-1 text-center" style={{ backgroundColor: "hsl(var(--primary) / 0.08)", borderColor: "hsl(var(--primary) / 0.2)" }}>
+            <div className="text-sm font-bold" style={{ color: "hsl(var(--primary))" }}>{nodes.length}</div>
+            <div className="text-[9px] font-medium" style={{ color: "hsl(var(--primary) / 0.6)" }}>Tables</div>
           </div>
-          <div className="flex-1 rounded-lg bg-purple-50 border border-purple-100 px-2 py-1 text-center">
+          <div className="flex-1 rounded-lg border px-2 py-1 text-center" style={{ backgroundColor: "#f5f3ff", borderColor: "#ddd6fe" }}>
             <div className="text-sm font-bold text-purple-600">{edges.length}</div>
             <div className="text-[9px] text-purple-400 font-medium">Joins</div>
           </div>
-          <div className="flex-1 rounded-lg bg-green-50 border border-green-100 px-2 py-1 text-center">
+          <div className="flex-1 rounded-lg border px-2 py-1 text-center" style={{ backgroundColor: "#f0fdf4", borderColor: "#a7f3d0" }}>
             <div className="text-sm font-bold text-green-600">{configuredEdges}</div>
             <div className="text-[9px] text-green-400 font-medium">Configured</div>
           </div>
@@ -697,20 +735,20 @@ function JoinBuilderInner() {
                 onClick={() => addDatasetNode(ds)}
                 className="w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-xl border transition-all duration-150 group"
                 style={{
-                  border: onCanvas > 0 ? "1px solid #bfdbfe" : "1px solid #f1f5f9",
-                  background: onCanvas > 0 ? "#eff6ff" : "#fafafa",
+                  borderColor: onCanvas > 0 ? "hsl(var(--primary) / 0.3)" : "#f1f5f9",
+                  backgroundColor: onCanvas > 0 ? "hsl(var(--primary) / 0.08)" : "#fafafa",
                 }}
               >
                 <div
                   className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
-                  style={{ background: onCanvas > 0 ? "#3b82f6" : "#e2e8f0" }}
+                  style={{ backgroundColor: onCanvas > 0 ? "hsl(var(--primary))" : "#e2e8f0" }}
                 >
                   <Database className="w-3 h-3" style={{ color: onCanvas > 0 ? "white" : "#94a3b8" }} />
                 </div>
-                <span className="text-[11px] font-medium text-gray-700 truncate flex-1 group-hover:text-blue-600 transition-colors">{ds.name}</span>
+                <span className="text-[11px] font-medium text-gray-700 truncate flex-1 group-hover:transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50" >{ds.name}</span>
                 {onCanvas > 0
-                  ? <span className="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-bold">×{onCanvas}</span>
-                  : <Plus className="w-3 h-3 text-gray-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
+                  ? <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }}>×{onCanvas}</span>
+                  : <Plus className="w-3 h-3 text-gray-300 group-hover:text-[hsl(var(--primary))] transition-colors flex-shrink-0" />
                 }
               </button>
             );
@@ -718,7 +756,7 @@ function JoinBuilderInner() {
         </div>
 
         {/* Bottom actions */}
-        <div className="px-3 py-2 flex-shrink-0 space-y-1" style={{ borderTop: "1px solid #f1f5f9" }}>
+        <div className="px-3 py-2 flex-shrink-0 space-y-1 border-t border-gray-100">
           <button
             onClick={undo}
             disabled={history.current.length === 0}
@@ -744,149 +782,152 @@ function JoinBuilderInner() {
         {/* Canvas area */}
         <div className="flex-1 relative overflow-hidden">
 
-        {/* Floating top toolbar */}
-        <div
-          className="absolute top-3 left-1/2 z-10 flex items-center gap-1.5 px-3 py-2 rounded-2xl shadow-lg"
-          style={{
-            transform: "translateX(-50%)",
-            background: "rgba(255,255,255,0.95)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(226,232,240,0.8)",
-          }}
-        >
-          {/* Canvas stats */}
-          {nodes.length > 0 && (
-            <div className="flex items-center gap-1 mr-1 pr-3" style={{ borderRight: "1px solid #e2e8f0" }}>
-              <Layers className="w-3 h-3 text-gray-400" />
-              <span className="text-[10px] text-gray-500">
-                <span className="font-semibold text-gray-700">{nodes.length}</span> tables,{" "}
-                <span className="font-semibold text-gray-700">{edges.length}</span> joins
-              </span>
-            </div>
-          )}
-
-          {/* Run controls */}
-          <button
-            onClick={() => generateSqlMutation.mutate()}
-            disabled={!readyToRun || generateSqlMutation.isPending}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: readyToRun ? "#1e40af" : "#94a3b8", color: "white" }}
-            title={!readyToRun ? "Need 2+ tables with configured join keys" : ""}
-          >
-            <Code2 className="w-3 h-3" />
-            SQL
-          </button>
-
-          <button
-            onClick={() => executeMutation.mutate()}
-            disabled={!readyToRun || executeMutation.isPending}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ background: readyToRun ? "#059669" : "#94a3b8", color: "white" }}
-          >
-            <Play className="w-3 h-3" />
-            {executeMutation.isPending ? "Running..." : "Run"}
-          </button>
-
-          {result && (
-            <>
-              <button
-                onClick={exportCsv}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
-              >
-                <Download className="w-3 h-3" />
-                CSV
-              </button>
-              <button
-                onClick={() => { setSavedDataset(null); setShowSaveModal(true); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
-                style={{ background: "#7c3aed", color: "white" }}
-              >
-                <Save className="w-3 h-3" />
-                Save Dataset
-              </button>
-            </>
-          )}
-
-          {/* Ready indicator */}
-          <div className="ml-1 flex items-center gap-1">
-            {readyToRun
-              ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-              : <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
-            }
-            <span className="text-[9px] text-gray-400">{readyToRun ? "Ready" : "Configure joins"}</span>
-          </div>
-        </div>
-
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onEdgeClick={onEdgeClick}
-          onPaneClick={onPaneClick}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          fitViewOptions={{ maxZoom: 0.75, padding: 0.3 }}
-          connectionLineType={ConnectionLineType.Bezier}
-          style={{ background: "transparent" }}
-        >
-          <Background color="#cbd5e1" gap={20} size={1} />
-          <Controls style={{ bottom: 16, left: 16 }} />
-          <MiniMap
-            style={{ bottom: 16, right: 16, borderRadius: 12, border: "1px solid #e2e8f0" }}
-            nodeColor="#3b82f6"
-          />
-        </ReactFlow>
-
-        {/* Empty state overlay */}
-        {nodes.length === 0 && (
+          {/* Floating top toolbar */}
           <div
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-            style={{ zIndex: 5 }}
-          >
-            <div className="text-center">
-              <div
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                style={{ background: "rgba(59,130,246,0.08)", border: "2px dashed #bfdbfe" }}
-              >
-                <GitMerge className="w-8 h-8 text-blue-300" />
-              </div>
-              <p className="text-sm font-semibold text-gray-400">Add tables from the left panel</p>
-              <p className="text-[11px] text-gray-300 mt-1">Drag the blue handle → to the purple ← to create a join</p>
-            </div>
-          </div>
-        )}
-
-        {/* Save success banner */}
-        {savedDataset && (
-          <div
-            className="absolute top-16 left-1/2 z-20 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl"
+            className="absolute top-3 left-1/2 z-10 flex items-center gap-1.5 px-3 py-2 rounded-2xl shadow-lg"
             style={{
               transform: "translateX(-50%)",
-              background: "rgba(240,253,244,0.97)",
+              background: "rgba(255,255,255,0.95)",
               backdropFilter: "blur(12px)",
-              border: "1px solid #86efac",
-              minWidth: 320,
+              border: "1px solid rgba(226,232,240,0.8)",
             }}
           >
-            <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-[11px] font-bold text-green-800">Dataset saved!</p>
-              <p className="text-[10px] text-green-600 truncate">{savedDataset.name}</p>
-            </div>
+            {/* Canvas stats */}
+            {nodes.length > 0 && (
+              <div className="flex items-center gap-1 mr-1 pr-3 border-r border-gray-200">
+                <Layers className="w-3 h-3 text-gray-400" />
+                <span className="text-[10px] text-gray-500">
+                  <span className="font-semibold text-gray-700">{nodes.length}</span> tables,{" "}
+                  <span className="font-semibold text-gray-700">{edges.length}</span> joins
+                </span>
+              </div>
+            )}
+
+            {/* Run controls */}
             <button
-              onClick={() => router.push(`/datasets/${savedDataset.dataset_id}/overview`)}
-              className="flex items-center gap-1 text-[10px] font-bold text-green-700 hover:text-green-900 transition-colors"
+              onClick={() => generateSqlMutation.mutate()}
+              disabled={!readyToRun || generateSqlMutation.isPending}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ 
+                backgroundColor: readyToRun ? "hsl(var(--primary))" : "#94a3b8", 
+                color: "white" 
+              }}
+              title={!readyToRun ? "Need 2+ tables with configured join keys" : ""}
             >
-              <ExternalLink className="w-3 h-3" /> Open
+              <Code2 className="w-3 h-3" />
+              SQL
             </button>
-            <button onClick={() => setSavedDataset(null)} className="p-0.5 rounded hover:bg-green-100">
-              <X className="w-3.5 h-3.5 text-green-400" />
+
+            <button
+              onClick={() => executeMutation.mutate()}
+              disabled={!readyToRun || executeMutation.isPending}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: readyToRun ? "#10b981" : "#94a3b8", color: "white" }}
+            >
+              <Play className="w-3 h-3" />
+              {executeMutation.isPending ? "Running..." : "Run"}
             </button>
+
+            {result && (
+              <>
+                <button
+                  onClick={exportCsv}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
+                >
+                  <Download className="w-3 h-3" />
+                  CSV
+                </button>
+                <button
+                  onClick={() => { setSavedDataset(null); setShowSaveModal(true); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all"
+                  style={{ backgroundColor: "#8b5cf6", color: "white" }}
+                >
+                  <Save className="w-3 h-3" />
+                  Save Dataset
+                </button>
+              </>
+            )}
+
+            {/* Ready indicator */}
+            <div className="ml-1 flex items-center gap-1">
+              {readyToRun
+                ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                : <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+              }
+              <span className="text-[9px] text-gray-400">{readyToRun ? "Ready" : "Configure joins"}</span>
+            </div>
           </div>
-        )}
+
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onEdgeClick={onEdgeClick}
+            onPaneClick={onPaneClick}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            fitView
+            fitViewOptions={{ maxZoom: 0.75, padding: 0.3 }}
+            connectionLineType={ConnectionLineType.Bezier}
+            style={{ background: "transparent" }}
+          >
+            <Background color="#cbd5e1" gap={20} size={1} />
+            <Controls style={{ bottom: 16, left: 16 }} />
+            <MiniMap
+              style={{ bottom: 16, right: 16, borderRadius: 12, border: "1px solid #e2e8f0" }}
+              nodeColor="hsl(var(--primary))"
+            />
+          </ReactFlow>
+
+          {/* Empty state overlay */}
+          {nodes.length === 0 && (
+            <div
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+              style={{ zIndex: 5 }}
+            >
+              <div className="text-center">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                  style={{ backgroundColor: "hsl(var(--primary) / 0.08)", border: "2px dashed hsl(var(--primary) / 0.3)" }}
+                >
+                  <GitMerge className="w-8 h-8" style={{ color: "hsl(var(--primary) / 0.4)" }} />
+                </div>
+                <p className="text-sm font-semibold text-gray-400">Add tables from the left panel</p>
+                <p className="text-[11px] text-gray-300 mt-1">Drag the blue handle → to the purple ← to create a join</p>
+              </div>
+            </div>
+          )}
+
+          {/* Save success banner */}
+          {savedDataset && (
+            <div
+              className="absolute top-16 left-1/2 z-20 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl"
+              style={{
+                transform: "translateX(-50%)",
+                background: "rgba(240,253,244,0.97)",
+                backdropFilter: "blur(12px)",
+                border: "1px solid #86efac",
+                minWidth: 320,
+              }}
+            >
+              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-[11px] font-bold text-green-800">Dataset saved!</p>
+                <p className="text-[10px] text-green-600 truncate">{savedDataset.name}</p>
+              </div>
+              <button
+                onClick={() => router.push(`/datasets/${savedDataset.dataset_id}/overview`)}
+                className="flex items-center gap-1 text-[10px] font-bold text-green-700 hover:text-green-900 transition-colors"
+              >
+                <ExternalLink className="w-3 h-3" /> Open
+              </button>
+              <button onClick={() => setSavedDataset(null)} className="p-0.5 rounded hover:bg-green-100">
+                <X className="w-3.5 h-3.5 text-green-400" />
+              </button>
+            </div>
+          )}
         </div>{/* end canvas area */}
 
         {/* ── Bottom results drawer ── */}
@@ -903,8 +944,7 @@ function JoinBuilderInner() {
               <>
                 {/* Drawer header */}
                 <div
-                  className="flex items-center gap-3 px-4 h-10 flex-shrink-0"
-                  style={{ borderBottom: "1px solid #f1f5f9" }}
+                  className="flex items-center gap-3 px-4 h-10 flex-shrink-0 border-b border-gray-100"
                 >
                   <Table2 className="w-3.5 h-3.5 text-gray-400" />
                   {result && !showSqlInDrawer ? (
@@ -912,7 +952,7 @@ function JoinBuilderInner() {
                       <span className="text-[11px] font-semibold text-gray-700">Results</span>
                       <span
                         className="text-[9px] px-2 py-0.5 rounded-full font-semibold"
-                        style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
+                        style={{ backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
                       >
                         {result.row_count.toLocaleString()} rows{result.truncated ? " (truncated)" : ""}
                       </span>
@@ -956,8 +996,8 @@ function JoinBuilderInner() {
                 <div className="flex-1 overflow-auto">
                   {showSqlInDrawer && generatedSql ? (
                     <pre
-                      className="p-4 text-[11px] text-green-300 font-mono whitespace-pre-wrap break-words leading-relaxed h-full"
-                      style={{ background: "#0f172a" }}
+                      className="p-4 text-[11px] font-mono whitespace-pre-wrap break-words leading-relaxed h-full"
+                      style={{ background: "#0f172a", color: "#22c55e" }}
                     >
                       {generatedSql}
                     </pre>
@@ -982,8 +1022,8 @@ function JoinBuilderInner() {
         {(result || generatedSql) && !resultsOpen && (
           <button
             onClick={() => setResultsOpen(true)}
-            className="flex-shrink-0 flex items-center justify-center gap-2 h-9 w-full text-[11px] font-semibold text-gray-600 hover:bg-white transition-colors"
-            style={{ borderTop: "1px solid #e2e8f0", background: "#f8fafc" }}
+            className="flex-shrink-0 flex items-center justify-center gap-2 h-9 w-full text-[11px] font-semibold text-gray-600 hover:bg-white transition-colors border-t border-gray-100"
+            style={{ background: "#f8fafc" }}
           >
             <ChevronUp className="w-3.5 h-3.5" />
             {result
@@ -1002,12 +1042,12 @@ function JoinBuilderInner() {
           onClick={(e) => { if (e.target === e.currentTarget) setShowSaveModal(false); }}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4"
-            style={{ border: "1px solid #e2e8f0" }}
+            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 border"
+            style={{ borderColor: "hsl(var(--sidebar-border))" }}
           >
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#f5f3ff" }}>
-                <Save className="w-5 h-5 text-violet-600" />
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.1)" }}>
+                <Save className="w-5 h-5" style={{ color: "hsl(var(--primary))" }} />
               </div>
               <div>
                 <h2 className="text-sm font-bold text-gray-900">Save as Dataset</h2>
@@ -1031,7 +1071,7 @@ function JoinBuilderInner() {
               onChange={(e) => setSaveName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && saveName.trim()) saveMutation.mutate(); }}
               placeholder="e.g. Customer Orders Joined"
-              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-400 transition"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:border-transparent transition focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
 
             {saveMutation.isError && (
@@ -1057,7 +1097,7 @@ function JoinBuilderInner() {
                 onClick={() => saveMutation.mutate()}
                 disabled={!saveName.trim() || saveMutation.isPending}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ background: "#7c3aed" }}
+                style={{ backgroundColor: "hsl(var(--primary))" }}
               >
                 {saveMutation.isPending ? (
                   <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</>
@@ -1085,7 +1125,7 @@ function JoinBuilderInner() {
               {/* Edge header */}
               <div
                 className="flex items-center justify-between p-3 rounded-xl"
-                style={{ background: `${JOIN_META[edgeConfig.joinType].bg}`, border: `1px solid ${JOIN_META[edgeConfig.joinType].border}` }}
+                style={{ backgroundColor: `${JOIN_META[edgeConfig.joinType].bg}`, border: `1px solid ${JOIN_META[edgeConfig.joinType].border}` }}
               >
                 <div>
                   <p className="text-[10px] font-bold" style={{ color: JOIN_META[edgeConfig.joinType].color }}>
@@ -1109,7 +1149,7 @@ function JoinBuilderInner() {
                       className="px-2 py-2 rounded-xl border transition-all text-left"
                       style={{
                         borderColor: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#e2e8f0",
-                        background: edgeConfig.joinType === jt ? JOIN_META[jt].bg : "white",
+                        backgroundColor: edgeConfig.joinType === jt ? JOIN_META[jt].bg : "white",
                         boxShadow: edgeConfig.joinType === jt ? `0 0 0 1px ${JOIN_META[jt].color}33` : "none",
                       }}
                     >
@@ -1128,8 +1168,8 @@ function JoinBuilderInner() {
                 <label className="text-[10px] font-bold text-gray-600 block mb-2 uppercase tracking-wider">Join Keys</label>
 
                 {matchingSuggestions.length > 0 && edgeConfig.conditions.length === 0 && (
-                  <div className="mb-2 p-2.5 rounded-xl" style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}>
-                    <p className="text-[9px] font-bold text-blue-700 mb-1.5 flex items-center gap-1">
+                  <div className="mb-2 p-2.5 rounded-xl border" style={{ backgroundColor: "hsl(var(--primary) / 0.08)", borderColor: "hsl(var(--primary) / 0.2)" }}>
+                    <p className="text-[9px] font-bold mb-1.5 flex items-center gap-1" style={{ color: "hsl(var(--primary))" }}>
                       <Zap className="w-2.5 h-2.5" /> Smart suggestions
                     </p>
                     <div className="flex flex-wrap gap-1">
@@ -1137,7 +1177,12 @@ function JoinBuilderInner() {
                         <button
                           key={col}
                           onClick={() => setEdgeConfig((c) => ({ ...c, conditions: [{ sourceKey: col, targetKey: col }] }))}
-                          className="text-[9px] px-2 py-1 bg-white text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 font-mono font-semibold transition-colors"
+                          className="text-[9px] px-2 py-1 rounded-lg font-mono font-semibold transition-colors border"
+                          style={{
+                            backgroundColor: "white",
+                            color: "hsl(var(--primary))",
+                            borderColor: "hsl(var(--primary) / 0.3)",
+                          }}
                         >
                           {col}
                         </button>
@@ -1157,7 +1202,7 @@ function JoinBuilderInner() {
                         <select
                           value={c.sourceKey}
                           onChange={(e) => updateCondition(i, "sourceKey", e.target.value)}
-                          className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition"
+                          className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:border-transparent transition focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                           <option value="">Source…</option>
                           {srcCols.map((col) => <option key={col} value={col}>{col}</option>)}
@@ -1166,7 +1211,7 @@ function JoinBuilderInner() {
                         <select
                           value={c.targetKey}
                           onChange={(e) => updateCondition(i, "targetKey", e.target.value)}
-                          className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:ring-blue-400 focus:border-blue-400 transition"
+                          className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:border-transparent transition focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                           <option value="">Target…</option>
                           {tgtCols.map((col) => <option key={col} value={col}>{col}</option>)}
@@ -1191,7 +1236,8 @@ function JoinBuilderInner() {
                   </button>
                   <button
                     onClick={applyEdgeConfig}
-                    className="flex-1 text-[10px] px-2.5 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
+                    className="flex-1 text-[10px] px-2.5 py-2 text-white rounded-xl font-bold hover:opacity-90 transition"
+                    style={{ backgroundColor: "hsl(var(--primary))" }}
                   >
                     Apply
                   </button>
@@ -1209,7 +1255,7 @@ function JoinBuilderInner() {
             <div className="flex flex-col items-center justify-center h-full px-6 py-8 text-center">
               <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-                style={{ background: "#f1f5f9" }}
+                style={{ backgroundColor: "#f1f5f9" }}
               >
                 <Settings className="w-6 h-6 text-gray-300" />
               </div>
