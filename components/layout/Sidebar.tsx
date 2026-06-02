@@ -159,7 +159,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
     )}>
 
       {/* -- Logo & Toggle -- */}
-      <div className="px-3 py-3 border-b border-sidebar-border flex items-center gap-2">
+      <div className="px-3 h-14 border-b border-sidebar-border flex items-center gap-2">
         {sidebarOpen ? (
           <Link href="/workspaces" className="flex-1 flex items-center justify-center min-w-0">
             <span className="leading-none select-none">

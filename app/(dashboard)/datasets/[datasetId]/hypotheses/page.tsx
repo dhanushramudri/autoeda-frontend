@@ -80,24 +80,39 @@ async function validateAssumptionWithBackend(
 
 // ── HypCard ───────────────────────────────────────────────────────────────────
 
+const SEV_DOT: Record<string, string> = {
+  danger:  "bg-red-400",
+  warning: "bg-amber-400",
+  info:    "bg-blue-400",
+};
+
 function HypCard({ card }: { card: HypothesisCard }) {
   return (
-    <div className={`bg-white border border-gray-200 border-l-4 ${SEV_BORDER[card.severity]} rounded-xl p-4`}>
-      <div className="flex items-start justify-between gap-3 mb-2">
-        <p className="text-sm font-semibold text-gray-900 leading-snug">{card.title}</p>
-        <span className={`flex-shrink-0 text-[11px] font-medium px-1.5 py-0.5 rounded-md ${CONF_COLOR[card.confidence]}`}>
+    <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2.5">
+      {/* Top row: dot + category + confidence */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${SEV_DOT[card.severity]}`} />
+          <span className="text-[11px] font-medium text-gray-500 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
+            {card.category}
+          </span>
+        </div>
+        <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${CONF_COLOR[card.confidence]}`}>
           {card.confidence}
         </span>
       </div>
-      <p className="text-xs text-gray-500 leading-relaxed mb-3">{card.hypothesis}</p>
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2">
-          <span className={`text-[11px] font-medium ${SEV_LABEL[card.severity]}`}>{card.category}</span>
-          <span className="text-gray-200">·</span>
-          <code className="text-[11px] text-gray-500 font-mono bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
-            {card.evidence}
-          </code>
-        </div>
+
+      {/* Title */}
+      <p className="text-sm font-medium text-gray-900 leading-snug">{card.title}</p>
+
+      {/* Hypothesis */}
+      <p className="text-xs text-gray-500 leading-relaxed">{card.hypothesis}</p>
+
+      {/* Footer: evidence + columns */}
+      <div className="flex items-center justify-between gap-2 flex-wrap pt-1">
+        <code className="text-[11px] text-gray-500 font-mono bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
+          {card.evidence}
+        </code>
         {card.columns.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap justify-end">
             {card.columns.slice(0, 4).map((col) => (
@@ -329,15 +344,16 @@ export default function HypothesesPage() {
             <FlaskConical className="w-4 h-4 text-violet-500" />
             <h2 className="text-base font-bold text-gray-900">Validate Your Assumptions</h2>
           </div>
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-gray-500 mb-4">
             Enter hypotheses from business context, client KT sessions, or your own intuition — we'll validate them against the data.
           </p>
 
-          {/* Input */}
-          <div className="bg-white border border-gray-200 rounded-xl p-4 mb-3">
+          {/* Input — improved visibility */}
+          <div className="bg-white border border-gray-300 rounded-xl p-4 mb-3 shadow-sm focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-50 transition-all">
             <textarea
               ref={textareaRef}
               value={inputText}
+              autoFocus
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
@@ -347,10 +363,9 @@ export default function HypothesesPage() {
               }}
               placeholder="e.g. High-value customers tend to churn less · Price and total_amount are correlated · Orders spike on weekends"
               rows={2}
-              className="w-full text-sm text-gray-700 placeholder-gray-300 resize-none focus:outline-none leading-relaxed"
+              className="w-full text-sm text-gray-900 placeholder-gray-400 resize-none focus:outline-none leading-relaxed bg-transparent"
             />
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-              <p className="text-[11px] text-gray-300">Press Enter or click Add to queue your assumption</p>
               <div className="flex items-center gap-2">
                 {pendingCount > 0 && (
                   <button
@@ -368,7 +383,7 @@ export default function HypothesesPage() {
                 <button
                   onClick={addAssumption}
                   disabled={!inputText.trim()}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-200 rounded-lg text-gray-600 hover:border-gray-400 disabled:opacity-40 transition"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-lg text-gray-700 hover:border-gray-500 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add
                 </button>
@@ -405,7 +420,7 @@ export default function HypothesesPage() {
               ))}
             </div>
           ) : (
-            <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-8 text-center">
+            <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-8 text-center">
               <FlaskConical className="w-6 h-6 text-gray-300 mx-auto mb-2" />
               <p className="text-xs text-gray-400">
                 No assumptions yet. Add one above to get started.
@@ -417,7 +432,7 @@ export default function HypothesesPage() {
         {/* ── Divider ── */}
         <div className="flex items-center gap-3 mb-8">
           <div className="flex-1 h-px bg-gray-100" />
-          <span className="text-[11px] font-medium text-gray-300 uppercase tracking-widest">AI-Generated Findings</span>
+          <span className="text-[11px] font-medium text-gray-400 uppercase tracking-widest">AI-Generated Findings</span>
           <div className="flex-1 h-px bg-gray-100" />
         </div>
 
@@ -442,7 +457,7 @@ export default function HypothesesPage() {
               )}
             </button>
           </div>
-          <p className="text-xs text-gray-400 mb-4">AI-generated findings from correlations, distributions, outliers, and feature importance.</p>
+          <p className="text-xs text-gray-500 mb-4">AI-generated findings from correlations, distributions, outliers, and feature importance.</p>
 
           {data && !isRunning && (
             <div className="flex items-center gap-3 mb-4 text-xs text-gray-500">
