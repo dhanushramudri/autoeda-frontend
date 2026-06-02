@@ -131,15 +131,6 @@ export default function DatasetOverviewPage() {
         </div>
       )}
 
-      {/* Insights */}
-      {insights && insights.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-          <h2 className="text-base font-semibold text-gray-800 mb-4">
-            Auto-Insights ({insights.length})
-          </h2>
-          <InsightList insights={insights} />
-        </div>
-      )}
 
       {/* EDA navigation grid */}
       <div>
