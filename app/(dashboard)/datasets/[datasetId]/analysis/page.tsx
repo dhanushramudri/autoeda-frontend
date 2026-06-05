@@ -937,14 +937,24 @@ function TabHeader({ label, count }: { label: string; count?: number }) {
 export default function AnalysisPage() {
   const { datasetId } = useParams<{ datasetId: string }>();
 
+  // 1. Skeleton query (fast, loads all metadata)
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: queryKeys.eda.analysis(datasetId),
     queryFn: () => datasetsApi.getAnalysis(datasetId).then((r) => r.data as FullAnalysisResult),
     staleTime: 1000 * 60 * 10,
   });
 
-  const [activeTab, setActiveTab] = useState<AnalysisTab>("univariate");
+  // 2. Per-column chart query (lazy, fires only when a column is selected)
   const [selectedCol, setSelectedCol] = useState<string>("");
+  const { data: columnCharts, isFetching: colChartsLoading } = useQuery({
+    queryKey: ["eda", "column", datasetId, selectedCol],
+    queryFn: () =>
+      datasetsApi.getAnalysisColumn(datasetId, selectedCol).then((r) => r.data),
+    enabled: !!selectedCol && !!data,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const [activeTab, setActiveTab] = useState<AnalysisTab>("univariate");
   const [visibleCharts, setVisibleCharts] = useState<Set<ChartKey>>(
     new Set([
       "histogram", "box", "violin", "strip", "qq", "ecdf",
@@ -1067,15 +1077,21 @@ export default function AnalysisPage() {
             {/* ══════════ UNIVARIATE TAB ══════════ */}
             {activeTab === "univariate" && (
               <div className="grid grid-cols-2 gap-4">
+                {selectedCol && colChartsLoading && (
+                  <div className="col-span-2 flex items-center justify-center h-40 gap-2 text-slate-400 animate-pulse">
+                    <PageSpinner />
+                    <span className="text-xs">Loading charts for {selectedCol}…</span>
+                  </div>
+                )}
 
                 {/* ── Numeric column ── */}
-                {selectedCol && colType === "numeric" && (() => {
-                  const charts = data.numeric_charts[selectedCol];
-                  if (!charts) return (
+                {selectedCol && !colChartsLoading && colType === "numeric" && (() => {
+                  const charts = columnCharts as any;
+                  if (!charts || !charts.histogram_kde) return (
                     <div className="col-span-2"><Empty msg={`No chart data for ${selectedCol}`} /></div>
                   );
                   const highSkew = Math.abs(charts.skewness ?? 0) > 1;
-                  const missingInfo = data.stat_cards.missing_bar.find((r) => r.column === selectedCol);
+                  const missingInfo = data!.stat_cards.missing_bar.find((r) => r.column === selectedCol);
                   return (
                     <>
                       {/* Stats pills */}
@@ -1151,9 +1167,9 @@ export default function AnalysisPage() {
                 })()}
 
                 {/* ── Categorical column ── */}
-                {selectedCol && colType === "categorical" && (() => {
-                  const charts = data.categorical_charts[selectedCol];
-                  if (!charts) return (
+                {selectedCol && !colChartsLoading && colType === "categorical" && (() => {
+                  const charts = columnCharts as any;
+                  if (!charts || !charts.bar) return (
                     <div className="col-span-2"><Empty msg={`No chart data for ${selectedCol}`} /></div>
                   );
                   const total = charts.bar.total_categories;
@@ -1192,7 +1208,7 @@ export default function AnalysisPage() {
                           {charts.pareto?.labels?.length ? (
                             <ResponsiveContainer width="100%" height={280}>
                               <BarChart
-                                data={charts.pareto.labels.map((l, i) => ({
+                                data={charts.pareto.labels.map((l: string, i: number) => ({
                                   label: l.length > 14 ? l.slice(0, 12) + "…" : l,
                                   value: charts.pareto.values[i],
                                   cumPct: charts.pareto.cumulative_pct[i],
@@ -1217,9 +1233,9 @@ export default function AnalysisPage() {
                 })()}
 
                 {/* ── Datetime column ── */}
-                {selectedCol && colType === "datetime" && (() => {
-                  const charts = data.datetime_charts[selectedCol];
-                  if (!charts) return (
+                {selectedCol && !colChartsLoading && colType === "datetime" && (() => {
+                  const charts = columnCharts as any;
+                  if (!charts || !charts.timeseries) return (
                     <div className="col-span-2"><Empty msg={`No chart data for ${selectedCol}`} /></div>
                   );
                   return (
