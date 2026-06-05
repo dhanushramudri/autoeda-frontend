@@ -1476,25 +1476,27 @@ export default function FeatureImportancePage() {
     setProgressiveData(initialData as FIResult);
 
     // Initialize loading methods
-    const methodLoadOrder = ["correlation", "mi", "anova", "permutation", "shap"];
+    const methodLoadOrder = ["correlation", "mi", "anova", "permutation", "shap"] as const;
+    const methodNames: Record<typeof methodLoadOrder[number], string> = {
+      correlation: "Correlation",
+      mi: "Mutual Info",
+      anova: "ANOVA",
+      permutation: "Permutation",
+      shap: "SHAP",
+    };
+    const methodTimes: Record<typeof methodLoadOrder[number], number> = {
+      correlation: 5,
+      mi: 20,
+      anova: 15,
+      permutation: 60,
+      shap: 120,
+    };
     const methodsState: MethodLoadingState[] = methodLoadOrder.map(id => ({
       id,
-      name: {
-        correlation: "Correlation",
-        mi: "Mutual Info",
-        anova: "ANOVA",
-        permutation: "Permutation",
-        shap: "SHAP",
-      }[id as keyof typeof id],
+      name: methodNames[id],
       status: "pending" as const,
       progress: 0,
-      estimatedTime: {
-        correlation: 5,
-        mi: 20,
-        anova: 15,
-        permutation: 60,
-        shap: 120,
-      }[id as keyof typeof id],
+      estimatedTime: methodTimes[id],
     }));
     setLoadingMethods(methodsState);
 
