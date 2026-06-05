@@ -44,13 +44,14 @@ interface TSData {
   anomalies: { index: number; date: string; value: number; z_score?: number }[];
   data_quality?: {
     n_total: number; n_missing: number; missing_pct: number; n_duplicates: number;
-    n_zeros: number; irregular_pct?: number; inferred_freq?: string; gaps: any[];
+    n_zeros: number; n_const_runs?: number; irregular_pct?: number; inferred_freq?: string; gaps: any[];
   };
   descriptive_stats?: {
     count: number; mean?: number; median?: number; std?: number;
     min?: number; max?: number; q1?: number; q3?: number;
-    skewness?: number; kurtosis?: number; cv?: number;
+    skewness?: number; kurtosis?: number; cv?: number; iqr?: number; range?: number;
   };
+  adf_pvalue?: number;
   normality_tests?: Record<string, { statistic?: number; pvalue?: number; is_normal?: boolean }>;
   stationarity?: {
     adf?: { statistic?: number; pvalue?: number; is_stationary?: boolean; interpretation?: string };
@@ -1034,7 +1035,7 @@ export default function TimeSeriesPage() {
 
   const datetimeCols =
     profile?.columns
-      ?.filter((c) => {
+      ?.filter((c: any) => {
         const name = c?.name?.toLowerCase?.() ?? "";
         return (
           c?.semantic_type === "datetime" ||
@@ -1045,7 +1046,7 @@ export default function TimeSeriesPage() {
           name.includes("timestamp")
         );
       })
-      .map((c) => c?.name)
+      .map((c: any) => c?.name)
       .filter(Boolean) ?? [];
 
   const numericCols: string[] = profile?.columns
