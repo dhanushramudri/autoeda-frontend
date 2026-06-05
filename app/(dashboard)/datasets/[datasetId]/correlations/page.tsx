@@ -145,7 +145,7 @@ interface Insight {
   message: string;
 }
 
-function CollapsibleInsights({ insights }: { insights?: Insight[] }) {
+function CollapsibleInsights({ insights }: { insights?: Insight[] | null }) {
   const [open, setOpen] = useState(false);
 
   if (!insights || insights.length === 0) return null;
@@ -796,7 +796,6 @@ export default function CorrelationsPage() {
           </div>
         ) : data ? (
           <div className="flex gap-5 items-start">
-
             {/* Sidebar */}
             <ColumnSidebar
               numCols={allNumCols}
@@ -813,7 +812,6 @@ export default function CorrelationsPage() {
 
               <ProfilePills numCols={allNumCols} catCols={allCatCols} />
 
-              {/* Insights — collapsed by default, renders **bold** correctly */}
               <CollapsibleInsights insights={data.insights} />
 
               <div className="bg-white rounded-xl border border-gray-200 p-6">
