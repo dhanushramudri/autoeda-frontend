@@ -1459,7 +1459,7 @@ export default function FeatureImportancePage() {
   const activeTarget = targetCol || allCols[allCols.length - 1] || "";
 
   const { data: initialData, isLoading: initialLoading, error: initialError } = useQuery({
-    queryKey: queryKeys.eda.featureImportance(datasetId, activeTarget, "rf"),
+    queryKey: queryKeys.eda.featureImportance(datasetId, activeTarget),
     queryFn: async () => {
       const startTime = performance.now();
       const response = await datasetsApi.getFeatureImportance(datasetId, activeTarget, "rf");
