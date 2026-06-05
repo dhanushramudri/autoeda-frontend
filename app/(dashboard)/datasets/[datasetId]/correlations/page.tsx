@@ -5,27 +5,71 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { PageSpinner } from "@/components/shared/LoadingBar";
 import { SubNav } from "@/components/layout/SubNav";
-import { CorrelationHeatmap } from "@/components/charts/CorrelationHeatmap";
+import { CorrelationHeatmap, type HeatmapMode } from "@/components/charts/CorrelationHeatmap";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { InsightList } from "@/components/shared/InsightCard";
 import { AskAiButton } from "@/components/ai/AskAiButton";
 import { useAiContextStore } from "@/store/aiContextStore";
 import { cn } from "@/lib/utils";
-import { Search, X, CheckSquare, Square } from "lucide-react";
-import type { CorrelationResult } from "@/types";
+import {
+  Search, X, CheckSquare, Square, Hash, Tag, Shuffle,
+  ChevronDown, ChevronRight, Lightbulb, AlertTriangle, Info,
+} from "lucide-react";
+import type { CorrelationResult, MixedPair, CatPair } from "@/types";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const METHODS = ["pearson", "spearman", "kendall"] as const;
-type Method = typeof METHODS[number];
+type Method = (typeof METHODS)[number];
 
 const METHOD_DESC: Record<Method, string> = {
   pearson:  "Linear relationships between continuous variables",
   spearman: "Monotonic relationships, robust to outliers",
   kendall:  "Rank-based, best for small datasets or ordinal data",
 };
+
+const HEATMAP_VIEWS: {
+  key: HeatmapMode;
+  label: string;
+  icon: React.ReactNode;
+  description: string;
+}[] = [
+  {
+    key: "numeric",
+    label: "Numeric",
+    icon: <Hash className="w-3.5 h-3.5" />,
+    description: "Pearson / Spearman / Kendall correlation between numeric columns",
+  },
+  {
+    key: "cramers_v",
+    label: "Cramér's V",
+    icon: <Tag className="w-3.5 h-3.5" />,
+    description: "Symmetric bias-corrected association between categorical columns",
+  },
+  {
+    key: "theils_u",
+    label: "Theil's U",
+    icon: <Tag className="w-3.5 h-3.5" />,
+    description: "Asymmetric: how much does knowing row reduce uncertainty about column?",
+  },
+  {
+    key: "eta_sq",
+    label: "η² Mixed",
+    icon: <Shuffle className="w-3.5 h-3.5" />,
+    description: "Variance in numeric column explained by categorical group (ANOVA)",
+  },
+];
+
+
+function deriveNumCols(data: CorrelationResult): string[] {
+  if (data.column_profile?.num_cols?.length) return data.column_profile.num_cols;
+  return Object.keys(data.matrix ?? {});
+}
+
+function deriveCatCols(data: CorrelationResult): string[] {
+  if (data.column_profile?.cat_cols?.length) return data.column_profile.cat_cols;
+  return Object.keys(data.cramers_v ?? {});
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -34,33 +78,198 @@ function absVal(v: number | null | undefined): number {
 }
 
 function corrColor(r: number): string {
-  return r > 0.7 ? "text-blue-600" : r > 0.4 ? "text-blue-500" : r < -0.7 ? "text-red-600" : r < -0.4 ? "text-red-500" : "text-gray-600";
+  return r > 0.7
+    ? "text-blue-600"
+    : r > 0.4
+    ? "text-blue-500"
+    : r < -0.7
+    ? "text-red-600"
+    : r < -0.4
+    ? "text-red-500"
+    : "text-gray-600";
+}
+
+function effectColor(v: number): string {
+  return v >= 0.14 ? "text-purple-700" : v >= 0.06 ? "text-purple-500" : "text-gray-500";
+}
+
+
+function MarkdownText({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith("**") && part.endsWith("**") ? (
+          <strong key={i} className="font-semibold text-gray-800">
+            {part.slice(2, -2)}
+          </strong>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+
+type InsightType = "warning" | "info" | "muted";
+
+const INSIGHT_CONFIG: Record<
+  InsightType,
+  { icon: React.ReactNode; bg: string; border: string; text: string }
+> = {
+  warning: {
+    icon:   <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />,
+    bg:     "bg-amber-50",
+    border: "border-amber-100",
+    text:   "text-amber-900",
+  },
+  info: {
+    icon:   <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />,
+    bg:     "bg-blue-50",
+    border: "border-blue-100",
+    text:   "text-blue-900",
+  },
+  muted: {
+    icon:   <Info className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />,
+    bg:     "bg-gray-50",
+    border: "border-gray-100",
+    text:   "text-gray-500",
+  },
+};
+
+
+interface Insight {
+  type: InsightType;
+  category: string;
+  message: string;
+}
+
+function CollapsibleInsights({ insights }: { insights?: Insight[] }) {
+  const [open, setOpen] = useState(false);
+
+  if (!insights || insights.length === 0) return null;
+
+  return (
+    <div className="mb-5 border border-gray-200 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+      >
+        <Lightbulb className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+        <span className="text-xs font-semibold text-gray-700 flex-1">
+          Insights
+          <span className="ml-1.5 font-normal text-gray-400">({insights.length})</span>
+        </span>
+        {open
+          ? <ChevronDown  className="w-3.5 h-3.5 text-gray-400" />
+          : <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+        }
+      </button>
+
+      {open && (
+        <div className="px-4 py-3 bg-white flex flex-col gap-2">
+          {insights.map((insight, i) => {
+            const cfg = INSIGHT_CONFIG[insight.type] ?? INSIGHT_CONFIG.muted;
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-xs",
+                  cfg.bg,
+                  cfg.border,
+                  cfg.text,
+                )}
+              >
+                {cfg.icon}
+                <span className="leading-relaxed">
+                  <MarkdownText text={insight.message} />
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ── Column selector sidebar ───────────────────────────────────────────────────
 
 interface SidebarProps {
-  allCols: string[];
+  numCols: string[];
+  catCols: string[];
+  catCardinality?: Record<string, number>;
   deselected: Set<string>;
   onChange: (col: string) => void;
   onSelectAll: () => void;
   onSelectNone: () => void;
 }
 
-function ColumnSidebar({ allCols, deselected, onChange, onSelectAll, onSelectNone }: SidebarProps) {
+function ColumnSidebar({
+  numCols,
+  catCols,
+  catCardinality = {},
+  deselected,
+  onChange,
+  onSelectAll,
+  onSelectNone,
+}: SidebarProps) {
   const [search, setSearch] = useState("");
-  const visible = useMemo(
-    () => allCols.filter((c) => !search || c.toLowerCase().includes(search.toLowerCase())),
-    [allCols, search],
-  );
-  const selectedCount = allCols.length - deselected.size;
+  const allActive = useMemo(() => [...numCols, ...catCols], [numCols, catCols]);
+  const filterFn  = (c: string) => !search || c.toLowerCase().includes(search.toLowerCase());
+  const visibleNum = numCols.filter(filterFn);
+  const visibleCat = catCols.filter(filterFn);
+  const selectedCount = allActive.length - deselected.size;
+
+  const HIGH_CARD = 50;
+
+  function ColRow({ col, type }: { col: string; type: "num" | "cat" }) {
+    const checked    = !deselected.has(col);
+    const cardinality = type === "cat" ? (catCardinality[col] ?? 0) : 0;
+    const highCard   = type === "cat" && cardinality > HIGH_CARD;
+
+    return (
+      <button
+        onClick={() => onChange(col)}
+        className={cn(
+          "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs text-left transition",
+          checked ? "text-gray-700 hover:bg-gray-50" : "text-gray-400 hover:bg-gray-50",
+        )}
+        title={highCard ? `${col} — high cardinality (${cardinality} unique values)` : col}
+      >
+        {checked
+          ? <CheckSquare className="w-3.5 h-3.5 text-brand flex-shrink-0" />
+          : <Square      className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+        }
+        <span className="font-mono truncate flex-1">{col}</span>
+        {highCard && (
+          <span className="text-[9px] px-1 py-0.5 rounded bg-orange-50 text-orange-400 border border-orange-100 flex-shrink-0 mr-0.5">
+            {cardinality}
+          </span>
+        )}
+        <span
+          className={cn(
+            "text-[9px] px-1 py-0.5 rounded font-medium flex-shrink-0",
+            type === "num"
+              ? "bg-blue-50 text-blue-500"
+              : "bg-purple-50 text-purple-500",
+          )}
+        >
+          {type === "num" ? "N" : "C"}
+        </span>
+      </button>
+    );
+  }
 
   return (
-    <aside className="w-56 flex-shrink-0 bg-white rounded-xl border border-gray-200 flex flex-col max-h-[75vh] sticky top-20">
+    <aside className="w-56 flex-shrink-0 bg-white rounded-xl border border-gray-200 flex flex-col max-h-[80vh] sticky top-20">
       <div className="px-3 pt-3 pb-2 border-b border-gray-100 flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-semibold text-gray-700">Columns</span>
-          <span className="text-[10px] text-gray-400 tabular-nums">{selectedCount}/{allCols.length}</span>
+          <span className="text-[10px] text-gray-400 tabular-nums">
+            {selectedCount}/{allActive.length}
+          </span>
         </div>
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
@@ -71,7 +280,10 @@ function ColumnSidebar({ allCols, deselected, onChange, onSelectAll, onSelectNon
             className="w-full pl-7 pr-6 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand transition"
           />
           {search && (
-            <button onClick={() => setSearch("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+            >
               <X className="w-3 h-3" />
             </button>
           )}
@@ -93,26 +305,23 @@ function ColumnSidebar({ allCols, deselected, onChange, onSelectAll, onSelectNon
       </div>
 
       <div className="overflow-y-auto flex-1 px-1 py-1 scrollbar-hide">
-        {visible.map((col) => {
-          const checked = !deselected.has(col);
-          return (
-            <button
-              key={col}
-              onClick={() => onChange(col)}
-              className={cn(
-                "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs text-left transition",
-                checked ? "text-gray-700 hover:bg-gray-50" : "text-gray-400 hover:bg-gray-50",
-              )}
-              title={col}
-            >
-              {checked
-                ? <CheckSquare className="w-3.5 h-3.5 text-brand flex-shrink-0" />
-                : <Square className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />}
-              <span className="font-mono truncate">{col}</span>
-            </button>
-          );
-        })}
-        {visible.length === 0 && (
+        {visibleNum.length > 0 && (
+          <>
+            <p className="text-[9px] uppercase tracking-wider text-gray-400 px-2 pt-1 pb-0.5">
+              Numeric ({numCols.length})
+            </p>
+            {visibleNum.map((col) => <ColRow key={col} col={col} type="num" />)}
+          </>
+        )}
+        {visibleCat.length > 0 && (
+          <>
+            <p className="text-[9px] uppercase tracking-wider text-gray-400 px-2 pt-2 pb-0.5">
+              Categorical ({catCols.length})
+            </p>
+            {visibleCat.map((col) => <ColRow key={col} col={col} type="cat" />)}
+          </>
+        )}
+        {visibleNum.length === 0 && visibleCat.length === 0 && (
           <p className="text-[10px] text-gray-400 px-2 py-3">No columns match.</p>
         )}
       </div>
@@ -122,16 +331,25 @@ function ColumnSidebar({ allCols, deselected, onChange, onSelectAll, onSelectNon
 
 // ── VIF table ─────────────────────────────────────────────────────────────────
 
-function VifTable({ vif, visibleCols }: { vif: Array<{ column: string; vif: number }>; visibleCols: string[] }) {
+function VifTable({
+  vif,
+  visibleCols,
+}: {
+  vif: Array<{ column: string; vif: number }>;
+  visibleCols: string[];
+}) {
   const filtered = vif.filter((v) => visibleCols.includes(v.column));
   if (filtered.length === 0) return null;
-
   return (
     <div className="mt-6 pt-6 border-t border-gray-100">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-sm font-semibold text-gray-800">Variance Inflation Factor (VIF)</h3>
-          <p className="text-xs text-gray-400 mt-0.5">VIF &gt; 5: moderate concern · VIF &gt; 10: high multicollinearity</p>
+          <h3 className="text-sm font-semibold text-gray-800">
+            Variance Inflation Factor (VIF)
+          </h3>
+          <p className="text-xs text-gray-400 mt-0.5">
+            VIF &gt; 5: moderate concern · VIF &gt; 10: high multicollinearity
+          </p>
         </div>
         <AskAiButton
           question="Looking at these VIF scores, which columns have multicollinearity concerns and what should I do about them?"
@@ -153,7 +371,12 @@ function VifTable({ vif, visibleCols }: { vif: Array<{ column: string; vif: numb
             )}
           >
             <span className="font-mono text-gray-700 truncate mr-2">{v.column}</span>
-            <span className={cn("font-bold tabular-nums flex-shrink-0", v.vif > 10 ? "text-red-600" : v.vif > 5 ? "text-amber-600" : "text-emerald-600")}>
+            <span
+              className={cn(
+                "font-bold tabular-nums flex-shrink-0",
+                v.vif > 10 ? "text-red-600" : v.vif > 5 ? "text-amber-600" : "text-emerald-600",
+              )}
+            >
               {v.vif.toFixed(2)}
             </span>
           </div>
@@ -163,15 +386,27 @@ function VifTable({ vif, visibleCols }: { vif: Array<{ column: string; vif: numb
   );
 }
 
-// ── Top pairs table ───────────────────────────────────────────────────────────
+// ── Top numeric pairs ─────────────────────────────────────────────────────────
 
-function TopPairsTable({ pairs }: { pairs: Array<{ col1: string; col2: string; correlation: number }> }) {
+function TopNumericPairs({
+  pairs,
+}: {
+  pairs: Array<{ col1: string; col2: string; correlation: number }>;
+}) {
   if (pairs.length === 0) return null;
   return (
     <div className="mt-6 pt-6 border-t border-gray-100">
-      <h3 className="text-sm font-semibold text-gray-800 mb-3">
-        Strongest Pairs <span className="text-gray-400 font-normal">(by absolute value)</span>
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-gray-800">
+          Strongest Numeric Pairs{" "}
+          <span className="text-gray-400 font-normal">(by |r|)</span>
+        </h3>
+        <AskAiButton
+          question="Which numeric column pairs are most strongly correlated, and are any of them problematic for a machine-learning model?"
+          label="Explain pairs"
+          variant="chip"
+        />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {pairs.map((pair, i) => {
           const abs = Math.abs(pair.correlation);
@@ -201,6 +436,193 @@ function TopPairsTable({ pairs }: { pairs: Array<{ col1: string; col2: string; c
   );
 }
 
+
+function TopCatPairs({ pairs }: { pairs: CatPair[] }) {
+  if (!pairs || pairs.length === 0) return null;
+  return (
+    <div className="mt-6 pt-6 border-t border-gray-100">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-sm font-semibold text-gray-800">
+          Strongest Categorical Associations{" "}
+          <span className="text-gray-400 font-normal">(Cramér's V)</span>
+        </h3>
+        <AskAiButton
+          question="Which categorical column pairs show the strongest association by Cramér's V? Are any near-redundant?"
+          label="Explain"
+          variant="chip"
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {pairs.slice(0, 12).map((pair, i) => (
+          <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5">
+            <span className="text-xs font-mono text-gray-600 truncate flex-1 min-w-0">
+              {pair.col1}
+              <span className="text-gray-400 mx-1.5">×</span>
+              {pair.col2}
+            </span>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <div className="h-1.5 w-16 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full rounded-full bg-purple-400" style={{ width: `${pair.cramers_v * 100}%` }} />
+              </div>
+              <span className="text-xs font-semibold tabular-nums w-12 text-right text-purple-700">
+                {pair.cramers_v.toFixed(3)}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
+  if (!pairs || pairs.length === 0) return null;
+  return (
+    <div className="mt-6 pt-6 border-t border-gray-100">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-800">
+            Top Numeric × Categorical Pairs{" "}
+            <span className="text-gray-400 font-normal">(η²)</span>
+          </h3>
+          <p className="text-xs text-gray-400 mt-0.5">
+            η² ≥ 0.14 = large effect · ≥ 0.06 = medium · &lt; 0.06 = small
+          </p>
+        </div>
+        <AskAiButton
+          question="Which categorical features explain the most variance in numeric columns? Are there strong group effects?"
+          label="Explain η²"
+          variant="chip"
+        />
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {pairs.slice(0, 12).map((pair, i) => {
+          const eta = pair.eta_sq ?? 0;
+          return (
+            <div key={i} className="bg-gray-50 rounded-xl px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono text-gray-600 truncate flex-1 min-w-0">
+                  <span className="text-purple-600">{pair.cat_col}</span>
+                  <span className="text-gray-400 mx-1.5">→</span>
+                  {pair.num_col}
+                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="h-1.5 w-16 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-indigo-400"
+                      style={{ width: `${Math.min((eta / 0.3) * 100, 100)}%` }}
+                    />
+                  </div>
+                  <span className={cn("text-xs font-semibold tabular-nums w-12 text-right", effectColor(eta))}>
+                    {eta.toFixed(3)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 mt-1.5">
+                {pair.point_biserial != null && (
+                  <span className="text-[10px] text-gray-400">
+                    pb-r:{" "}
+                    <span className={cn("font-mono", pair.point_biserial > 0 ? "text-blue-500" : "text-red-500")}>
+                      {pair.point_biserial.toFixed(3)}
+                    </span>
+                  </span>
+                )}
+                {pair.rank_biserial != null && (
+                  <span className="text-[10px] text-gray-400">
+                    rb-r:{" "}
+                    <span className="font-mono text-gray-600">{pair.rank_biserial.toFixed(3)}</span>
+                  </span>
+                )}
+                {pair.p_value != null && (
+                  <span
+                    className={cn(
+                      "text-[9px] border rounded px-1 py-0.5 font-mono",
+                      pair.p_value < 0.001
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : pair.p_value < 0.05
+                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                        : "bg-gray-50 text-gray-400 border-gray-200",
+                    )}
+                  >
+                    {pair.p_value < 0.001
+                      ? "p<0.001"
+                      : pair.p_value < 0.01
+                      ? "p<0.01"
+                      : pair.p_value < 0.05
+                      ? "p<0.05"
+                      : `p=${pair.p_value.toFixed(3)}`}
+                  </span>
+                )}
+                <span className="text-[10px] text-gray-300 ml-auto">{pair.n_categories} groups</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+
+function ProfilePills({ numCols, catCols }: { numCols: string[]; catCols: string[] }) {
+  return (
+    <div className="flex flex-wrap gap-2 mb-5">
+      {numCols.length > 0 && (
+        <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+          <Hash className="w-3 h-3" />
+          {numCols.length} numeric
+        </span>
+      )}
+      {catCols.length > 0 && (
+        <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+          <Tag className="w-3 h-3" />
+          {catCols.length} categorical
+        </span>
+      )}
+    </div>
+  );
+}
+
+
+function HeatmapTabs({
+  active, hasNumeric, hasCat, hasMixed, onChange,
+}: {
+  active: HeatmapMode;
+  hasNumeric: boolean;
+  hasCat: boolean;
+  hasMixed: boolean;
+  onChange: (m: HeatmapMode) => void;
+}) {
+  const available = HEATMAP_VIEWS.filter((v) => {
+    if (v.key === "numeric") return hasNumeric;
+    if (v.key === "cramers_v" || v.key === "theils_u") return hasCat;
+    if (v.key === "eta_sq") return hasMixed;
+    return false;
+  });
+
+  if (available.length <= 1) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1 mb-4 bg-gray-100 rounded-xl p-1 w-fit">
+      {available.map((v) => (
+        <button
+          key={v.key}
+          onClick={() => onChange(v.key)}
+          title={v.description}
+          className={cn(
+            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition",
+            v.key === active ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700",
+          )}
+        >
+          {v.icon}
+          {v.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function CorrelationsPage() {
@@ -210,7 +632,8 @@ export default function CorrelationsPage() {
   const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const method = (searchParams.get("method") as Method) ?? "pearson";
-  const [deselected, setDeselected] = useState<Set<string>>(new Set());
+  const [deselected, setDeselected]   = useState<Set<string>>(new Set());
+  const [heatmapMode, setHeatmapMode] = useState<HeatmapMode>("numeric");
 
   const setMethod = (m: Method) =>
     router.replace(`/datasets/${datasetId}/correlations?method=${m}`);
@@ -222,88 +645,131 @@ export default function CorrelationsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.eda.correlations(datasetId, method),
-    queryFn:  () => datasetsApi.getCorrelations(datasetId, method).then((r) => r.data as CorrelationResult),
+    queryFn:  () =>
+      datasetsApi.getCorrelations(datasetId, method).then((r) => r.data as CorrelationResult),
   });
 
-  // All columns available in the matrix
-  const allCols = useMemo(() => Object.keys(data?.matrix ?? {}), [data]);
-
-  // When the method changes, clear deselections (fresh slate)
-  useEffect(() => { setDeselected(new Set()); }, [method]);
-
-  // Columns actually rendered
-  const visibleCols = useMemo(
-    () => allCols.filter((c) => !deselected.has(c)),
-    [allCols, deselected],
+  const allNumCols = useMemo(() => (data ? deriveNumCols(data) : []), [data]);
+  const allCatCols = useMemo(() => (data ? deriveCatCols(data) : []), [data]);
+  const allCols    = useMemo(() => [...allNumCols, ...allCatCols], [allNumCols, allCatCols]);
+  const catCardinality = useMemo(
+    () => data?.column_profile?.cat_cardinality ?? {},
+    [data],
   );
 
-  // Derive top pairs from the filtered matrix (up to 12)
-  const topPairs = useMemo(() => {
-    if (!data?.matrix || visibleCols.length < 2) return [];
+  const hasNumeric = allNumCols.length >= 2;
+  const hasCat     = allCatCols.length >= 2;
+  const hasMixed   = allNumCols.length >= 1 && allCatCols.length >= 1;
+
+  useEffect(() => {
+    if (!data) return;
+    setHeatmapMode(!hasNumeric && hasCat ? "cramers_v" : "numeric");
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { setDeselected(new Set()); }, [method]);
+
+  // ── Filtered visible columns ───────────────────────────────────────────────
+  const visibleNumCols = useMemo(
+    () => allNumCols.filter((c) => !deselected.has(c)),
+    [allNumCols, deselected],
+  );
+  const visibleCatCols = useMemo(
+    () => allCatCols.filter((c) => !deselected.has(c)),
+    [allCatCols, deselected],
+  );
+
+  // ── Top pairs (filtered) ───────────────────────────────────────────────────
+  const topNumericPairs = useMemo(() => {
+    if (!data?.matrix || visibleNumCols.length < 2) return [];
     const pairs: Array<{ col1: string; col2: string; correlation: number }> = [];
-    visibleCols.forEach((c1, i) => {
-      visibleCols.slice(i + 1).forEach((c2) => {
+    visibleNumCols.forEach((c1, i) => {
+      visibleNumCols.slice(i + 1).forEach((c2) => {
         const r = data.matrix[c1]?.[c2];
         if (r != null) pairs.push({ col1: c1, col2: c2, correlation: r });
       });
     });
     return pairs.sort((a, b) => absVal(b.correlation) - absVal(a.correlation)).slice(0, 12);
-  }, [data, visibleCols]);
+  }, [data, visibleNumCols]);
 
-  // AI context — top 3 pairs for brevity
+  const topCatPairs = useMemo(
+    () => (data?.cat_top_pairs ?? []).filter(
+      (p) => visibleCatCols.includes(p.col1) && visibleCatCols.includes(p.col2),
+    ),
+    [data, visibleCatCols],
+  );
+
+  const topMixedPairs = useMemo(
+    () => (data?.mixed_top_pairs ?? []).filter(
+      (p) => visibleNumCols.includes(p.num_col) && visibleCatCols.includes(p.cat_col),
+    ),
+    [data, visibleNumCols, visibleCatCols],
+  );
+
   useEffect(() => {
-    const top3 = topPairs.slice(0, 3).map((p) => `${p.col1}↔${p.col2}: ${p.correlation.toFixed(2)}`).join(", ");
+    const top3Num   = topNumericPairs.slice(0, 3).map((p) => `${p.col1}↔${p.col2}: ${p.correlation.toFixed(2)}`).join(", ");
+    const top3Mixed = topMixedPairs.slice(0, 3).map((p) => `${p.cat_col}→${p.num_col}: η²=${p.eta_sq?.toFixed(2)}`).join(", ");
     setPageContext({
-      page: "correlations",
+      page:  "correlations",
       label: `Correlations (${method})`,
       details: {
         method,
-        selected_columns: visibleCols.length,
-        total_columns: allCols.length,
-        top_pairs: top3 || "none",
+        view:             heatmapMode,
+        numeric_cols:     visibleNumCols.length,
+        categorical_cols: visibleCatCols.length,
+        total_cols:       allCols.length,
+        top_numeric_pairs: top3Num   || "none",
+        top_mixed_pairs:   top3Mixed || "none",
       },
       suggestedQuestions: [
         "Which columns are most strongly correlated?",
         "Are any correlations problematic for modeling?",
+        "Which categorical features have the most group-level variance?",
         "What do the VIF scores indicate?",
+        "Are there near-redundant categorical columns?",
       ],
     });
     return () => setPageContext(null);
-  }, [method, topPairs, visibleCols.length, allCols.length, setPageContext]);
+  }, [method, heatmapMode, topNumericPairs, topMixedPairs,
+      visibleNumCols.length, visibleCatCols.length, allCols.length, setPageContext]);
 
-  // Sidebar handlers
-  const toggleCol = useCallback((col: string) => {
+  // ── Sidebar handlers ───────────────────────────────────────────────────────
+  const toggleCol  = useCallback((col: string) => {
     setDeselected((prev) => {
       const next = new Set(prev);
-      if (next.has(col)) next.delete(col);
-      else next.add(col);
+      if (next.has(col)) next.delete(col); else next.add(col);
       return next;
     });
   }, []);
-
   const selectAll  = useCallback(() => setDeselected(new Set()), []);
   const selectNone = useCallback(() => setDeselected(new Set(allCols)), [allCols]);
+
+  function renderTopPairs() {
+    if (heatmapMode === "numeric")                                  return <TopNumericPairs pairs={topNumericPairs} />;
+    if (heatmapMode === "cramers_v" || heatmapMode === "theils_u") return <TopCatPairs pairs={topCatPairs} />;
+    if (heatmapMode === "eta_sq")                                   return <TopMixedPairs pairs={topMixedPairs} />;
+    return null;
+  }
 
   return (
     <>
       <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-full mx-auto">
-        <Breadcrumb items={[
-          { label: "Workspaces", href: "/workspaces" },
-          { label: dataset?.name ?? "Dataset", href: `/datasets/${datasetId}` },
-          { label: "Correlations" },
-        ]} />
+        <Breadcrumb
+          items={[
+            { label: "Workspaces", href: "/workspaces" },
+            { label: dataset?.name ?? "Dataset", href: `/datasets/${datasetId}` },
+            { label: "Correlations" },
+          ]}
+        />
 
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 mt-4 mb-6">
           <div>
             <h1 className="text-xl font-bold text-gray-900">Correlations</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Pairwise relationships between numeric columns
+              Pairwise associations — numeric, categorical, and mixed
             </p>
           </div>
-
-          {/* Method pills */}
           <div className="flex flex-col items-end gap-1">
             <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
               {METHODS.map((m) => (
@@ -330,29 +796,34 @@ export default function CorrelationsPage() {
           </div>
         ) : data ? (
           <div className="flex gap-5 items-start">
-            {/* Column selector */}
+
+            {/* Sidebar */}
             <ColumnSidebar
-              allCols={allCols}
+              numCols={allNumCols}
+              catCols={allCatCols}
+              catCardinality={catCardinality}
               deselected={deselected}
               onChange={toggleCol}
               onSelectAll={selectAll}
               onSelectNone={selectNone}
             />
 
-            {/* Main content */}
+            {/* Main panel */}
             <div className="flex-1 min-w-0">
-              {data.insights && data.insights.length > 0 && (
-                <div className="mb-5">
-                  <InsightList insights={data.insights} />
-                </div>
-              )}
+
+              <ProfilePills numCols={allNumCols} catCols={allCatCols} />
+
+              {/* Insights — collapsed by default, renders **bold** correctly */}
+              <CollapsibleInsights insights={data.insights} />
 
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                {/* Selection summary */}
+
                 {deselected.size > 0 && (
                   <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
                     <span className="text-xs text-blue-700">
-                      Showing <strong>{visibleCols.length}</strong> of <strong>{allCols.length}</strong> columns.
+                      Showing{" "}
+                      <strong>{visibleNumCols.length + visibleCatCols.length}</strong>{" "}
+                      of <strong>{allCols.length}</strong> columns.
                     </span>
                     <button onClick={selectAll} className="text-xs text-brand hover:underline ml-1">
                       Show all
@@ -360,15 +831,24 @@ export default function CorrelationsPage() {
                   </div>
                 )}
 
-                {/* Heatmap */}
-                <CorrelationHeatmap data={data} cols={visibleCols} />
+                <HeatmapTabs
+                  active={heatmapMode}
+                  hasNumeric={hasNumeric}
+                  hasCat={hasCat}
+                  hasMixed={hasMixed}
+                  onChange={setHeatmapMode}
+                />
 
-                {/* Top pairs */}
-                <TopPairsTable pairs={topPairs} />
+                <CorrelationHeatmap
+                  data={data}
+                  cols={heatmapMode === "numeric" ? visibleNumCols : undefined}
+                  mode={heatmapMode}
+                />
 
-                {/* VIF */}
-                {data.vif && data.vif.length > 0 && (
-                  <VifTable vif={data.vif} visibleCols={visibleCols} />
+                {renderTopPairs()}
+
+                {heatmapMode === "numeric" && data.vif && data.vif.length > 0 && (
+                  <VifTable vif={data.vif} visibleCols={visibleNumCols} />
                 )}
               </div>
             </div>

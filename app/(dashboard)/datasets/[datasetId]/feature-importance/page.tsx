@@ -85,7 +85,16 @@ interface FIResult {
   redundant_groups: Array<{ features: string[]; max_correlation: number }>;
   leakage_suspects: Array<{ feature: string; reason: string; severity: "high" | "medium" }>;
   error?: string;
+  computed_methods?: string[];
 }
+
+type MethodLoadingState = {
+  id: string;
+  name: string;
+  status: "pending" | "loading" | "done" | "error";
+  progress: number;
+  estimatedTime: number;
+};
 
 type Tab = "overview" | "rankings" | "charts" | "stability" | "interactions" | "insights";
 type SortKey = "combined_rank" | "rf_importance" | "mi_score" | "correlation" | "anova_f" | "missing_pct" | "permutation_importance" | "shap_value" | "stability_score";
@@ -122,6 +131,88 @@ const METHOD_CONFIG: Record<ChartMethod, { label: string; desc: string; color: s
   correlation: { label: "Correlation",     desc: "Absolute Pearson r with the target variable",      color: "#D97706", icon: <Sigma className="w-3.5 h-3.5" /> },
   anova:       { label: "ANOVA F",         desc: "F-statistic testing group mean differences",       color: "#DC2626", icon: <FlaskConical className="w-3.5 h-3.5" /> },
 };
+
+function MethodLoadingIndicator({ loadingMethods, initialLoadTime }: { loadingMethods: MethodLoadingState[]; initialLoadTime: number }) {
+  const allDone = loadingMethods.every(m => m.status === "done" || m.status === "error");
+  const totalComplete = loadingMethods.filter(m => m.status === "done").length;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-xs font-semibold text-gray-600">Loading Additional Methods</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">
+            {totalComplete}/{loadingMethods.length} loaded
+            {!allDone && (
+              <span className="ml-2 inline-flex items-center gap-1">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                Computing...
+              </span>
+            )}
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {loadingMethods.map(method => (
+          <div key={method.id} className="flex items-center gap-2">
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-medium text-gray-700">{method.name}</span>
+                <span
+                  className={cn(
+                    "text-[10px] font-semibold",
+                    method.status === "done"
+                      ? "text-emerald-600"
+                      : method.status === "error"
+                      ? "text-red-600"
+                      : method.status === "loading"
+                      ? "text-blue-600"
+                      : "text-gray-400"
+                  )}
+                >
+                  {method.status === "done"
+                    ? "✓ Done"
+                    : method.status === "error"
+                    ? "✗ Error"
+                    : method.status === "loading"
+                    ? `~${method.estimatedTime}s`
+                    : "Pending"}
+                </span>
+              </div>
+              <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-all duration-300",
+                    method.status === "done"
+                      ? "bg-emerald-500"
+                      : method.status === "error"
+                      ? "bg-red-500"
+                      : method.status === "loading"
+                      ? "bg-blue-500"
+                      : "bg-gray-300"
+                  )}
+                  style={{
+                    width: method.status === "loading" ? "66%" : method.status === "done" ? "100%" : "0%",
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {!allDone && (
+        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex gap-2">
+          <Zap className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-700">
+            Initial results loaded in ~{(initialLoadTime / 1000).toFixed(1)}s. Additional methods loading in background. Check back in a moment!
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Small helpers ─────────────────────────────────────────────────────────────
 
@@ -692,7 +783,7 @@ const maxPerm = useMemo(() =>
 // ── Charts Tab ────────────────────────────────────────────────────────────────
 
 function ChartsTab({ data }: { data: FIResult }) {
-  const [method, setMethod] = useState<ChartMethod>("shap");
+  const [method, setMethod] = useState<ChartMethod>("rf");
   const [visMode, setVisMode] = useState<VisMode>("bar");
   const [topN, setTopN] = useState(20);
 
@@ -1346,6 +1437,11 @@ export default function FeatureImportancePage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const targetCol  = searchParams.get("target") ?? "";
 
+  // ── NEW: State for progressive data loading ────────────────────────────────
+  const [progressiveData, setProgressiveData] = useState<FIResult | null>(null);
+  const [loadingMethods, setLoadingMethods] = useState<MethodLoadingState[]>([]);
+  const loadingRef = useRef<NodeJS.Timeout | null>(null);
+
   const { data: dataset } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
     queryFn: () => datasetsApi.get(datasetId).then(r => r.data),
@@ -1362,12 +1458,90 @@ export default function FeatureImportancePage() {
   );
   const activeTarget = targetCol || allCols[allCols.length - 1] || "";
 
-  const { data, isLoading, error, refetch, isFetching } = useQuery({
-    queryKey: queryKeys.eda.featureImportance(datasetId, activeTarget),
-    queryFn: () => datasetsApi.getFeatureImportance(datasetId, activeTarget).then(r => r.data as FIResult),
+  const { data: initialData, isLoading: initialLoading, error: initialError } = useQuery({
+    queryKey: queryKeys.eda.featureImportance(datasetId, activeTarget, "rf"),
+    queryFn: async () => {
+      const startTime = performance.now();
+      const response = await datasetsApi.getFeatureImportance(datasetId, activeTarget, "rf");
+      const loadTime = performance.now() - startTime;
+      return { ...response.data, _initialLoadTime: loadTime };
+    },
     enabled: !!activeTarget,
     staleTime: 1000 * 60 * 10,
   });
+
+  useEffect(() => {
+    if (!initialData || !activeTarget) return;
+
+    setProgressiveData(initialData as FIResult);
+
+    // Initialize loading methods
+    const methodLoadOrder = ["correlation", "mi", "anova", "permutation", "shap"];
+    const methodsState: MethodLoadingState[] = methodLoadOrder.map(id => ({
+      id,
+      name: {
+        correlation: "Correlation",
+        mi: "Mutual Info",
+        anova: "ANOVA",
+        permutation: "Permutation",
+        shap: "SHAP",
+      }[id as keyof typeof id],
+      status: "pending" as const,
+      progress: 0,
+      estimatedTime: {
+        correlation: 5,
+        mi: 20,
+        anova: 15,
+        permutation: 60,
+        shap: 120,
+      }[id as keyof typeof id],
+    }));
+    setLoadingMethods(methodsState);
+
+    // Start loading additional methods
+    const loadNextMethod = (index: number) => {
+      if (index >= methodLoadOrder.length) return;
+
+      const method = methodLoadOrder[index];
+
+      setLoadingMethods(prev =>
+        prev.map(m => (m.id === method ? { ...m, status: "loading" as const } : m))
+      );
+
+      datasetsApi
+        .getFeatureImportance(datasetId, activeTarget, method)
+        .then(response => {
+          setProgressiveData(prev => {
+            if (!prev) return prev;
+            return { ...prev, ...response.data };
+          });
+
+          setLoadingMethods(prev =>
+            prev.map(m => (m.id === method ? { ...m, status: "done" as const, progress: 100 } : m))
+          );
+
+          if (loadingRef.current) clearTimeout(loadingRef.current);
+          loadingRef.current = setTimeout(() => loadNextMethod(index + 1), 500);
+        })
+        .catch(error => {
+          console.error(`Failed to load ${method}:`, error);
+          setLoadingMethods(prev =>
+            prev.map(m => (m.id === method ? { ...m, status: "error" as const } : m))
+          );
+
+          if (loadingRef.current) clearTimeout(loadingRef.current);
+          loadingRef.current = setTimeout(() => loadNextMethod(index + 1), 1000);
+        });
+    };
+
+    loadNextMethod(0);
+
+    return () => {
+      if (loadingRef.current) clearTimeout(loadingRef.current);
+    };
+  }, [initialData, activeTarget, datasetId]);
+
+  const data = progressiveData || (initialData as FIResult | undefined);
 
   const setTarget = useCallback(
     (col: string) => router.replace(`/datasets/${datasetId}/feature-importance?target=${encodeURIComponent(col)}`),
@@ -1387,7 +1561,7 @@ export default function FeatureImportancePage() {
         top_features: data.top_features.join(", "),
         drop_candidates: data.drop_candidates.join(", "),
         leakage_suspects: (data.leakage_suspects ?? []).map(s => s.feature).join(", "),
-redundant_groups: (data.redundant_groups ?? []).length,
+        redundant_groups: (data.redundant_groups ?? []).length,
         n_features: data.n_features,
         n_samples: data.n_samples,
       },
@@ -1402,21 +1576,10 @@ redundant_groups: (data.redundant_groups ?? []).length,
     return () => setPageContext(null);
   }, [data, setPageContext]);
 
-  const hasNewFeatures = data && (
-      (data.shap_values ?? []).length > 0 ||
-    data.stability?.length > 0 ||
-    data.interactions?.length > 0
-  );
-
   return (
     <>
       <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-full mx-auto">
-        <Breadcrumb items={[
-          { label: "Workspaces", href: "/workspaces" },
-          { label: dataset?.name ?? "Dataset", href: `/datasets/${datasetId}` },
-          { label: "Feature Importance" },
-        ]} />
 
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 mt-4 mb-5">
@@ -1424,7 +1587,7 @@ redundant_groups: (data.redundant_groups ?? []).length,
             <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-blue-600" />
               Feature Importance
-              {isFetching && <RefreshCw className="w-3.5 h-3.5 text-gray-400 animate-spin" />}
+              {!initialData && initialLoading && <RefreshCw className="w-3.5 h-3.5 text-gray-400 animate-spin" />}
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               6-method analysis: RF · Permutation · SHAP · Mutual Info · ANOVA · Correlation — with stability & interaction detection
@@ -1457,6 +1620,13 @@ redundant_groups: (data.redundant_groups ?? []).length,
           </div>
         </div>
 
+        {initialData && loadingMethods.length > 0 && (
+          <MethodLoadingIndicator
+            loadingMethods={loadingMethods}
+            initialLoadTime={(initialData as any)._initialLoadTime || 0}
+          />
+        )}
+
         {/* Warnings */}
         {data?.warnings && data.warnings.length > 0 && (
           <div className="space-y-2 mb-5">
@@ -1477,26 +1647,24 @@ redundant_groups: (data.redundant_groups ?? []).length,
             <TrendingUp className="w-10 h-10" />
             <p className="text-sm">Select a target column above to run feature importance analysis</p>
           </div>
-        ) : isLoading ? (
+        ) : initialLoading ? (
           <div className="space-y-4">
             <div className="grid grid-cols-4 gap-3">
-              {[1,2,3,4].map(i => <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />)}
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />
+              ))}
             </div>
             <div className="h-64 bg-gray-100 rounded-xl animate-pulse" />
             <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-              Computing RF · Permutation · SHAP · MI · ANOVA · Stability · Interactions…
+              Loading Random Forest importance (~10s)…
             </div>
           </div>
-        ) : error ? (
+        ) : initialError ? (
           <div className="flex flex-col items-center gap-3 py-20 text-red-500">
             <AlertTriangle className="w-8 h-8" />
             <p className="text-sm font-semibold">Analysis failed</p>
-            <p className="text-xs text-gray-400">{(error as Error).message}</p>
-            <button onClick={() => refetch()}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              <RefreshCw className="w-3 h-3" /> Retry
-            </button>
+            <p className="text-xs text-gray-400">{(initialError as Error).message}</p>
           </div>
         ) : data && data.feature_meta.length > 0 ? (
           <>
@@ -1524,12 +1692,12 @@ redundant_groups: (data.redundant_groups ?? []).length,
               ))}
             </div>
 
-            {activeTab === "overview"     && <OverviewTab     data={data} />}
-            {activeTab === "rankings"     && <RankingsTab     data={data} />}
-            {activeTab === "charts"       && <ChartsTab       data={data} />}
-            {activeTab === "stability"    && <StabilityTab    data={data} />}
+            {activeTab === "overview" && <OverviewTab data={data} />}
+            {activeTab === "rankings" && <RankingsTab data={data} />}
+            {activeTab === "charts" && <ChartsTab data={data} />}
+            {activeTab === "stability" && <StabilityTab data={data} />}
             {activeTab === "interactions" && <InteractionsTab data={data} />}
-            {activeTab === "insights"     && <InsightsTab     data={data} />}
+            {activeTab === "insights" && <InsightsTab data={data} />}
           </>
         ) : data?.error ? (
           <div className="flex flex-col items-center gap-3 py-20 text-amber-500">

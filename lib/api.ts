@@ -39,6 +39,13 @@ export default api;
 export const authApi = {
   login: (email: string, password: string) =>
     api.post("/auth/login", { email, password }),
+
+  microsoftMockLogin: (data: {
+    email: string;
+    full_name?: string;
+  }) =>
+    api.post("/auth/microsoft-mock", data),
+
   logout: () => api.post("/auth/logout"),
   me: () => api.get("/auth/me"),
   updateProfile: (data: { full_name?: string }) =>
@@ -87,8 +94,104 @@ export const datasetsApi = {
     api.get(`/datasets/${datasetId}/correlations`, { params: { method } }),
   getOutliers: (datasetId: string, method: string = "iqr", column?: string) =>
     api.get(`/datasets/${datasetId}/outliers`, { params: { method, column } }),
-  getFeatureImportance: (datasetId: string, target: string) =>
-    api.get(`/datasets/${datasetId}/feature-importance`, { params: { target } }),
+  getFeatureImportance: (
+    datasetId: string,
+    target: string,
+    methods?: string
+  ) =>
+    api.get(`/datasets/${datasetId}/feature-importance`, {
+      params: {
+        target,
+        ...(methods && { methods }),
+      },
+    }),
+
+  /**
+   * Get a single feature importance method.
+   */
+  getFeatureImportanceMethod: (
+    datasetId: string,
+    target: string,
+    methodId: string
+  ) =>
+    api.get(`/datasets/${datasetId}/feature-importance`, {
+      params: {
+        target,
+        methods: methodId,
+      },
+    }),
+
+  /**
+   * Get multiple feature importance methods.
+   */
+  getFeatureImportanceMethods: (
+    datasetId: string,
+    target: string,
+    methodIds: string[]
+  ) =>
+    api.get(`/datasets/${datasetId}/feature-importance`, {
+      params: {
+        target,
+        methods: methodIds.join(","),
+      },
+    }),
+
+  /**
+   * Get available feature importance methods metadata.
+   */
+  getFeatureImportanceAvailableMethods: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/feature-importance-methods`),
+
+  /**
+   * Progressive loader.
+   */
+  loadFeatureImportanceProgressive: async (
+    datasetId: string,
+    target: string,
+    options?: {
+      onProgress?: (method: string, data: any) => void;
+      onError?: (error: Error) => void;
+      methods?: string[];
+    }
+  ) => {
+    const methodOrder = options?.methods || [
+      "rf",
+      "correlation",
+      "mi",
+      "anova",
+      "permutation",
+      "shap",
+      "stability",
+      "interactions",
+    ];
+
+    let accumulated = {};
+
+    for (const method of methodOrder) {
+      try {
+        const response = await api.get(
+          `/datasets/${datasetId}/feature-importance`,
+          {
+            params: {
+              target,
+              methods: method,
+            },
+          }
+        );
+
+        accumulated = {
+          ...accumulated,
+          ...response.data,
+        };
+
+        options?.onProgress?.(method, response.data);
+      } catch (error) {
+        options?.onError?.(error as Error);
+      }
+    }
+
+    return accumulated;
+  },
   getTimeSeries: (datasetId: string, time_col: string, value_col: string) =>
     api.get(`/datasets/${datasetId}/timeseries`, { params: { time_col, value_col } }),
   getText: (datasetId: string, column: string) =>

@@ -145,19 +145,103 @@ export interface DistributionResult {
   error?: string | null;
 }
 
+// ── Correlation Types ─────────────────────────────────────────────────────────
+
+export interface CorrelationColumnProfile {
+  num_cols: string[];
+  cat_cols: string[];
+  ignored_cols: string[];
+  cat_cardinality: Record<string, number>;
+}
+
 export interface CorrelationPair {
   col1: string;
   col2: string;
   correlation: number;
-  abs_correlation?: number;
+  abs_correlation: number;
 }
 
+export interface CatPair {
+  col1: string;
+  col2: string;
+  cramers_v: number;
+}
+
+
+export interface MixedCell {
+  /** η² from one-way ANOVA — proportion of variance explained. */
+  eta_sq: number | null;
+  /** Point-biserial r (binary categorical only). */
+  point_biserial: number | null;
+  /** Rank-biserial r via Mann-Whitney U (binary categorical only). */
+  rank_biserial: number | null;
+  /** ANOVA F-test p-value (or point-biserial p for binary). */
+  p_value: number | null;
+  /** Number of unique categories in the categorical column. */
+  n_categories: number;
+}
+
+export interface MixedPair {
+  num_col: string;
+  cat_col: string;
+  eta_sq: number | null;
+  point_biserial: number | null;
+  rank_biserial: number | null;
+  p_value: number | null;
+  n_categories: number;
+}
+
+
 export interface CorrelationResult {
+  /** Correlation method used: 'pearson' | 'spearman' | 'kendall'. */
   method: string;
+
+  /** Column classification from the backend profiler. */
+  column_profile: CorrelationColumnProfile;
+
+  // ── Numeric × Numeric ──────────────────────────────────────────────────────
+
+  /** Full r matrix: { col → { col → r } }. Diagonal = 1. */
   matrix: Record<string, Record<string, number | null>>;
+
+  /** Matching p-value matrix. Diagonal = null. */
+  p_values: Record<string, Record<string, number | null>>;
+
+  /** Top-25 numeric pairs sorted by |r|. */
   top_pairs: CorrelationPair[];
+
+  /** VIF scores (Pearson only). Empty array when not applicable. */
   vif?: Array<{ column: string; vif: number }> | null;
+
+  // ── Categorical × Categorical ──────────────────────────────────────────────
+
+  /** Symmetric bias-corrected Cramér's V matrix. */
   cramers_v?: Record<string, Record<string, number | null>> | null;
+
+  /**
+   * Asymmetric Theil's U matrix.
+   * Cell [row][col] = how much knowing *row* reduces uncertainty about *col*.
+   */
+  theils_u?: Record<string, Record<string, number | null>> | null;
+
+  /** Chi-square p-values for each categorical pair. */
+  cat_p_values?: Record<string, Record<string, number | null>> | null;
+
+  /** Top-25 categorical pairs ranked by Cramér's V. */
+  cat_top_pairs?: CatPair[] | null;
+
+  // ── Numeric × Categorical (mixed) ─────────────────────────────────────────
+
+  /**
+   * Mixed association matrix: { num_col → { cat_col → MixedCell } }.
+   * Null cell = not computable (too few samples, etc.).
+   */
+  mixed?: Record<string, Record<string, MixedCell | null>> | null;
+
+  /** Top-25 numeric × categorical pairs ranked by η². */
+  mixed_top_pairs?: MixedPair[] | null;
+
+
   insights?: InsightCard[] | null;
 }
 
@@ -243,9 +327,12 @@ export interface QualityScore {
 }
 
 export interface InsightCard {
-  chart_type: string;
-  insight: string;
-  severity: "info" | "warning" | "danger";
+  type: "info" | "warning" | "muted";
+  category: string;
+  message: string;
+  chart_type?: string;
+  insight?: string;
+  severity?: "info" | "warning" | "danger";
 }
 
 export interface JobStatus {

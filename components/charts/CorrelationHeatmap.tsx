@@ -5,174 +5,461 @@ import type { CorrelationResult } from "@/types";
 import { AskAiButton } from "@/components/ai/AskAiButton";
 import { cn } from "@/lib/utils";
 
+
+export type HeatmapMode = "numeric" | "cramers_v" | "theils_u" | "eta_sq";
+
 interface Props {
   data: CorrelationResult;
-  /** Subset of columns to display. When omitted, all matrix columns are shown. */
+  /** Subset of columns to display. Undefined = show all. */
   cols?: string[];
+  mode?: HeatmapMode;
 }
 
-/** Diverging colour: -1 → red, 0 → white, +1 → blue */
-function cellColor(value: number): string {
+interface TooltipInfo {
+  row: string;
+  col: string;
+  primary: number;
+  secondary?: { label: string; value: number | null }[];
+}
+
+
+/**
+ * Diverging blue–white–red for correlation [-1, +1].
+ * Positive → blue, negative → red, zero → white.
+ */
+function divergingColor(value: number): string {
   if (value >= 0) {
-    const t  = value;                          // 0→1
-    const r  = Math.round(255 - t * (255 - 59));
-    const g  = Math.round(255 - t * (255 - 130));
-    const b  = Math.round(255 - t * (255 - 246));
-    return `rgb(${r},${g},${b})`;
+    const t = value;
+    return `rgb(${Math.round(255 - t * 196)},${Math.round(255 - t * 125)},${Math.round(255 - t * 9)})`;
   } else {
-    const t  = -value;                         // 0→1
-    const r  = Math.round(255 - t * (255 - 239));
-    const g  = Math.round(255 - t * (255 - 68));
-    const b  = Math.round(255 - t * (255 - 68));
-    return `rgb(${r},${g},${b})`;
+    const t = -value;
+    return `rgb(${Math.round(255 - t * 16)},${Math.round(255 - t * 187)},${Math.round(255 - t * 187)})`;
   }
 }
 
-function textColor(value: number): string {
-  return Math.abs(value) > 0.55 ? "rgba(255,255,255,0.95)" : "#374151";
+/**
+ * Sequential purple scale for [0, 1] association metrics (Cramér's V, η², etc.).
+ * 0 → white, 1 → deep purple.
+ */
+function sequentialColor(value: number): string {
+  const t = Math.max(0, Math.min(1, value));
+  const r = Math.round(255 - t * (255 - 76));
+  const g = Math.round(255 - t * (255 - 29));
+  const b = Math.round(255 - t * (255 - 149));
+  return `rgb(${r},${g},${b})`;
 }
 
-export function CorrelationHeatmap({ data, cols }: Props) {
-  const { matrix } = data;
-  const [tooltip, setTooltip] = useState<{ row: string; col: string; val: number } | null>(null);
+function cellBg(mode: HeatmapMode, value: number): string {
+  return mode === "numeric" ? divergingColor(value) : sequentialColor(value);
+}
 
-  const displayCols: string[] = useMemo(() => {
+function cellTextColor(mode: HeatmapMode, value: number): string {
+  const abs = Math.abs(value);
+  return abs > 0.55 ? "rgba(255,255,255,0.95)" : "#374151";
+}
+
+
+function extractNumericMatrix(
+  data: CorrelationResult,
+  cols: string[],
+): Record<string, Record<string, number | null>> {
+  return Object.fromEntries(
+    cols.map((r) => [
+      r,
+      Object.fromEntries(cols.map((c) => [c, data.matrix?.[r]?.[c] ?? null])),
+    ]),
+  );
+}
+
+function extractCramersMatrix(
+  data: CorrelationResult,
+  cols: string[],
+): Record<string, Record<string, number | null>> {
+  return Object.fromEntries(
+    cols.map((r) => [
+      r,
+      Object.fromEntries(cols.map((c) => [c, data.cramers_v?.[r]?.[c] ?? null])),
+    ]),
+  );
+}
+
+function extractTheilsMatrix(
+  data: CorrelationResult,
+  cols: string[],
+): Record<string, Record<string, number | null>> {
+  return Object.fromEntries(
+    cols.map((r) => [
+      r,
+      Object.fromEntries(cols.map((c) => [c, data.theils_u?.[r]?.[c] ?? null])),
+    ]),
+  );
+}
+
+/**
+ * Mixed matrix: rows = num_cols, columns = cat_cols.
+ * Returns the primary scalar (eta_sq) for each cell.
+ */
+function extractMixedMatrix(
+  data: CorrelationResult,
+  numCols: string[],
+  catCols: string[],
+): {
+  rowLabels: string[];
+  colLabels: string[];
+  values: Record<string, Record<string, number | null>>;
+  extras: Record<string, Record<string, { pb?: number | null; rb?: number | null; p?: number | null; ncat?: number } | null>>;
+} {
+  const values: Record<string, Record<string, number | null>> = {};
+  const extras: Record<string, Record<string, any>> = {};
+
+  for (const nr of numCols) {
+    values[nr] = {};
+    extras[nr] = {};
+    for (const cc of catCols) {
+      const cell = data.mixed?.[nr]?.[cc];
+      if (!cell) {
+        values[nr][cc] = null;
+        extras[nr][cc] = null;
+      } else {
+        values[nr][cc] = cell.eta_sq ?? null;
+        extras[nr][cc] = {
+          pb:   cell.point_biserial,
+          rb:   cell.rank_biserial,
+          p:    cell.p_value,
+          ncat: cell.n_categories,
+        };
+      }
+    }
+  }
+
+  return { rowLabels: numCols, colLabels: catCols, values, extras };
+}
+
+
+function Legend({ mode }: { mode: HeatmapMode }) {
+  if (mode === "numeric") {
+    return (
+      <div className="flex items-center gap-2 mt-2">
+        <span className="text-[10px] text-gray-400">−1</span>
+        <div
+          className="h-2 rounded-full flex-1 max-w-[200px]"
+          style={{ background: "linear-gradient(to right, rgb(239,68,68), rgb(255,255,255), rgb(59,130,246))" }}
+        />
+        <span className="text-[10px] text-gray-400">+1</span>
+      </div>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 mt-2">
+      <span className="text-[10px] text-gray-400">0</span>
+      <div
+        className="h-2 rounded-full flex-1 max-w-[200px]"
+        style={{ background: "linear-gradient(to right, rgb(255,255,255), rgb(76,29,149))" }}
+      />
+      <span className="text-[10px] text-gray-400">1</span>
+    </div>
+  );
+}
+
+
+function Tooltip({ info, mode }: { info: TooltipInfo; mode: HeatmapMode }) {
+  return (
+    <div className="absolute z-30 pointer-events-none bg-gray-900 text-white text-xs rounded-xl px-3 py-2 shadow-2xl whitespace-nowrap"
+      style={{ top: -48, left: "50%", transform: "translateX(-50%)" }}
+    >
+      <div className="font-mono mb-1 text-gray-300">
+        <span className="text-white">{info.row}</span>
+        <span className="text-gray-500 mx-1.5">×</span>
+        <span className="text-white">{info.col}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <span className="font-semibold tabular-nums text-amber-300">
+          {mode === "numeric" ? info.primary.toFixed(4) : info.primary.toFixed(4)}
+        </span>
+        {info.secondary?.map((s) =>
+          s.value != null ? (
+            <span key={s.label} className="text-gray-400">
+              {s.label}: <span className="text-gray-200">{s.value.toFixed(3)}</span>
+            </span>
+          ) : null,
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+interface GridProps {
+  rowLabels: string[];
+  colLabels: string[];
+  values: Record<string, Record<string, number | null>>;
+  extras?: Record<string, Record<string, any>>;
+  mode: HeatmapMode;
+  isDiag?: boolean; 
+}
+
+function HeatmapGrid({ rowLabels, colLabels, values, extras, mode, isDiag = true }: GridProps) {
+  const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
+
+  const n        = Math.max(rowLabels.length, colLabels.length);
+  const cellSize = Math.max(20, Math.min(54, Math.floor(560 / n)));
+  const showNums = cellSize >= 30;
+  const fontSize = Math.max(7, Math.min(11, cellSize * 0.21));
+
+  return (
+    <div className="overflow-x-auto">
+      <div className="inline-block relative">
+        {tooltip && <Tooltip info={tooltip} mode={mode} />}
+
+        {/* Column headers */}
+        <div className="flex" style={{ marginLeft: 108, marginBottom: 2 }}>
+          {colLabels.map((col) => (
+            <div
+              key={col}
+              style={{ width: cellSize, height: 72, flexShrink: 0 }}
+              className="flex items-end justify-center overflow-visible"
+            >
+              <span
+                className="block text-gray-500 truncate origin-bottom-left"
+                style={{
+                  fontSize: Math.max(8, Math.min(10, cellSize * 0.21)),
+                  transform: "rotate(-50deg) translateX(-2px)",
+                  maxWidth: 64,
+                  whiteSpace: "nowrap",
+                }}
+                title={col}
+              >
+                {col}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* Rows */}
+        {rowLabels.map((rowCol) => (
+          <div key={rowCol} className="flex items-center">
+            {/* Row label */}
+            <div
+              className="text-gray-500 text-right pr-2 truncate flex-shrink-0"
+              style={{ width: 108, fontSize: Math.max(8, Math.min(11, cellSize * 0.21)) }}
+              title={rowCol}
+            >
+              {rowCol}
+            </div>
+
+            {/* Cells */}
+            {colLabels.map((colCol) => {
+              const val    = values[rowCol]?.[colCol];
+              const isDiagCell = isDiag && rowCol === colCol;
+              const bg     = val != null ? cellBg(mode, val) : "#f9fafb";
+              const textClr = val != null ? cellTextColor(mode, val) : "#d1d5db";
+
+              const extra  = extras?.[rowCol]?.[colCol];
+              const secondary: TooltipInfo["secondary"] = extra
+                ? [
+                    { label: "pb", value: extra.pb ?? null },
+                    { label: "rb", value: extra.rb ?? null },
+                    { label: "p",  value: extra.p  ?? null },
+                  ]
+                : undefined;
+
+              return (
+                <div
+                  key={colCol}
+                  style={{ width: cellSize, height: cellSize, backgroundColor: bg, flexShrink: 0 }}
+                  className={cn(
+                    "flex items-center justify-center border border-white/40 cursor-default select-none",
+                    "transition-transform duration-100 hover:scale-110 hover:z-10 relative",
+                    isDiagCell && "opacity-60",
+                  )}
+                  onMouseEnter={() =>
+                    val != null &&
+                    setTooltip({ row: rowCol, col: colCol, primary: val, secondary })
+                  }
+                  onMouseLeave={() => setTooltip(null)}
+                >
+                  {showNums && val != null && (
+                    <span
+                      className="font-mono text-center leading-none pointer-events-none"
+                      style={{ fontSize, color: textClr }}
+                    >
+                      {val.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+function pBadge(p: number | null | undefined) {
+  if (p == null) return null;
+  const label = p < 0.001 ? "p<0.001" : p < 0.01 ? "p<0.01" : p < 0.05 ? "p<0.05" : `p=${p.toFixed(3)}`;
+  const cls =
+    p < 0.001
+      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+      : p < 0.05
+      ? "bg-blue-50 text-blue-700 border-blue-200"
+      : "bg-gray-50 text-gray-500 border-gray-200";
+  return (
+    <span className={cn("inline-block text-[9px] border rounded px-1 py-0.5 font-mono ml-1", cls)}>
+      {label}
+    </span>
+  );
+}
+
+
+export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
+  const { matrix } = data;
+
+  const numCols = useMemo(() => {
     const all = Object.keys(matrix ?? {});
     if (!cols || cols.length === 0) return all;
     return cols.filter((c) => all.includes(c));
   }, [matrix, cols]);
 
-  if (!matrix || displayCols.length === 0) {
+  const catCols = useMemo(
+    () => Object.keys(data.cramers_v ?? {}),
+    [data.cramers_v],
+  );
+
+  const mixedData = useMemo(() => {
+    const mxNumCols = Object.keys(data.mixed ?? {});
+    const mxCatCols =
+      mxNumCols.length > 0 ? Object.keys(data.mixed![mxNumCols[0]] ?? {}) : [];
+    return extractMixedMatrix(data, mxNumCols, mxCatCols);
+  }, [data.mixed]);
+
+  if (mode === "numeric") {
+    if (!matrix || numCols.length === 0) {
+      return <EmptyState message="No numeric correlation data available." />;
+    }
+    if (numCols.length < 2) {
+      return <EmptyState warn message="Select at least 2 columns to display the correlation matrix." />;
+    }
+    const numMatrix = extractNumericMatrix(data, numCols);
     return (
-      <p className="text-sm text-gray-400 py-8 text-center">
-        No correlation data for the selected columns.
-      </p>
+      <div className="space-y-3">
+        <HeatmapHeader
+          label={`${numCols.length} columns · ${numCols.length * numCols.length} cells`}
+          askQuestion="Explain the top correlations in this heatmap. Which pairs are strongly correlated and could cause multicollinearity?"
+          askLabel="Explain correlations"
+        />
+        <HeatmapGrid rowLabels={numCols} colLabels={numCols} values={numMatrix} mode="numeric" isDiag />
+        <Legend mode="numeric" />
+      </div>
     );
   }
 
-  if (displayCols.length < 2) {
+  if (mode === "cramers_v") {
+    if (!data.cramers_v || catCols.length < 2) {
+      return <EmptyState message="Not enough categorical columns for Cramér's V matrix." />;
+    }
+    const cramersMatrix = extractCramersMatrix(data, catCols);
     return (
-      <p className="text-sm text-amber-600 py-8 text-center bg-amber-50 rounded-xl">
-        Select at least 2 columns to display the correlation matrix.
-      </p>
+      <div className="space-y-3">
+        <HeatmapHeader
+          label={`${catCols.length} categorical columns · bias-corrected`}
+          askQuestion="Looking at the Cramér's V matrix, which categorical columns are strongly associated? Should any be treated as near-duplicates?"
+          askLabel="Explain associations"
+        />
+        <HeatmapGrid rowLabels={catCols} colLabels={catCols} values={cramersMatrix} mode="cramers_v" isDiag />
+        <Legend mode="cramers_v" />
+        <p className="text-[10px] text-gray-400 mt-1">
+          Cramér's V ∈ [0, 1] — higher values indicate stronger categorical association.
+          Diagonal is always 1 (self-association).
+        </p>
+      </div>
     );
   }
 
-  // Dynamic cell sizing: fit within a comfortable viewport width
-  const n        = displayCols.length;
-  const cellSize = Math.max(20, Math.min(54, Math.floor(600 / n)));
-  const showNums = cellSize >= 32;
+  if (mode === "theils_u") {
+    if (!data.theils_u || catCols.length < 2) {
+      return <EmptyState message="Not enough categorical columns for Theil's U matrix." />;
+    }
+    const theilsMatrix = extractTheilsMatrix(data, catCols);
+    return (
+      <div className="space-y-3">
+        <HeatmapHeader
+          label={`${catCols.length} categorical columns · asymmetric (row → column)`}
+          askQuestion="Looking at the Theil's U (uncertainty coefficient) matrix, which categorical variables have the most directional predictive power?"
+          askLabel="Explain Theil's U"
+        />
+        <HeatmapGrid rowLabels={catCols} colLabels={catCols} values={theilsMatrix} mode="theils_u" isDiag />
+        <Legend mode="theils_u" />
+        <p className="text-[10px] text-gray-400 mt-1">
+          Theil's U is asymmetric: cell [row, col] = how much knowing <em>row</em> reduces uncertainty about <em>col</em>.
+          Values near 1 = row almost perfectly predicts col.
+        </p>
+      </div>
+    );
+  }
 
+  if (mode === "eta_sq") {
+    if (!data.mixed || mixedData.rowLabels.length === 0 || mixedData.colLabels.length === 0) {
+      return <EmptyState message="No mixed numeric×categorical data available." />;
+    }
+    return (
+      <div className="space-y-3">
+        <HeatmapHeader
+          label={`${mixedData.rowLabels.length} numeric × ${mixedData.colLabels.length} categorical`}
+          askQuestion="Looking at the η² (eta-squared) matrix, which categorical features explain the most variance in numeric columns? Any strong group effects worth investigating?"
+          askLabel="Explain η² associations"
+        />
+        <p className="text-[10px] text-gray-400">
+          η² = proportion of variance in the numeric variable explained by the categorical variable (one-way ANOVA).
+          Hover cells for point-biserial r and rank-biserial r where applicable.
+        </p>
+        <HeatmapGrid
+          rowLabels={mixedData.rowLabels}
+          colLabels={mixedData.colLabels}
+          values={mixedData.values}
+          extras={mixedData.extras}
+          mode="eta_sq"
+          isDiag={false}
+        />
+        <Legend mode="eta_sq" />
+      </div>
+    );
+  }
+
+  return null;
+}
+
+
+function HeatmapHeader({
+  label,
+  askQuestion,
+  askLabel,
+}: {
+  label: string;
+  askQuestion: string;
+  askLabel: string;
+}) {
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">{n} columns · {n * n} cells</span>
-        <AskAiButton
-          question="Explain the top correlations in this heatmap. Which pairs are strongly correlated and could cause multicollinearity?"
-          label="Explain correlations"
-          variant="chip"
-        />
-      </div>
-
-      <div className="overflow-x-auto">
-        <div className="inline-block relative">
-          {/* Tooltip */}
-          {tooltip && (
-            <div
-              className="absolute z-20 pointer-events-none bg-gray-900 text-white text-xs rounded-lg px-2.5 py-1.5 shadow-xl whitespace-nowrap"
-              style={{ top: -36, left: "50%", transform: "translateX(-50%)" }}
-            >
-              <span className="font-mono">{tooltip.row}</span>
-              <span className="text-gray-400 mx-1">×</span>
-              <span className="font-mono">{tooltip.col}</span>
-              <span className="ml-2 font-semibold">{tooltip.val.toFixed(4)}</span>
-            </div>
-          )}
-
-          {/* Column header labels (angled) */}
-          <div className="flex" style={{ marginLeft: 100, marginBottom: 2 }}>
-            {displayCols.map((col) => (
-              <div
-                key={col}
-                style={{ width: cellSize, height: 70, flexShrink: 0 }}
-                className="flex items-end justify-center overflow-visible"
-              >
-                <span
-                  className="block text-gray-500 truncate origin-bottom-left"
-                  style={{
-                    fontSize: Math.max(8, Math.min(10, cellSize * 0.22)),
-                    transform: "rotate(-50deg) translateX(-2px)",
-                    maxWidth: 60,
-                    display: "block",
-                    whiteSpace: "nowrap",
-                  }}
-                  title={col}
-                >
-                  {col}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Rows */}
-          {displayCols.map((rowCol) => (
-            <div key={rowCol} className="flex items-center">
-              {/* Row label */}
-              <div
-                className="text-gray-500 text-right pr-2 truncate flex-shrink-0"
-                style={{ width: 100, fontSize: Math.max(8, Math.min(11, cellSize * 0.22)) }}
-                title={rowCol}
-              >
-                {rowCol}
-              </div>
-
-              {/* Cells */}
-              {displayCols.map((colCol) => {
-                const val      = matrix[rowCol]?.[colCol];
-                const isDiag   = rowCol === colCol;
-                const bg       = val != null ? cellColor(val) : "#f9fafb";
-                const textClr  = val != null ? textColor(val) : "#d1d5db";
-                const display  = val != null ? val.toFixed(2) : "—";
-
-                return (
-                  <div
-                    key={colCol}
-                    style={{ width: cellSize, height: cellSize, backgroundColor: bg, flexShrink: 0 }}
-                    className={cn(
-                      "flex items-center justify-center border border-white/50 cursor-default select-none transition-transform duration-100 hover:scale-110 hover:z-10 relative",
-                      isDiag && "opacity-70",
-                    )}
-                    onMouseEnter={() => val != null && setTooltip({ row: rowCol, col: colCol, val })}
-                    onMouseLeave={() => setTooltip(null)}
-                    title={`${rowCol} × ${colCol}: ${display}`}
-                  >
-                    {showNums && (
-                      <span
-                        className="font-mono text-center leading-none pointer-events-none"
-                        style={{ fontSize: Math.max(7, Math.min(11, cellSize * 0.22)), color: textClr }}
-                      >
-                        {display}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Colour legend */}
-      <div className="flex items-center gap-2 mt-1">
-        <span className="text-[10px] text-gray-400">−1</span>
-        <div
-          className="h-2 rounded-full flex-1 max-w-[200px]"
-          style={{
-            background: "linear-gradient(to right, rgb(239,68,68), rgb(255,255,255), rgb(59,130,246))",
-          }}
-        />
-        <span className="text-[10px] text-gray-400">+1</span>
-      </div>
+    <div className="flex items-center justify-between">
+      <span className="text-xs text-gray-400">{label}</span>
+      <AskAiButton question={askQuestion} label={askLabel} variant="chip" />
     </div>
+  );
+}
+
+function EmptyState({ message, warn }: { message: string; warn?: boolean }) {
+  return (
+    <p
+      className={cn(
+        "text-sm py-8 text-center rounded-xl",
+        warn
+          ? "text-amber-600 bg-amber-50"
+          : "text-gray-400",
+      )}
+    >
+      {message}
+    </p>
   );
 }

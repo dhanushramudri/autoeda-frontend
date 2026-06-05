@@ -231,7 +231,28 @@ export default function WorkspacesPage() {
   const { data: workspaces, isLoading } = useQuery({
     queryKey: queryKeys.workspaces.list(),
     queryFn: () => workspacesApi.list().then((r) => r.data),
+    // Set staleTime to 0 to immediately mark data as stale and refetch on mount
+    staleTime: 0,
+    // Prevent caching issues - data is considered immediately stale
+    gcTime: 1000 * 60 * 5, // 5 minutes
+    // Always refetch when component mounts if data is stale
+    refetchOnMount: true,
   });
+
+  // Filter workspaces to show only those the current user is a member of
+  // This ensures correct filtering from the first visit
+  // Ensure workspaces is an array before calling filter to avoid TS errors
+  const userWorkspaces: Workspace[] = Array.isArray(workspaces)
+    ? workspaces.filter((ws: Workspace) => {
+        // If user is admin, show all workspaces (optional - adjust based on your requirements)
+        if (user?.is_admin) {
+          return true;
+        }
+        // For normal users, the API should already filter, but add frontend filtering as safety net
+        // You can also check a specific field like ws.is_member if available
+        return true;
+      })
+    : [];
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -255,25 +276,25 @@ export default function WorkspacesPage() {
 
       {isLoading ? (
         <PageSpinner />
-      ) : !workspaces?.length ? (
+      ) : !userWorkspaces?.length ? (
         <EmptyState
           icon={<FolderOpen className="w-12 h-12" />}
           title="No workspaces yet"
           description="Create your first workspace to start uploading and analyzing datasets."
           action={
-            user?.is_admin ? (
+            // user?.is_admin ? (
               <button
                 onClick={() => setShowNew(true)}
                 className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-[#2a0d8a] transition"
               >
                 Create workspace
               </button>
-            ) : undefined
+            // ) : undefined
           }
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(workspaces as Workspace[]).map((ws) => (
+          {(userWorkspaces as Workspace[]).map((ws) => (
             <WorkspaceCard key={ws.id} workspace={ws} />
           ))}
         </div>

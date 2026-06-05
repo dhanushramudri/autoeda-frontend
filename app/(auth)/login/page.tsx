@@ -2,39 +2,41 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
 import { authApi } from "@/lib/api";
 import type { AxiosError } from "axios";
 import type { ApiError } from "@/types";
+import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleMicrosoftSSO = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email) return;
+
     setLoading(true);
     setError("");
 
     try {
-      const { data } = await authApi.login(email, password);
+      const { data } = await authApi.microsoftMockLogin({
+        email,
+        full_name: email.split("@")[0],
+      });
+
       setAuth(data.user, data.access_token);
       router.push("/workspaces");
     } catch (err) {
       const axiosErr = err as AxiosError<ApiError>;
-      setError(axiosErr.response?.data?.detail ?? "Login failed. Check credentials.");
+      setError(axiosErr.response?.data?.detail ?? "Login failed");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleMicrosoftSSO = () => {
-    window.location.href = "/api/auth/microsoft";
   };
 
   return (
@@ -194,29 +196,7 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Microsoft SSO */}
-          <button
-            type="button"
-            onClick={handleMicrosoftSSO}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 mb-6 bg-white/10 border border-white/20 rounded-xl text-white text-sm font-medium hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/40 transition-all active:scale-[0.98]"
-          >
-            <svg width="18" height="18" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-              <rect x="1"  y="1"  width="9" height="9" fill="#f25022"/>
-              <rect x="11" y="1"  width="9" height="9" fill="#7fba00"/>
-              <rect x="1"  y="11" width="9" height="9" fill="#00a4ef"/>
-              <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-            </svg>
-            Continue with Microsoft
-          </button>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="flex-1 h-px bg-white/15" />
-            <span className="text-white/30 text-xs font-medium">or sign in with email</span>
-            <div className="flex-1 h-px bg-white/15" />
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleMicrosoftSSO} className="space-y-4">
             <div>
               <label
                 htmlFor="email"
@@ -232,25 +212,6 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@jmangroup.com"
                 autoComplete="email"
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-xs font-semibold text-white/60 mb-1.5 uppercase tracking-wider"
-              >
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                autoComplete="current-password"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition"
               />
             </div>
