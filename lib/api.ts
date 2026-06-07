@@ -150,7 +150,7 @@ export const datasetsApi = {
     target: string,
     options?: {
       onProgress?: (method: string, data: any) => void;
-      onError?: (error: Error) => void;
+      onError?: (method: string, error: Error) => void; 
       methods?: string[];
     }
   ) => {
@@ -165,10 +165,12 @@ export const datasetsApi = {
       "interactions",
     ];
 
-    let accumulated = {};
+    let accumulated: any = null;  
 
     for (const method of methodOrder) {
       try {
+        console.log(`📡 [${method}] Fetching...`);  // ← ADD: logging
+
         const response = await api.get(
           `/datasets/${datasetId}/feature-importance`,
           {
@@ -179,19 +181,48 @@ export const datasetsApi = {
           }
         );
 
-        accumulated = {
-          ...accumulated,
-          ...response.data,
-        };
+        const data = response.data;
+        console.log(`✅ [${method}] Success:`, data);  
 
-        options?.onProgress?.(method, response.data);
+        accumulated = accumulated
+          ? {
+              target: data.target,
+              problem_type: data.problem_type,
+              n_samples: data.n_samples,
+              n_features: data.n_features,
+              class_distribution: data.class_distribution,
+              importances: data.importances?.length > 0 ? data.importances : accumulated.importances,
+              permutation_importances: data.permutation_importances?.length > 0 ? data.permutation_importances : accumulated.permutation_importances,
+              mutual_info: data.mutual_info?.length > 0 ? data.mutual_info : accumulated.mutual_info,
+              correlations: data.correlations?.length > 0 ? data.correlations : accumulated.correlations,
+              anova: data.anova?.length > 0 ? data.anova : accumulated.anova,
+              shap_values: data.shap_values?.length > 0 ? data.shap_values : accumulated.shap_values,
+              stability: data.stability?.length > 0 ? data.stability : accumulated.stability,
+              interactions: data.interactions?.length > 0 ? data.interactions : accumulated.interactions,
+              computed_methods: data.computed_methods || accumulated.computed_methods,
+              feature_meta: data.feature_meta || accumulated.feature_meta,
+              top_features: data.top_features || accumulated.top_features,
+              drop_candidates: data.drop_candidates || accumulated.drop_candidates,
+              warnings: data.warnings || accumulated.warnings,
+              redundant_groups: data.redundant_groups || accumulated.redundant_groups,
+              leakage_suspects: data.leakage_suspects || accumulated.leakage_suspects,
+              model_score: data.model_score !== null ? data.model_score : accumulated.model_score,
+              cv_score_mean: data.cv_score_mean,
+              cv_score_std: data.cv_score_std,
+            }
+          : data;
+
+        options?.onProgress?.(method, accumulated);
       } catch (error) {
-        options?.onError?.(error as Error);
+        console.error(`❌ [${method}] Error:`, error); 
+        options?.onError?.(method, error as Error);  
       }
     }
 
+    console.log(`✅ Progressive loading complete.`, accumulated);  
     return accumulated;
   },
+
   getTimeSeries: (datasetId: string, time_col: string, value_col: string) =>
     api.get(`/datasets/${datasetId}/timeseries`, { params: { time_col, value_col } }),
   getText: (datasetId: string, column: string) =>
