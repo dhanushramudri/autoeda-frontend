@@ -162,10 +162,10 @@ function Legend({ mode }: { mode: HeatmapMode }) {
 }
 
 
-function Tooltip({ info, mode }: { info: TooltipInfo; mode: HeatmapMode }) {
+function Tooltip({ info, mode, x, y }: { info: TooltipInfo; mode: HeatmapMode; x: number; y: number }) {
   return (
-    <div className="absolute z-30 pointer-events-none bg-gray-900 text-white text-xs rounded-xl px-3 py-2 shadow-2xl whitespace-nowrap"
-      style={{ top: -48, left: "50%", transform: "translateX(-50%)" }}
+    <div className="fixed z-[9999] pointer-events-none bg-gray-900 text-white text-xs rounded-xl px-3 py-2 shadow-2xl whitespace-nowrap"
+      style={{ top: y - 70, left: x, transform: "translateX(-50%)" }}
     >
       <div className="font-mono mb-1 text-gray-300">
         <span className="text-white">{info.row}</span>
@@ -200,6 +200,7 @@ interface GridProps {
 
 function HeatmapGrid({ rowLabels, colLabels, values, extras, mode, isDiag = true }: GridProps) {
   const [tooltip, setTooltip] = useState<TooltipInfo | null>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const n        = Math.max(rowLabels.length, colLabels.length);
   const cellSize = Math.max(20, Math.min(54, Math.floor(560 / n)));
@@ -209,7 +210,7 @@ function HeatmapGrid({ rowLabels, colLabels, values, extras, mode, isDiag = true
   return (
     <div className="overflow-x-auto">
       <div className="inline-block relative">
-        {tooltip && <Tooltip info={tooltip} mode={mode} />}
+        {tooltip && <Tooltip info={tooltip} mode={mode} x={mousePos.x} y={mousePos.y} />}
 
         {/* Column headers */}
         <div className="flex" style={{ marginLeft: 108, marginBottom: 2 }}>
@@ -272,10 +273,10 @@ function HeatmapGrid({ rowLabels, colLabels, values, extras, mode, isDiag = true
                     "transition-transform duration-100 hover:scale-110 hover:z-10 relative",
                     isDiagCell && "opacity-60",
                   )}
-                  onMouseEnter={() =>
-                    val != null &&
-                    setTooltip({ row: rowCol, col: colCol, primary: val, secondary })
-                  }
+                  onMouseMove={(e) => {
+                    setMousePos({ x: e.clientX, y: e.clientY });
+                    if (val != null) setTooltip({ row: rowCol, col: colCol, primary: val, secondary });
+                  }}
                   onMouseLeave={() => setTooltip(null)}
                 >
                   {showNums && val != null && (
