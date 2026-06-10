@@ -2,14 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 
 async function proxyHandler(request: NextRequest) {
   try {
-    const pathname = new URL(request.url).pathname;
+    const url = new URL(request.url);
+    const pathname = url.pathname;
+    const searchParams = url.search; 
     
     const apiPath = pathname.replace(/^\/api/, "");
     
     const ec2Url = process.env.EC2_API_URL || "http://localhost:8000/api/v1";
-    const fullUrl = `${ec2Url}${apiPath}`;
+    const fullUrl = `${ec2Url}${apiPath}${searchParams}`; 
 
-    console.log(`[Proxy] ${request.method} ${apiPath} -> ${fullUrl}`);
+    console.log(`[Proxy] ${request.method} ${apiPath}${searchParams} -> ${fullUrl}`);
 
     const response = await fetch(fullUrl, {
       method: request.method,
