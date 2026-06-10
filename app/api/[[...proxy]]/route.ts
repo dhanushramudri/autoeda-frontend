@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function handler(request: NextRequest) {
+async function proxyHandler(request: NextRequest) {
   try {
-    // Get the path that was requested
     const pathname = new URL(request.url).pathname;
     
-    // Remove /api prefix to get the actual API path
     const apiPath = pathname.replace(/^\/api/, "");
     
     const ec2Url = process.env.EC2_API_URL || "http://localhost:8000/api/v1";
@@ -37,9 +35,9 @@ export async function handler(request: NextRequest) {
   }
 }
 
-export const POST = handler;
-export const GET = handler;
-export const PUT = handler;
-export const PATCH = handler;
-export const DELETE = handler;
-export const HEAD = handler;
+export const GET = proxyHandler;
+export const POST = proxyHandler;
+export const PUT = proxyHandler;
+export const PATCH = proxyHandler;
+export const DELETE = proxyHandler;
+export const HEAD = proxyHandler;
