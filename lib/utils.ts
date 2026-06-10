@@ -1,8 +1,8 @@
-﻿import {  ClassValue, clsx } from "clsx";
+﻿import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+export function cn(...inputs: (ClassValue | undefined)[]): string {
+  return twMerge(clsx(inputs.filter(Boolean)));
 }
 
 export function formatBytes(bytes: number): string {

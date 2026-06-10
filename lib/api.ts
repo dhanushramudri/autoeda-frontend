@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import type { ApiError } from "@/types";
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 export const UPLOADS_BASE = API_BASE.replace(/\/api\/v1$/, "");
 
 const api = axios.create({
