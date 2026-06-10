@@ -12,23 +12,12 @@ import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NLQueryBar } from "@/components/shared/NLQueryBar";
 import { NotificationBell } from "@/components/layout/NotificationBell";
-import { usePresence } from "@/hooks/usePresence";
-import { OnlineAvatars } from "@/components/shared/PresenceAvatars";
 
 export function Topbar() {
   const router = useRouter();
   const pathname = usePathname();
   const user = useAuthStore((s) => s.user);
   const { currentWorkspaceId, setCurrentWorkspace } = useWorkspaceStore();
-
-  const datasetId = pathname?.match(/\/datasets\/([^/]+)/)?.[1];
-  const { presence } = usePresence(currentWorkspaceId ?? undefined, datasetId);
-
-  // All unique online users across all datasets, excluding self
-  const onlineUsers = Object.values(presence)
-    .flat()
-    .filter((u, i, arr) => arr.findIndex((x) => x.email === u.email) === i)
-    .filter((u) => u.email !== user?.email);
 
   const [wsOpen, setWsOpen] = useState(false);
   const wsRef = useRef<HTMLDivElement>(null);
@@ -101,13 +90,7 @@ export function Topbar() {
         <NLQueryBar />
       </div>
 
-      {/* Online teammates */}
-      {onlineUsers.length > 0 && (
-        <OnlineAvatars users={onlineUsers} />
-      )}
-
       <NotificationBell workspaceId={currentWorkspaceId ?? undefined} />
-
     </header>
   );
 }
