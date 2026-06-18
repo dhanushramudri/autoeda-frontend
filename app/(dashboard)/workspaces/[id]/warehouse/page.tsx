@@ -72,6 +72,18 @@ const SOURCE_TYPE_ICON: Record<string, React.ComponentType<{ className?: string 
   csv: FileText, excel: FileText, json: FileText, parquet: FileText,
 };
 
+const SOURCE_TYPE_GROUP_LABEL: Record<string, string> = {
+  rest_api: "API", graphql: "API",
+  postgresql: "PostgreSQL", mysql: "MySQL", mssql: "SQL Server", sqlite: "SQLite",
+  redshift: "Redshift", snowflake: "Snowflake", bigquery: "BigQuery", mongodb: "MongoDB",
+  s3: "Amazon S3", azure_blob: "Azure Blob Storage", gcs: "Google Cloud Storage", google_drive: "Google Drive",
+};
+
+function sourceGroupLabel(sourceType?: string): string {
+  if (!sourceType) return "Other";
+  return SOURCE_TYPE_GROUP_LABEL[sourceType] ?? sourceType;
+}
+
 const TYPE_BADGE_COLOR: Record<string, string> = {
   INTEGER: "text-blue-400", BIGINT: "text-blue-400",
   DOUBLE: "text-purple-400", FLOAT: "text-purple-400",
@@ -251,6 +263,65 @@ function CatalogSectionBlock({ section, search, workspaceId, onInsertSelect, onI
   );
 }
 
+interface SourceTypeGroupProps {
+  groupLabel: string;
+  sourceType?: string;
+  sections: CatalogSection[];
+  search: string;
+  workspaceId: string;
+  onInsertSelect: (slug: string) => void;
+  onInsertCol: (slug: string, col: string) => void;
+}
+
+function SourceTypeGroupBlock({
+  groupLabel, sourceType, sections, search, workspaceId, onInsertSelect, onInsertCol,
+}: SourceTypeGroupProps) {
+  const [collapsed, setCollapsed] = useState(true);
+  const Icon = sourceType ? (SOURCE_TYPE_ICON[sourceType] ?? Database) : Database;
+  const totalItems = sections.reduce((n, s) => n + s.items.length, 0);
+
+  if (sections.length === 1) {
+    return (
+      <CatalogSectionBlock
+        section={sections[0]}
+        search={search}
+        workspaceId={workspaceId}
+        onInsertSelect={onInsertSelect}
+        onInsertCol={onInsertCol}
+      />
+    );
+  }
+
+  return (
+    <div className="border-b border-gray-100 last:border-b-0">
+      <button
+        onClick={() => setCollapsed((p) => !p)}
+        className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-gray-100 transition sticky top-0 bg-white z-10"
+      >
+        <Icon className="w-3.5 h-3.5 flex-shrink-0 text-brand" />
+        <span className="text-xs font-semibold text-gray-700 flex-1 text-left truncate">{groupLabel}</span>
+        <span className="text-[9px] text-gray-400 flex-shrink-0">{sections.length} sources · {totalItems}</span>
+        {collapsed ? <ChevronRight className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />}
+      </button>
+
+      {!collapsed && (
+        <div className="ml-2 border-l border-gray-200">
+          {sections.map((section, i) => (
+            <CatalogSectionBlock
+              key={section.id ?? section.type + i}
+              section={section}
+              search={search}
+              workspaceId={workspaceId}
+              onInsertSelect={onInsertSelect}
+              onInsertCol={onInsertCol}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // —— Main page ——————————————————————————————————————————————————————————————————————
 
 export default function WarehousePage() {
@@ -274,6 +345,19 @@ export default function WarehousePage() {
 
   const sections: CatalogSection[] = catalogData?.sections ?? [];
   const totalTables = sections.reduce((s, sec) => s + sec.items.length, 0);
+
+  const datasetSections = sections.filter((s) => s.type === "datasets");
+  const sourceGroups: { key: string; label: string; sourceType?: string; sections: CatalogSection[] }[] = [];
+  for (const section of sections) {
+    if (section.type !== "source") continue;
+    const key = section.source_type ?? "other";
+    let group = sourceGroups.find((g) => g.key === key);
+    if (!group) {
+      group = { key, label: sourceGroupLabel(section.source_type), sourceType: section.source_type, sections: [] };
+      sourceGroups.push(group);
+    }
+    group.sections.push(section);
+  }
   const totalCols = sections.reduce(
     (s, sec) => s + sec.items.reduce((ss, item) => ss + (item.columns?.length ?? 0), 0),
     0
@@ -378,16 +462,30 @@ export default function WarehousePage() {
                   <p className="text-[10px]">Upload datasets or connect data sources to start querying</p>
                 </div>
               ) : (
-                sections.map((section, i) => (
-                  <CatalogSectionBlock
-                    key={section.id ?? section.type + i}
-                    section={section}
-                    search={catalogSearch}
-                    workspaceId={workspaceId}
-                    onInsertSelect={insertSelect}
-                    onInsertCol={insertCol}
-                  />
-                ))
+                <>
+                  {datasetSections.map((section, i) => (
+                    <CatalogSectionBlock
+                      key={section.id ?? section.type + i}
+                      section={section}
+                      search={catalogSearch}
+                      workspaceId={workspaceId}
+                      onInsertSelect={insertSelect}
+                      onInsertCol={insertCol}
+                    />
+                  ))}
+                  {sourceGroups.map((group) => (
+                    <SourceTypeGroupBlock
+                      key={group.key}
+                      groupLabel={group.label}
+                      sourceType={group.sourceType}
+                      sections={group.sections}
+                      search={catalogSearch}
+                      workspaceId={workspaceId}
+                      onInsertSelect={insertSelect}
+                      onInsertCol={insertCol}
+                    />
+                  ))}
+                </>
               )}
             </div>
 
