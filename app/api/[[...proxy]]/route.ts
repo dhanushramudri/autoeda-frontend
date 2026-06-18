@@ -14,12 +14,12 @@ async function proxyHandler(request: NextRequest) {
     
     const backendHost = process.env.EC2_API_URL || "http://localhost:8000";
     const ec2Url = backendHost.endsWith("/api/v1") ? backendHost : `${backendHost}/api/v1`;
-    const fullUrl = `${ec2Url}${apiPath}${searchParams}`;
+    let fullUrl = `${ec2Url}${apiPath}${searchParams}`;
 
     console.log(`[Proxy] ${request.method} ${pathname}${searchParams} -> ${fullUrl}`);
 
     const headers = new Headers();
-    
+
     if (request.headers.get("authorization")) {
       headers.set("authorization", request.headers.get("authorization")!);
     }
@@ -34,11 +34,27 @@ async function proxyHandler(request: NextRequest) {
       body = await request.arrayBuffer();
     }
 
-    const response = await fetch(fullUrl, {
+
+    let response = await fetch(fullUrl, {
       method: request.method,
       headers: Object.fromEntries(headers),
       body: body ? body : undefined,
+      redirect: "manual",
     });
+
+    let redirects = 0;
+    while ([301, 302, 303, 307, 308].includes(response.status) && redirects < 5) {
+      const location = response.headers.get("location");
+      if (!location) break;
+      fullUrl = new URL(location, fullUrl).toString();
+      response = await fetch(fullUrl, {
+        method: request.method,
+        headers: Object.fromEntries(headers),
+        body: body ? body : undefined,
+        redirect: "manual",
+      });
+      redirects++;
+    }
 
 
     const text = await response.text();

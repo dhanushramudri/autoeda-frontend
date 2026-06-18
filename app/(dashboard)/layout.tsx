@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
-  const { currentWorkspaceId } = useWorkspaceStore();
+  const { currentWorkspaceId, setCurrentWorkspace } = useWorkspaceStore();
 
   // Rehydrate on mount
   useEffect(() => {
@@ -37,6 +37,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Determine which workspaceId to use for sidebar context
   const activeWorkspaceId = workspaceIdFromPath ?? currentWorkspaceId ?? undefined;
+
+  const { data: workspaces } = useQuery({
+    queryKey: queryKeys.workspaces.list(),
+    queryFn: () => workspacesApi.list().then((r) => r.data),
+    enabled: isHydrated && !!token && !activeWorkspaceId,
+  });
+
+  useEffect(() => {
+    if (!activeWorkspaceId && workspaces?.length) {
+      setCurrentWorkspace(workspaces[0].id);
+    }
+  }, [activeWorkspaceId, workspaces, setCurrentWorkspace]);
 
   const { data: datasets } = useQuery({
     queryKey: queryKeys.datasets.list(activeWorkspaceId ?? ""),
