@@ -96,6 +96,45 @@ type MethodLoadingState = {
   estimatedTime: number;
 };
 
+
+const FI_LIST_FIELDS = [
+  "importances", "permutation_importances", "mutual_info",
+  "correlations", "anova", "shap_values", "stability", "interactions",
+] as const;
+
+function mergeFIResult(prev: FIResult, next: FIResult): FIResult {
+  const merged: FIResult = { ...prev, ...next };
+
+  for (const key of FI_LIST_FIELDS) {
+    if ((next[key]?.length ?? 0) === 0 && (prev[key]?.length ?? 0) > 0) {
+      (merged[key] as unknown[]) = prev[key] as unknown[];
+    }
+  }
+
+  const prevByFeature = new Map(prev.feature_meta.map((f) => [f.feature, f]));
+  merged.feature_meta = next.feature_meta.map((f) => {
+    const old = prevByFeature.get(f.feature);
+    if (!old) return f;
+    return {
+      ...f,
+      rf_importance: f.rf_importance ?? old.rf_importance,
+      mi_score: f.mi_score ?? old.mi_score,
+      correlation: f.correlation ?? old.correlation,
+      anova_f: f.anova_f ?? old.anova_f,
+      permutation_importance: f.permutation_importance ?? old.permutation_importance,
+      shap_value: f.shap_value ?? old.shap_value,
+      stability_score: f.stability_score ?? old.stability_score,
+      interaction_score: f.interaction_score ?? old.interaction_score,
+    };
+  });
+
+  merged.computed_methods = Array.from(
+    new Set([...(prev.computed_methods ?? []), ...(next.computed_methods ?? [])])
+  );
+
+  return merged;
+}
+
 type Tab = "overview" | "rankings" | "charts" | "stability" | "interactions" | "insights";
 type SortKey = "combined_rank" | "rf_importance" | "mi_score" | "correlation" | "anova_f" | "missing_pct" | "permutation_importance" | "shap_value" | "stability_score";
 type SortDir = "asc" | "desc";
@@ -1519,7 +1558,7 @@ export default function FeatureImportancePage() {
         .then(response => {
           setProgressiveData(prev => {
             if (!prev) return prev;
-            return { ...prev, ...response.data };
+            return mergeFIResult(prev, response.data as FIResult);
           });
 
           setLoadingMethods(prev =>
