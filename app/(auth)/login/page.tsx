@@ -31,8 +31,7 @@ export default function LoginPage() {
         full_name: email.split("@")[0],
       });
 
-      // Wipe any cached queries from a previous session in this tab so a
-      // different user can never briefly see the last user's workspaces/data.
+
       queryClient.clear();
       setAuth(data.user, data.access_token);
       router.push("/workspaces");
