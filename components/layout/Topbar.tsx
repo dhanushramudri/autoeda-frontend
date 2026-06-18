@@ -8,10 +8,10 @@ import { queryKeys } from "@/lib/queryKeys";
 import type { Workspace } from "@/types";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NLQueryBar } from "@/components/shared/NLQueryBar";
-import { NotificationBell } from "@/components/layout/NotificationBell";
+import { NewFeatureNudge } from "@/components/shared/NewFeatureNudge";
 
 export function Topbar() {
   const router = useRouter();
@@ -42,6 +42,8 @@ export function Topbar() {
     router.push(`/workspaces/${id}/datasets`);
     setWsOpen(false);
   };
+
+  const showNudge = pathname === "/workspaces";
 
   return (
     <header className="h-14 border-b border-gray-200 bg-white flex items-center px-6 gap-4 flex-shrink-0">
@@ -90,7 +92,56 @@ export function Topbar() {
         <NLQueryBar />
       </div>
 
-      <NotificationBell workspaceId={currentWorkspaceId ?? undefined} />
+      <div className="relative">
+        {showNudge && (
+          <style>{`
+            @keyframes icon-ping {
+              0%   { transform: scale(1);   opacity: 0.75; }
+              100% { transform: scale(2);   opacity: 0;    }
+            }
+            @keyframes icon-glow-pulse {
+              0%, 100% { box-shadow: 0 0 6px 2px rgba(124,58,237,0.30); }
+              50%       { box-shadow: 0 0 18px 6px rgba(124,58,237,0.55); }
+            }
+            .library-ping {
+              position: absolute;
+              inset: 0;
+              border-radius: 9999px;
+              border: 2px solid #A78BFA;
+              animation: icon-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+              pointer-events: none;
+            }
+            .library-ping-delay {
+              animation-delay: 0.6s;
+            }
+            .library-glow {
+              position: absolute;
+              inset: 0;
+              border-radius: 9999px;
+              animation: icon-glow-pulse 2.6s ease-in-out infinite;
+              pointer-events: none;
+            }
+          `}</style>
+        )}
+
+        <button
+          onClick={() => router.push("/library")}
+          title="Dataset Library"
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-transform hover:scale-105 relative z-10"
+          style={{ background: "linear-gradient(135deg, #7C3AED, #A78BFA)" }}
+        >
+          <BookOpen className="w-4 h-4 text-white" />
+        </button>
+
+        {showNudge && (
+          <>
+            <span className="library-ping" />
+            <span className="library-ping library-ping-delay" />
+            <span className="library-glow" />
+            <NewFeatureNudge label="Dataset Library" className="top-full right-0 mt-1" />
+          </>
+        )}
+      </div>
     </header>
   );
 }

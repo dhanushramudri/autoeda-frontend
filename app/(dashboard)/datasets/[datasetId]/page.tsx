@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { datasetsApi } from "@/lib/api";
+import { datasetsApi, docsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
@@ -17,6 +17,7 @@ import {
   MemoryStick,
   FileText,
   ArrowRight,
+  BookOpen,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { AiNarrative } from "@/components/ai/AiNarrative";
@@ -30,7 +31,6 @@ const EDA_LINKS = [
   { label: "Feature Importance", href: "feature-importance", desc: "Target-based feature ranking" },
   { label: "Time Series", href: "timeseries", desc: "Trends, seasonality, ADF test" },
   { label: "Text Analysis", href: "text", desc: "Word frequency, sentiment, n-grams" },
-  { label: "Relationship Graph", href: "graph", desc: "Column dependency force-directed graph" },
   { label: "Transform Studio", href: "transform", desc: "Clean, encode, and export your data" },
 ];
 
@@ -53,6 +53,11 @@ export default function DatasetOverviewPage() {
     queryKey: queryKeys.eda.insights(datasetId),
     queryFn: () => datasetsApi.getInsights(datasetId).then((r) => r.data),
     enabled: dataset?.status === "ready",
+  });
+
+  const { data: relatedArticles } = useQuery({
+    queryKey: queryKeys.docs.forDataset(datasetId),
+    queryFn: () => docsApi.articlesForDataset(datasetId).then((r) => r.data),
   });
 
   if (isLoading) return <PageSpinner />;
@@ -131,6 +136,40 @@ export default function DatasetOverviewPage() {
         </div>
       )}
 
+
+      {/* Related documentation */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-brand" /> Related Documentation
+          </h2>
+          <button onClick={() => router.push("/library")} className="text-xs text-brand hover:text-[#2a0d8a] font-medium">
+            Browse Dataset Library
+          </button>
+        </div>
+        {!relatedArticles || relatedArticles.length === 0 ? (
+          <p className="text-xs text-gray-400">
+            No documentation linked to this dataset yet. Add an article in the{" "}
+            <button onClick={() => router.push("/library")} className="text-brand hover:underline">
+              Dataset Library
+            </button>{" "}
+            describing what it's for.
+          </p>
+        ) : (
+          <div className="space-y-1.5">
+            {relatedArticles.map((a: { id: number; title: string; summary?: string | null }) => (
+              <button
+                key={a.id}
+                onClick={() => router.push(`/library/articles/${a.id}`)}
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 transition flex items-center justify-between gap-2"
+              >
+                <span className="text-xs font-medium text-gray-700 truncate">{a.title}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* EDA navigation grid */}
       <div>

@@ -401,3 +401,30 @@ export const feedbackApi = {
   updateStatus: (id: number, status: string) =>
     api.patch(`/feedback/${id}`, { status }),
 };
+
+// Dataset Library (doc hub)
+export const docsApi = {
+  listCategories: () => api.get("/doc-categories"),
+  createCategory: (name: string, description?: string) =>
+    api.post("/doc-categories", { name, description }),
+  deleteCategory: (id: number) => api.delete(`/doc-categories/${id}`),
+  listArticles: (categoryId: number) => api.get(`/doc-categories/${categoryId}/articles`),
+  getArticle: (articleId: number) => api.get(`/doc-articles/${articleId}`),
+  createArticle: (data: { category_id: number; title: string; summary?: string; content?: string; dataset_ids?: number[] }) =>
+    api.post("/doc-articles", data),
+  updateArticle: (articleId: number, data: Partial<{ category_id: number; title: string; summary: string; content: string; dataset_ids: number[] }>) =>
+    api.patch(`/doc-articles/${articleId}`, data),
+  deleteArticle: (articleId: number) => api.delete(`/doc-articles/${articleId}`),
+  uploadAttachment: (articleId: number, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return api.post(`/doc-articles/${articleId}/attachments`, form, {
+      headers: { "Content-Type": undefined },
+    });
+  },
+  downloadAttachment: (attachmentId: number) =>
+    api.get(`/doc-attachments/${attachmentId}/download`, { responseType: "blob" }),
+  deleteAttachment: (attachmentId: number) => api.delete(`/doc-attachments/${attachmentId}`),
+  searchDatasets: (q: string) => api.get("/doc-dataset-search", { params: { q } }),
+  articlesForDataset: (datasetId: string) => api.get(`/datasets/${datasetId}/doc-articles`),
+};
