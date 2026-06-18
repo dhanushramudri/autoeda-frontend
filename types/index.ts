@@ -429,13 +429,6 @@ export interface RuleResult extends QualityRule {
   sample_failing_rows: Record<string, unknown>[];
 }
 
-// -- Pivot ---------------------------------------------------------------------
-export interface PivotResult {
-  index: string[];
-  columns: string[];
-  data: number[][];
-}
-
 // -- Saved Chart ---------------------------------------------------------------
 export interface SavedChart {
   id: number;

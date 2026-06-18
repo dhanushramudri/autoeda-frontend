@@ -54,7 +54,6 @@ const DATASET_GROUPS: NavGroup[] = [
       { label: "Transform Studio", href: "/transform", icon: Wand2 },
       { label: "SQL Editor",       href: "/sql",       icon: Code2 },
       { label: "Chart Builder",    href: "/charts",    icon: PieChart },
-      { label: "Pivot Table",      href: "/pivot",     icon: Layers },
     ],
   },
   {

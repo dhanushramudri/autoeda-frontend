@@ -51,9 +51,6 @@ export const queryKeys = {
   rules: {
     results: (datasetId: string) => ["rules", "results", datasetId] as const,
   },
-  pivot: {
-    get: (datasetId: string, params: string) => ["pivot", datasetId, params] as const,
-  },
   charts: {
     saved: (datasetId: string) => ["charts", "saved", datasetId] as const,
   },
