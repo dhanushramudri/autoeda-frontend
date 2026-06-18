@@ -17,7 +17,6 @@ const NAV_ITEMS = [
   { label: "Feature Importance",href: "/feature-importance",id: "feature-importance" },
   { label: "Time Series",       href: "/timeseries",        id: "timeseries" },
   { label: "Text",              href: "/text",              id: "text" },
-  { label: "Graph",             href: "/graph",             id: "graph" },
   { label: "Hypotheses",        href: "/hypotheses",        id: "hypotheses" },
   { label: "Transform",         href: "/transform",         id: "transform" },
   { label: "SQL",               href: "/sql",               id: "sql" },

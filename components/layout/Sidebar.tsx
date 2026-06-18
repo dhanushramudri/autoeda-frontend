@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Database, BarChart2, GitBranch,
   Sliders, ChevronDown, LogOut, Settings, Users,
   FileSearch, TrendingUp, AlertTriangle, Layers,
-  Type, Network, Wand2, Plug, Warehouse, ShieldCheck,
+  Type, Wand2, Plug, Warehouse, ShieldCheck,
   Code2, PieChart, ChevronLeft, MessageSquarePlus,
   HelpCircle, ChevronUp,
 } from "lucide-react";
@@ -46,7 +46,6 @@ const DATASET_GROUPS: NavGroup[] = [
       { label: "Feature Importance",  href: "/feature-importance", icon: TrendingUp },
       { label: "Time Series",         href: "/timeseries",         icon: TrendingUp },
       { label: "Text Analysis",       href: "/text",               icon: Type },
-      { label: "Relationship Graph",  href: "/graph",              icon: Network },
     ],
   },
   {
