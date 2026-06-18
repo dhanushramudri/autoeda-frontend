@@ -75,4 +75,10 @@ export const queryKeys = {
     detail: (workspaceId: string, sourceId: number) => ["sources", workspaceId, sourceId] as const,
     schema: (workspaceId: string, sourceId: number) => ["source-schema", workspaceId, sourceId] as const,
   },
+  docs: {
+    categories: () => ["docs", "categories"] as const,
+    articles: (categoryId: number) => ["docs", "articles", categoryId] as const,
+    article: (articleId: number) => ["docs", "article", articleId] as const,
+    forDataset: (datasetId: string) => ["docs", "for-dataset", datasetId] as const,
+  },
 };
