@@ -39,6 +39,7 @@ function formatMessage(evt: Record<string, unknown>): string {
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
 const MAX_NOTIFS = 50;
+const REALTIME_ENABLED = false;
 
 export function useNotifications(workspaceId?: string) {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -47,7 +48,7 @@ export function useNotifications(workspaceId?: string) {
   const retryRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const connect = useCallback(() => {
-    if (!workspaceId) return;
+    if (!REALTIME_ENABLED || !workspaceId) return;
     const token = sessionStorage.getItem("access_token");
     if (!token) return;
 

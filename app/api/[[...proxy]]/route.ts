@@ -40,8 +40,18 @@ async function proxyHandler(request: NextRequest) {
       body: body ? body : undefined,
     });
 
-    const data = await response.json();
-    return NextResponse.json(data, { status: response.status });
+
+    const text = await response.text();
+    if (!text) {
+      return new NextResponse(null, { status: response.status });
+    }
+
+    try {
+      const data = JSON.parse(text);
+      return NextResponse.json(data, { status: response.status });
+    } catch {
+      return new NextResponse(text, { status: response.status });
+    }
   } catch (error) {
     console.error("[Proxy Error]", error);
     return NextResponse.json(
