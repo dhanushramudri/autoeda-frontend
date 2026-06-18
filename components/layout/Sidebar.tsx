@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/authStore";
 import {
   LayoutDashboard, Database, BarChart2, GitBranch,
@@ -206,9 +207,10 @@ interface SidebarProps {
 
 export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: SidebarProps) {
   const pathname  = usePathname();
-  const router    = useRouter();
-  const user      = useAuthStore((s) => s.user);
-  const clearAuth = useAuthStore((s) => s.clearAuth);
+  const router      = useRouter();
+  const queryClient = useQueryClient();
+  const user        = useAuthStore((s) => s.user);
+  const clearAuth   = useAuthStore((s) => s.clearAuth);
   const { startTour } = useTour();
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -228,6 +230,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
 
   const handleLogout = () => {
     clearAuth();
+    queryClient.clear();
     router.push("/login");
   };
 

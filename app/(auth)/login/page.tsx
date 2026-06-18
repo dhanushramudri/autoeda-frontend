@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { authApi } from "@/lib/api";
 import type { AxiosError } from "axios";
 import type { ApiError } from "@/types";
@@ -9,6 +10,7 @@ import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const setAuth = useAuthStore((s) => s.setAuth);
 
   const [email, setEmail] = useState("");
@@ -29,6 +31,9 @@ export default function LoginPage() {
         full_name: email.split("@")[0],
       });
 
+      // Wipe any cached queries from a previous session in this tab so a
+      // different user can never briefly see the last user's workspaces/data.
+      queryClient.clear();
       setAuth(data.user, data.access_token);
       router.push("/workspaces");
     } catch (err) {
