@@ -18,7 +18,6 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface TextResult {
   column: string;
@@ -65,7 +64,6 @@ interface TextResult {
   error?: string | null;
 }
 
-// ── Small helpers ─────────────────────────────────────────────────────────────
 
 const LEVEL_CFG = {
   danger: { cls: "bg-red-50 border-red-200 text-red-800", icon: <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" /> },
@@ -132,7 +130,6 @@ function NgramChips({ items, color }: { items: Array<{ ngram: string; count: num
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TextAnalysisPage() {
   const { datasetId } = useParams<{ datasetId: string }>();
@@ -156,11 +153,50 @@ export default function TextAnalysisPage() {
 
   const activeCol = searchParams.get("column") ?? textCols[0] ?? "";
 
-  const { data, isLoading } = useQuery<TextResult>({
+  const { data: rawData, isLoading } = useQuery<TextResult>({
     queryKey: queryKeys.eda.text(datasetId, activeCol),
     queryFn: () => datasetsApi.getText(datasetId, activeCol).then((r) => r.data),
     enabled: !!activeCol,
   });
+
+  const data: TextResult | undefined = rawData && {
+    ...rawData,
+    total_rows: rawData.total_rows ?? rawData.total_texts ?? 0,
+    missing_count: rawData.missing_count ?? 0,
+    missing_pct: rawData.missing_pct ?? 0,
+    empty_count: rawData.empty_count ?? 0,
+    empty_pct: rawData.empty_pct ?? 0,
+    duplicate_count: rawData.duplicate_count ?? 0,
+    duplicate_pct: rawData.duplicate_pct ?? 0,
+    top_duplicates: rawData.top_duplicates ?? [],
+    avg_char_length: rawData.avg_char_length ?? 0,
+    median_char_length: rawData.median_char_length ?? 0,
+    min_char_length: rawData.min_char_length ?? 0,
+    max_char_length: rawData.max_char_length ?? 0,
+    vocabulary_size: rawData.vocabulary_size ?? 0,
+    type_token_ratio: rawData.type_token_ratio ?? 0,
+    tfidf_keywords: rawData.tfidf_keywords ?? [],
+    word_freq: rawData.word_freq ?? [],
+    bigrams: rawData.bigrams ?? [],
+    trigrams: rawData.trigrams ?? [],
+    length_distribution: rawData.length_distribution ?? { bins: [], counts: [] },
+    char_length_distribution: rawData.char_length_distribution ?? { bins: [], counts: [] },
+    quality_flags: rawData.quality_flags ?? {
+      outlier_short_count: 0, outlier_short_pct: 0,
+      outlier_long_count: 0, outlier_long_pct: 0,
+      all_caps_count: 0, all_caps_pct: 0,
+      numeric_only_count: 0, numeric_only_pct: 0,
+      avg_special_char_ratio: 0,
+    },
+    pii: rawData.pii ?? {
+      emails: { count: 0, unique_count: 0, samples: [] },
+      urls: { count: 0, unique_count: 0, samples: [] },
+      phone_numbers: { count: 0, unique_count: 0, samples: [] },
+    },
+    insights: rawData.insights ?? [],
+    sampled: rawData.sampled ?? false,
+    sample_size: rawData.sample_size ?? null,
+  };
 
   const setCol = (col: string) => {
     router.replace(`/datasets/${datasetId}/text?column=${encodeURIComponent(col)}`);
