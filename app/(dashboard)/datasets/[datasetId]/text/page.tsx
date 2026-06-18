@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -8,21 +9,136 @@ import { PageSpinner } from "@/components/shared/LoadingBar";
 import { SubNav } from "@/components/layout/SubNav";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Type } from "lucide-react";
+import { AskAiButton } from "@/components/ai/AskAiButton";
+import { useAiContextStore } from "@/store/aiContextStore";
+import { WordCloud } from "@/components/charts/WordCloud";
+import { cn } from "@/lib/utils";
+import { Type, AlertTriangle, XCircle, Info } from "lucide-react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
+
+interface TextResult {
+  column: string;
+  total_rows: number;
+  total_texts: number;
+  missing_count: number;
+  missing_pct: number;
+  empty_count: number;
+  empty_pct: number;
+  duplicate_count: number;
+  duplicate_pct: number;
+  top_duplicates: Array<{ text: string; count: number }>;
+  avg_length: number;
+  median_length: number;
+  avg_char_length: number;
+  median_char_length: number;
+  min_char_length: number;
+  max_char_length: number;
+  vocabulary_size: number;
+  type_token_ratio: number;
+  word_freq: Array<{ word: string; count: number }>;
+  tfidf_keywords: Array<{ word: string; score: number }>;
+  bigrams: Array<{ ngram: string; count: number }>;
+  trigrams: Array<{ ngram: string; count: number }>;
+  sentiment_dist: { positive: number; negative: number; neutral: number };
+  language: string;
+  length_distribution: { bins: number[]; counts: number[] };
+  char_length_distribution: { bins: number[]; counts: number[] };
+  quality_flags: {
+    outlier_short_count: number; outlier_short_pct: number;
+    outlier_long_count: number; outlier_long_pct: number;
+    all_caps_count: number; all_caps_pct: number;
+    numeric_only_count: number; numeric_only_pct: number;
+    avg_special_char_ratio: number;
+  };
+  pii: {
+    emails: { count: number; unique_count: number; samples: string[] };
+    urls: { count: number; unique_count: number; samples: string[] };
+    phone_numbers: { count: number; unique_count: number; samples: string[] };
+  };
+  insights: Array<{ type: string; level: "info" | "warning" | "danger"; message: string }>;
+  sampled: boolean;
+  sample_size: number | null;
+  error?: string | null;
+}
+
+// ── Small helpers ─────────────────────────────────────────────────────────────
+
+const LEVEL_CFG = {
+  danger: { cls: "bg-red-50 border-red-200 text-red-800", icon: <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" /> },
+  warning: { cls: "bg-amber-50 border-amber-200 text-amber-800", icon: <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" /> },
+  info: { cls: "bg-blue-50 border-blue-200 text-blue-800", icon: <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" /> },
+};
+
+function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+      <p className="text-lg font-bold truncate" style={color ? { color } : undefined}>{value}</p>
+      {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
+    </div>
+  );
+}
+
+function HBarChart({ data, dataKey, nameKey, color, height = 280 }: {
+  data: Array<Record<string, unknown>>; dataKey: string; nameKey: string; color: string; height?: number;
+}) {
+  if (data.length === 0) return <p className="text-xs text-gray-400 py-6 text-center">No data</p>;
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, bottom: 4, left: 90 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+        <XAxis type="number" tick={{ fontSize: 10 }} tickLine={false} />
+        <YAxis type="category" dataKey={nameKey} tick={{ fontSize: 10, fontFamily: "monospace" }} tickLine={false} width={85} />
+        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+        <Bar dataKey={dataKey} fill={color} radius={[0, 4, 4, 0]} maxBarSize={16} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function HistogramChart({ bins, counts, color }: { bins: number[]; counts: number[]; height?: number; color: string }) {
+  if (!bins?.length || !counts?.length) return <p className="text-xs text-gray-400 py-6 text-center">No data</p>;
+  const data = counts.map((c, i) => ({
+    range: `${bins[i]}–${bins[i + 1]}`,
+    count: c,
+  }));
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <BarChart data={data} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+        <XAxis dataKey="range" tick={{ fontSize: 9 }} tickLine={false} interval={Math.ceil(data.length / 8)} />
+        <YAxis tick={{ fontSize: 10 }} tickLine={false} />
+        <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+        <Bar dataKey="count" fill={color} radius={[3, 3, 0, 0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
+function NgramChips({ items, color }: { items: Array<{ ngram: string; count: number }>; color: string }) {
+  if (items.length === 0) return <p className="text-xs text-gray-400">None found</p>;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.slice(0, 20).map((item) => (
+        <span key={item.ngram} className={cn("px-2.5 py-1 rounded-full text-xs font-medium", color)}>
+          {item.ngram} <span className="opacity-60">({item.count})</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TextAnalysisPage() {
   const { datasetId } = useParams<{ datasetId: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const { data: dataset } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
@@ -34,15 +150,13 @@ export default function TextAnalysisPage() {
     queryFn: () => datasetsApi.getProfile(datasetId).then((r) => r.data),
   });
 
-  const textCols = profile?.columns
-    .filter((c: { semantic_type: string }) =>
-      ["text", "categorical"].includes(c.semantic_type)
-    )
+  const textCols: string[] = profile?.columns
+    .filter((c: { semantic_type: string }) => ["text", "categorical"].includes(c.semantic_type))
     .map((c: { name: string }) => c.name) ?? [];
 
   const activeCol = searchParams.get("column") ?? textCols[0] ?? "";
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<TextResult>({
     queryKey: queryKeys.eda.text(datasetId, activeCol),
     queryFn: () => datasetsApi.getText(datasetId, activeCol).then((r) => r.data),
     enabled: !!activeCol,
@@ -52,11 +166,34 @@ export default function TextAnalysisPage() {
     router.replace(`/datasets/${datasetId}/text?column=${encodeURIComponent(col)}`);
   };
 
-  const wordData = Array.isArray(data?.word_freq)
-    ? [...data!.word_freq]
-        .sort((a: { word: string; count: number }, b: { word: string; count: number }) => b.count - a.count)
-        .slice(0, 20)
-    : [];
+  useEffect(() => {
+    if (!data) return;
+    setPageContext({
+      page: "text-analysis",
+      label: `Text Analysis — ${data.column}`,
+      details: {
+        column: data.column,
+        total_texts: data.total_texts,
+        missing_pct: data.missing_pct,
+        duplicate_pct: data.duplicate_pct,
+        vocabulary_size: data.vocabulary_size,
+        sentiment_dist: data.sentiment_dist,
+        pii_emails: data.pii?.emails.count,
+        pii_phones: data.pii?.phone_numbers.count,
+        insights: data.insights?.map((i) => i.message).join(" | "),
+      },
+      suggestedQuestions: [
+        "Should I be concerned about the duplicate values in this column?",
+        "What does this PII detection mean for how I should handle this data?",
+        "Why is the sentiment skewed the way it is?",
+      ],
+    });
+    return () => setPageContext(null);
+  }, [data, setPageContext]);
+
+  const sd = data?.sentiment_dist;
+  const sentimentTotal = sd ? (sd.positive + sd.negative + sd.neutral) || 1 : 1;
+  const hasPii = data?.pii && (data.pii.emails.count > 0 || data.pii.urls.count > 0 || data.pii.phone_numbers.count > 0);
 
   return (
     <>
@@ -73,7 +210,7 @@ export default function TextAnalysisPage() {
         <div className="mt-4 mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Text Analysis</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Word frequency, n-grams, sentiment, and language detection
+            Vocabulary, n-grams, sentiment, data quality, and PII detection
           </p>
         </div>
 
@@ -87,19 +224,16 @@ export default function TextAnalysisPage() {
           <div className="flex gap-6">
             {/* Column list */}
             <div className="w-48 flex-shrink-0">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">
-                Columns
-              </p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Columns</p>
               <div className="space-y-0.5">
-                {textCols.map((col: string) => (
+                {textCols.map((col) => (
                   <button
                     key={col}
                     onClick={() => setCol(col)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs transition truncate ${
-                      col === activeCol
-                        ? "bg-blue-50 text-brand font-semibold"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
+                    className={cn(
+                      "w-full text-left px-3 py-2 rounded-lg text-xs transition truncate",
+                      col === activeCol ? "bg-blue-50 text-brand font-semibold" : "text-gray-600 hover:bg-gray-50"
+                    )}
                     title={col}
                   >
                     {col}
@@ -109,96 +243,209 @@ export default function TextAnalysisPage() {
             </div>
 
             {/* Analysis */}
-            <div className="flex-1 space-y-6">
+            <div className="flex-1 space-y-6 min-w-0">
               {isLoading ? (
                 <PageSpinner />
-              ) : data ? (
+              ) : !data || data.total_texts === 0 ? (
+                <EmptyState
+                  icon={<Type className="w-12 h-12" />}
+                  title="No data"
+                  description={data?.error ?? `No usable values found in '${activeCol}'.`}
+                />
+              ) : (
                 <>
-                  {/* Sentiment */}
-                  {data.sentiment_dist && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Sentiment Distribution</h3>
-                      {(() => {
-                        const sd = data.sentiment_dist as { positive: number; negative: number; neutral: number };
-                        const total = (sd.positive ?? 0) + (sd.negative ?? 0) + (sd.neutral ?? 0) || 1;
+                  {data.sampled && (
+                    <p className="text-[10px] text-gray-400">
+                      Word/sentiment/keyword stats computed from a random sample of {data.sample_size?.toLocaleString()} rows
+                      (out of {data.total_texts.toLocaleString()}) for performance. Row-count stats (missing, empty, duplicates) reflect the full column.
+                    </p>
+                  )}
+
+                  {/* Insights */}
+                  {data.insights.length > 0 && (
+                    <div className="space-y-2">
+                      {data.insights.map((ins, i) => {
+                        const cfg = LEVEL_CFG[ins.level];
                         return (
-                          <div className="grid grid-cols-3 gap-3">
-                            {[
-                              { label: "Positive", value: sd.positive ?? 0, color: "text-emerald-600" },
-                              { label: "Neutral", value: sd.neutral ?? 0, color: "text-gray-500" },
-                              { label: "Negative", value: sd.negative ?? 0, color: "text-red-500" },
-                            ].map(({ label, value, color }) => (
-                              <div key={label} className="text-center bg-gray-50 rounded-lg p-3">
-                                <p className="text-xs text-gray-500 mb-1">{label}</p>
-                                <p className={`text-xl font-bold ${color}`}>
-                                  {((value / total) * 100).toFixed(1)}%
-                                </p>
-                                <p className="text-xs text-gray-400">{value} texts</p>
-                              </div>
-                            ))}
+                          <div key={i} className={cn("rounded-xl p-3 border flex gap-2.5", cfg.cls)}>
+                            {cfg.icon}
+                            <p className="text-xs leading-relaxed">{ins.message}</p>
                           </div>
                         );
-                      })()}
+                      })}
+                      <AskAiButton
+                        question={`For the column "${data.column}": ${data.insights.map((i) => i.message).join(" ")} What should I do about these findings?`}
+                        label="What should I do about these?"
+                        variant="chip"
+                      />
                     </div>
                   )}
 
-                  {/* Word frequency */}
-                  {wordData.length > 0 && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Top 20 Words</h3>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart
-                          data={wordData}
-                          layout="vertical"
-                          margin={{ top: 4, right: 40, bottom: 4, left: 80 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-                          <XAxis type="number" tick={{ fontSize: 10 }} tickLine={false} />
-                          <YAxis type="category" dataKey="word" tick={{ fontSize: 10 }} tickLine={false} width={75} />
-                          <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
-                          <Bar dataKey="count" fill="#3b82f6" radius={[0, 4, 4, 0]} maxBarSize={16} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  )}
+                  {/* Core stats */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <StatCard label="Total Rows" value={data.total_rows.toLocaleString()} sub={`${data.total_texts.toLocaleString()} non-null`} />
+                    <StatCard label="Missing" value={`${data.missing_pct}%`} sub={`${data.missing_count.toLocaleString()} rows`} color={data.missing_pct > 20 ? "#DC2626" : undefined} />
+                    <StatCard label="Empty / Blank" value={`${data.empty_pct}%`} sub={`${data.empty_count.toLocaleString()} rows`} color={data.empty_pct > 10 ? "#D97706" : undefined} />
+                    <StatCard label="Duplicates" value={`${data.duplicate_pct}%`} sub={`${data.duplicate_count.toLocaleString()} rows`} color={data.duplicate_pct > 30 ? "#D97706" : undefined} />
+                    <StatCard label="Vocabulary Size" value={data.vocabulary_size.toLocaleString()} sub="unique words" />
+                    <StatCard label="Type-Token Ratio" value={data.type_token_ratio} sub="vocab / total words" />
+                    <StatCard label="Avg Length" value={`${data.avg_length} words`} sub={`median ${data.median_length}`} />
+                    <StatCard label="Char Length" value={`${data.avg_char_length} avg`} sub={`min ${data.min_char_length} · max ${data.max_char_length}`} />
+                  </div>
 
-                  {/* Bigrams */}
-                  {Array.isArray(data.bigrams) && data.bigrams.length > 0 && (
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Top Bigrams</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {(data.bigrams as Array<{ ngram: string; count: number }>).slice(0, 20).map((item) => (
-                          <span
-                            key={item.ngram}
-                            className="px-2.5 py-1 bg-blue-50 text-brand rounded-full text-xs font-medium"
-                          >
-                            {item.ngram} <span className="opacity-60">({item.count})</span>
-                          </span>
+                  {/* PII */}
+                  {hasPii && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <XCircle className="w-4 h-4 text-red-500" />
+                        <h3 className="text-sm font-bold text-red-800">Possible PII Detected</h3>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {([
+                          ["Emails", data.pii.emails],
+                          ["URLs", data.pii.urls],
+                          ["Phone Numbers", data.pii.phone_numbers],
+                        ] as const).map(([label, stat]) => (
+                          <div key={label} className="bg-white rounded-lg p-3 border border-red-100">
+                            <p className="text-[10px] text-gray-400 mb-1">{label}</p>
+                            <p className="text-base font-bold text-red-700">{stat.count.toLocaleString()}</p>
+                            {stat.samples.length > 0 && (
+                              <p className="text-[10px] text-gray-500 font-mono truncate mt-1" title={stat.samples.join(", ")}>
+                                e.g. {stat.samples[0]}
+                              </p>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Stats */}
+                  {/* Sentiment */}
                   <div className="bg-white rounded-xl border border-gray-200 p-5">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-3">Text Statistics</h3>
+                    <h3 className="text-sm font-semibold text-gray-800 mb-3">Sentiment Distribution</h3>
                     <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { label: "Total Texts", value: data.total_texts ?? 0 },
-                        { label: "Avg Length (words)", value: (data.avg_length ?? 0).toFixed(1) },
-                        { label: "Median Length (words)", value: (data.median_length ?? 0).toFixed(1) },
-                        { label: "Language", value: data.language ?? "--" },
-                        { label: "Unique Words", value: wordData.length },
-                      ].map(({ label, value }) => (
-                        <div key={label} className="bg-gray-50 rounded-lg p-3">
-                          <p className="text-[10px] text-gray-400 mb-0.5">{label}</p>
-                          <p className="text-sm font-semibold text-gray-800">{String(value)}</p>
+                      {([
+                        ["Positive", sd?.positive ?? 0, "text-emerald-600"],
+                        ["Neutral", sd?.neutral ?? 0, "text-gray-500"],
+                        ["Negative", sd?.negative ?? 0, "text-red-500"],
+                      ] as const).map(([label, value, color]) => (
+                        <div key={label} className="text-center bg-gray-50 rounded-lg p-3">
+                          <p className="text-xs text-gray-500 mb-1">{label}</p>
+                          <p className={cn("text-xl font-bold", color)}>{((value / sentimentTotal) * 100).toFixed(1)}%</p>
+                          <p className="text-xs text-gray-400">{value.toLocaleString()} texts</p>
                         </div>
                       ))}
                     </div>
                   </div>
+
+                  {/* Word cloud + top words */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Word Cloud</h3>
+                      {data.word_freq.length > 0 ? (
+                        <WordCloud
+                          words={data.word_freq.map((w) => ({ text: w.word, value: w.count }))}
+                          width={500}
+                          height={260}
+                        />
+                      ) : (
+                        <p className="text-xs text-gray-400 py-10 text-center">No words found</p>
+                      )}
+                    </div>
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Top 20 Words (by frequency)</h3>
+                      <HBarChart
+                        data={[...data.word_freq].sort((a, b) => b.count - a.count).slice(0, 20)}
+                        dataKey="count" nameKey="word" color="#3b82f6"
+                      />
+                    </div>
+                  </div>
+
+                  {/* TF-IDF keywords */}
+                  <div className="bg-white rounded-xl border border-gray-200 p-5">
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="text-sm font-semibold text-gray-800">TF-IDF Keywords</h3>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mb-3">Down-weights generic words — different signal than raw frequency above</p>
+                    <HBarChart
+                      data={data.tfidf_keywords.slice(0, 20)}
+                      dataKey="score" nameKey="word" color="#7C3AED"
+                    />
+                  </div>
+
+                  {/* Bigrams + Trigrams */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Top Bigrams</h3>
+                      <NgramChips items={data.bigrams} color="bg-blue-50 text-brand" />
+                    </div>
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Top Trigrams</h3>
+                      <NgramChips items={data.trigrams} color="bg-purple-50 text-purple-700" />
+                    </div>
+                  </div>
+
+                  {/* Length distributions */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Word-Length Distribution</h3>
+                      <HistogramChart bins={data.length_distribution.bins} counts={data.length_distribution.counts} color="#0891B2" />
+                    </div>
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Character-Length Distribution</h3>
+                      <HistogramChart bins={data.char_length_distribution.bins} counts={data.char_length_distribution.counts} color="#059669" />
+                    </div>
+                  </div>
+
+                  {/* Quality flags + duplicates */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Quality Flags</h3>
+                      <div className="space-y-2 text-xs">
+                        {[
+                          ["Outlier-short values", data.quality_flags.outlier_short_count, data.quality_flags.outlier_short_pct],
+                          ["Outlier-long values", data.quality_flags.outlier_long_count, data.quality_flags.outlier_long_pct],
+                          ["ALL-CAPS values", data.quality_flags.all_caps_count, data.quality_flags.all_caps_pct],
+                          ["Numeric-only values", data.quality_flags.numeric_only_count, data.quality_flags.numeric_only_pct],
+                        ].map(([label, count, pct]) => (
+                          <div key={label as string} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-b-0">
+                            <span className="text-gray-600">{label}</span>
+                            <span className="font-mono font-semibold text-gray-800">
+                              {(count as number).toLocaleString()} <span className="text-gray-400">({pct}%)</span>
+                            </span>
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-between py-1.5">
+                          <span className="text-gray-600">Avg special-char ratio</span>
+                          <span className="font-mono font-semibold text-gray-800">{data.quality_flags.avg_special_char_ratio}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-xl border border-gray-200 p-5">
+                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Most Repeated Values</h3>
+                      {data.top_duplicates.length === 0 ? (
+                        <p className="text-xs text-gray-400">No duplicate values found.</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {data.top_duplicates.map((d, i) => (
+                            <div key={i} className="flex items-center justify-between gap-2 py-1 border-b border-gray-50 last:border-b-0">
+                              <span className="text-xs text-gray-600 truncate font-mono" title={d.text}>{d.text}</span>
+                              <span className="text-[10px] font-bold text-gray-400 flex-shrink-0">×{d.count}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Language */}
+                  <div className="bg-white rounded-xl border border-gray-200 p-5">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-1">Detected Language</h3>
+                    <p className="text-base font-mono text-gray-700">{data.language}</p>
+                  </div>
                 </>
-              ) : null}
+              )}
             </div>
           </div>
         )}
