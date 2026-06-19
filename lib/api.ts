@@ -400,6 +400,8 @@ export const feedbackApi = {
     api.post(`/feedback/${id}/comments/${commentId}/vote`, { vote_type: voteType }),
   updateStatus: (id: number, status: string) =>
     api.patch(`/feedback/${id}`, { status }),
+  update: (id: number, data: { subject?: string | null; message?: string; rating?: number | null }) =>
+    api.patch(`/feedback/${id}`, data),
 };
 
 // Dataset Library (doc hub)

@@ -390,6 +390,24 @@ function InlineReplyEditor({ replyToName, onSubmit, onCancel, isPending }: {
 
 // ── Comment editor ────────────────────────────────────────────────────────────
 
+function Btn({ title, active, onClick, children }: {
+  title: string; active?: boolean; onClick: () => void; children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      className={cn(
+        "p-1.5 rounded transition",
+        active ? "bg-gray-200 text-gray-900" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
 function CommentEditor({ onSubmit, isPending }: {
   onSubmit: (html: string) => void;
   isPending: boolean;
@@ -413,22 +431,6 @@ function CommentEditor({ onSubmit, isPending }: {
     onSubmit(editor?.getHTML() ?? "");
     editor?.commands.clearContent();
   };
-
-  const Btn = ({ title, active, onClick, children }: {
-    title: string; active?: boolean; onClick: () => void; children: React.ReactNode;
-  }) => (
-    <button
-      type="button"
-      title={title}
-      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
-      className={cn(
-        "p-1.5 rounded transition",
-        active ? "bg-gray-200 text-gray-900" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100",
-      )}
-    >
-      {children}
-    </button>
-  );
 
   return (
     <>
@@ -480,13 +482,15 @@ function CommentEditor({ onSubmit, isPending }: {
 
 // ── Detail modal ──────────────────────────────────────────────────────────────
 
-function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, onStatusChange }: {
+function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUserEmail, onStatusChange, onEdit }: {
   row: FeedbackRow;
   onClose: () => void;
   onVote: (id: number) => void;
   isAdmin: boolean;
   currentUserId: number | undefined;
+  currentUserEmail: string | undefined;
   onStatusChange: (id: number, status: string) => void;
+  onEdit: (id: number, data: { message?: string; subject?: string | null }) => void;
 }) {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"comments" | "activity">("comments");
@@ -494,6 +498,34 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, onStatusCha
   const [replyingToRootId, setReplyingToRootId] = useState<number | null>(null);
   const [viewMedia, setViewMedia] = useState<{ url: string; name: string; isVideo: boolean } | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editSubject, setEditSubject] = useState(row.subject ?? "");
+  const isOwner = !!currentUserEmail && row.user_email === currentUserEmail;
+  const canEdit = isOwner || isAdmin;
+
+  const editEditor = useEditor({
+    immediatelyRender: false,
+    extensions: [StarterKit, TiptapLink.configure({ openOnClick: false })],
+    content: row.message,
+    editorProps: {
+      attributes: {
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 pt-3 pb-1 text-sm text-gray-800",
+      },
+    },
+  });
+
+  const startEditing = () => {
+    setEditSubject(row.subject ?? "");
+    editEditor?.commands.setContent(row.message);
+    setIsEditing(true);
+  };
+
+  const saveEdit = () => {
+    const html = editEditor?.getHTML() ?? "";
+    if (editEditor?.getText().trim().length === 0) return;
+    onEdit(row.id, { message: html, subject: editSubject.trim() || null });
+    setIsEditing(false);
+  };
 
   const { data: allComments = [] } = useQuery<FeedbackComment[]>({
     queryKey: ["feedback-comments", row.id],
@@ -565,10 +597,27 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, onStatusCha
                   {STATUS_LABEL[row.status] ?? row.status}
                 </span>
               </div>
-              <h2 className="text-base font-bold text-gray-900 leading-snug">
-                {row.subject || row.message.slice(0, 80)}
-              </h2>
+              {isEditing ? (
+                <input
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                  placeholder="Subject (optional)"
+                  className="w-full text-base font-bold text-gray-900 leading-snug border-b border-gray-200 focus:border-brand outline-none pb-0.5"
+                />
+              ) : (
+                <h2 className="text-base font-bold text-gray-900 leading-snug">
+                  {row.subject || row.message.replace(/<[^>]*>/g, "").slice(0, 80)}
+                </h2>
+              )}
             </div>
+            {canEdit && !isEditing && (
+              <button
+                onClick={startEditing}
+                className="px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:text-brand hover:bg-brand/5 rounded-lg transition"
+              >
+                Edit
+              </button>
+            )}
             <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition">
               <X className="w-4 h-4" />
             </button>
@@ -580,10 +629,49 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, onStatusCha
             <div className="flex-1 flex flex-col min-w-0 border-r border-gray-100">
               {/* Message */}
               <div className="p-5 overflow-y-auto flex-shrink-0 max-h-80">
-                <div
-          className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={{ __html: row.message }}
-        />
+                {isEditing ? (
+                  <div>
+                    <div className="border border-gray-200 rounded-xl focus-within:border-brand transition">
+                      <EditorContent editor={editEditor} />
+                      <div className="flex items-center gap-1 px-3 py-2 border-t border-gray-100">
+                        <Btn title="Bold" active={editEditor?.isActive("bold")} onClick={() => editEditor?.chain().focus().toggleBold().run()}>
+                          <Bold className="w-3.5 h-3.5" />
+                        </Btn>
+                        <Btn title="Italic" active={editEditor?.isActive("italic")} onClick={() => editEditor?.chain().focus().toggleItalic().run()}>
+                          <Italic className="w-3.5 h-3.5" />
+                        </Btn>
+                        <Btn title="Bullet list" active={editEditor?.isActive("bulletList")} onClick={() => editEditor?.chain().focus().toggleBulletList().run()}>
+                          <List className="w-3.5 h-3.5" />
+                        </Btn>
+                        <Btn title="Link" active={editEditor?.isActive("link")} onClick={() => {
+                          const url = window.prompt("URL:");
+                          if (url) editEditor?.chain().focus().setLink({ href: url }).run();
+                        }}>
+                          <Link2 className="w-3.5 h-3.5" />
+                        </Btn>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-3">
+                      <button
+                        onClick={() => setIsEditing(false)}
+                        className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={saveEdit}
+                        className="px-3.5 py-1.5 bg-brand text-white text-xs font-semibold rounded-lg hover:bg-[#2a0d8a] transition"
+                      >
+                        Save changes
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: row.message }}
+                  />
+                )}
 
                 {/* Attachments */}
                 {row.attachments.length > 0 && (
@@ -1118,6 +1206,20 @@ export default function FeedbackPage() {
     },
   });
 
+  const editMutation = useMutation({
+    mutationFn: ({ id, message, subject }: { id: number; message?: string; subject?: string | null }) =>
+      feedbackApi.update(id, { message, subject }),
+    onSuccess: (res) => {
+      const updated = res.data as FeedbackRow;
+      qc.setQueryData<FeedbackRow[]>(["feedback-list"], (old) =>
+        old?.map((r) => r.id === updated.id ? { ...r, message: updated.message, subject: updated.subject } : r) ?? []
+      );
+      if (selected?.id === updated.id) {
+        setSelected((prev) => prev ? { ...prev, message: updated.message, subject: updated.subject } : prev);
+      }
+    },
+  });
+
   const rows = data ?? [];
 
   const filtered = rows
@@ -1265,7 +1367,9 @@ export default function FeedbackPage() {
           onVote={(id) => voteMutation.mutate(id)}
           isAdmin={user?.is_admin ?? false}
           currentUserId={user?.id ? Number(user.id) : undefined}
+          currentUserEmail={user?.email}
           onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
+          onEdit={(id, data) => editMutation.mutate({ id, ...data })}
         />
       )}
     </div>
