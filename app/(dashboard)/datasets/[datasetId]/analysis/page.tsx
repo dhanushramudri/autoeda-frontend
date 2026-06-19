@@ -136,15 +136,16 @@ function HistKDE({ data, col }: { data: NumericCharts["histogram_kde"]; col: str
 }
 
 function BoxPlot({ data, col }: { data: NumericCharts["box"]; col: string }) {
-  if (!data?.q1) return <Empty />;
+  if (data?.q1 == null || data?.median == null || data?.q3 == null) return <Empty />;
+  const outliers = (data.outliers ?? []).filter((v): v is number => v != null);
   return (
     <Plot
       data={[{
         type: "box",
-        y: [...(data.outliers as number[] ?? []), data.min!, data.q1!, data.median!, data.q3!, data.max!],
-        q1: [data.q1!], median: [data.median!], q3: [data.q3!],
-        lowerfence: [data.min!], upperfence: [data.max!],
-        mean: [data.mean ?? data.median!], name: col,
+        y: outliers,
+        q1: [data.q1], median: [data.median], q3: [data.q3],
+        lowerfence: [data.min ?? data.q1], upperfence: [data.max ?? data.q3],
+        mean: [data.mean ?? data.median], name: col,
         marker: { color: C.primary, outliercolor: C.danger, size: 4 },
         line: { color: C.primary }, boxpoints: "outliers", jitter: 0.4,
       } as Data]}
