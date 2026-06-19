@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
@@ -98,6 +98,7 @@ const OP_COLORS: Record<string, string> = {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function TransformStudioPage() {
   const { datasetId } = useParams<{ datasetId: string }>();
+  const queryClient = useQueryClient();
   const [ops, setOps] = useState<TransformOp[]>([]);
   const [result, setResult] = useState<{ rows: number; columns: number; errors: { op: string; error: string }[] } | null>(null);
   const [activeTab, setActiveTab] = useState<"missing" | "columns" | "clean" | "feature">("missing");
@@ -156,7 +157,15 @@ export default function TransformStudioPage() {
 
   const applyMutation = useMutation({
     mutationFn: () => datasetsApi.transform(datasetId, ops),
-    onSuccess: (res) => setResult(res.data),
+    onSuccess: (res) => {
+      setResult(res.data);
+
+      queryClient.invalidateQueries({ queryKey: ["eda"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasets.detail(datasetId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.datasets.preview(datasetId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.columnMeta.all(datasetId) });
+      queryClient.invalidateQueries({ queryKey: ["columnDetail", datasetId] });
+    },
   });
 
   useEffect(() => {
