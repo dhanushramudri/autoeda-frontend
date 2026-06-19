@@ -415,15 +415,23 @@ export const docsApi = {
   updateArticle: (articleId: number, data: Partial<{ category_id: number; title: string; summary: string; content: string; dataset_ids: number[] }>) =>
     api.patch(`/doc-articles/${articleId}`, data),
   deleteArticle: (articleId: number) => api.delete(`/doc-articles/${articleId}`),
-  uploadAttachment: (articleId: number, file: File) => {
-    const form = new FormData();
-    form.append("file", file);
-    return api.post(`/doc-articles/${articleId}/attachments`, form, {
-      headers: { "Content-Type": undefined },
+  uploadAttachment: async (articleId: number, file: File, onProgress?: (pct: number) => void) => {
+    const presign = await api.post(`/doc-articles/${articleId}/attachments/presign`, {
+      filename: file.name,
+      content_type: file.type || "application/octet-stream",
+      file_size_bytes: file.size,
     });
+    const { upload_id, upload_url } = presign.data;
+    await axios.put(upload_url, file, {
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+      onUploadProgress: onProgress
+        ? (e) => onProgress(e.total ? Math.round((e.loaded / e.total) * 100) : 0)
+        : undefined,
+    });
+    return api.post(`/doc-articles/${articleId}/attachments/confirm`, { upload_id });
   },
   downloadAttachment: (attachmentId: number) =>
-    api.get(`/doc-attachments/${attachmentId}/download`, { responseType: "blob" }),
+    api.get<{ download_url: string }>(`/doc-attachments/${attachmentId}/download`),
   deleteAttachment: (attachmentId: number) => api.delete(`/doc-attachments/${attachmentId}`),
   searchDatasets: (q: string) => api.get("/doc-dataset-search", { params: { q } }),
   articlesForDataset: (datasetId: string) => api.get(`/datasets/${datasetId}/doc-articles`),

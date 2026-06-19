@@ -56,7 +56,7 @@ interface Article {
 }
 interface DatasetSearchResult { id: number; name: string; workspace_id: number; row_count?: number | null }
 
-const MAX_ATTACHMENT_MB = 25;
+const MAX_ATTACHMENT_MB = 100;
 
 function fmtBytes(n: number): string {
   if (n < 1024) return `${n} B`;
@@ -86,6 +86,7 @@ export default function ArticleDetailPage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [attachmentError, setAttachmentError] = useState("");
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -187,8 +188,9 @@ export default function ArticleDetailPage() {
       return;
     }
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const res = await docsApi.uploadAttachment(id, file);
+      const res = await docsApi.uploadAttachment(id, file, setUploadProgress);
       // Patch the cache directly instead of refetching the whole article —
       // instant, and never touches the title/content/etc the user is editing.
       queryClient.setQueryData<Article>(queryKeys.docs.article(id), (prev) =>
@@ -199,6 +201,7 @@ export default function ArticleDetailPage() {
       setAttachmentError(detail ?? `Failed to upload "${file.name}". Please try again.`);
     } finally {
       setUploading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -207,10 +210,7 @@ export default function ArticleDetailPage() {
     setDownloadingId(att.id);
     try {
       const res = await docsApi.downloadAttachment(att.id);
-      const url = URL.createObjectURL(new Blob([res.data]));
-      const a = document.createElement("a");
-      a.href = url; a.download = att.filename; a.click();
-      URL.revokeObjectURL(url);
+      window.open(res.data.download_url, "_blank");
     } catch {
       setAttachmentError(`Failed to download "${att.filename}".`);
     } finally {
@@ -496,7 +496,7 @@ export default function ArticleDetailPage() {
             ) : (
               <Upload className="w-3.5 h-3.5" />
             )}
-            {uploading ? "Uploading..." : "Attach file"}
+            {uploading ? `Uploading${uploadProgress != null ? ` ${uploadProgress}%` : "..."}` : "Attach file"}
           </button>
           <input
             ref={fileInputRef}
