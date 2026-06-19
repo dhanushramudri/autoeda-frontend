@@ -321,7 +321,6 @@ export interface QualityScore {
   completeness: number;
   consistency: number;
   uniqueness: number;
-  validity: number;
   issues: Array<{ type: string; column: string; description: string; severity: string }>;
   suggestions: string[];
 }
