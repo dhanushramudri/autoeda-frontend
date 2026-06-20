@@ -7,7 +7,6 @@ import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { StatCard } from "@/components/shared/StatCard";
-import { InsightList } from "@/components/shared/InsightCard";
 import { QualityGauge } from "@/components/charts/QualityGauge";
 import { SubNav } from "@/components/layout/SubNav";
 import {
@@ -20,7 +19,6 @@ import {
   BookOpen,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { AiNarrative } from "@/components/ai/AiNarrative";
 
 const EDA_LINKS = [
   { label: "Column Profile", href: "profile", desc: "Types, stats, and sample values for each column" },
@@ -46,12 +44,6 @@ export default function DatasetOverviewPage() {
   const { data: quality } = useQuery({
     queryKey: queryKeys.eda.quality(datasetId),
     queryFn: () => datasetsApi.getQualityScore(datasetId).then((r) => r.data),
-    enabled: dataset?.status === "ready",
-  });
-
-  const { data: insights } = useQuery({
-    queryKey: queryKeys.eda.insights(datasetId),
-    queryFn: () => datasetsApi.getInsights(datasetId).then((r) => r.data),
     enabled: dataset?.status === "ready",
   });
 
@@ -94,9 +86,6 @@ export default function DatasetOverviewPage() {
           </div>
         </div>
       </div>
-
-      {/* AI Narrative */}
-      {/* <AiNarrative datasetId={datasetId} datasetReady={dataset.status === "ready"} /> */}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">

@@ -8,8 +8,6 @@ import { queryKeys } from "@/lib/queryKeys";
 import { SubNav } from "@/components/layout/SubNav";
 import { CorrelationHeatmap, type HeatmapMode } from "@/components/charts/CorrelationHeatmap";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { AskAiButton } from "@/components/ai/AskAiButton";
-import { useAiContextStore } from "@/store/aiContextStore";
 import { cn } from "@/lib/utils";
 import {
   Search, X, CheckSquare, Square, Hash, Tag, Shuffle,
@@ -351,11 +349,6 @@ function VifTable({
             VIF &gt; 5: moderate concern · VIF &gt; 10: high multicollinearity
           </p>
         </div>
-        <AskAiButton
-          question="Looking at these VIF scores, which columns have multicollinearity concerns and what should I do about them?"
-          label="What should I do?"
-          variant="chip"
-        />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
         {[...filtered].sort((a, b) => b.vif - a.vif).map((v) => (
@@ -401,11 +394,6 @@ function TopNumericPairs({
           Strongest Numeric Pairs{" "}
           <span className="text-gray-400 font-normal">(by |r|)</span>
         </h3>
-        <AskAiButton
-          question="Which numeric column pairs are most strongly correlated, and are any of them problematic for a machine-learning model?"
-          label="Explain pairs"
-          variant="chip"
-        />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {pairs.map((pair, i) => {
@@ -446,11 +434,6 @@ function TopCatPairs({ pairs }: { pairs: CatPair[] }) {
           Strongest Categorical Associations{" "}
           <span className="text-gray-400 font-normal">(Cramér's V)</span>
         </h3>
-        <AskAiButton
-          question="Which categorical column pairs show the strongest association by Cramér's V? Are any near-redundant?"
-          label="Explain"
-          variant="chip"
-        />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {pairs.slice(0, 12).map((pair, i) => (
@@ -490,11 +473,6 @@ function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
             η² ≥ 0.14 = large effect · ≥ 0.06 = medium · &lt; 0.06 = small
           </p>
         </div>
-        <AskAiButton
-          question="Which categorical features explain the most variance in numeric columns? Are there strong group effects?"
-          label="Explain η²"
-          variant="chip"
-        />
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {pairs.slice(0, 12).map((pair, i) => {
@@ -629,7 +607,6 @@ export default function CorrelationsPage() {
   const { datasetId }  = useParams<{ datasetId: string }>();
   const searchParams   = useSearchParams();
   const router         = useRouter();
-  const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const method = (searchParams.get("method") as Method) ?? "pearson";
   const [deselected, setDeselected]   = useState<Set<string>>(new Set());
@@ -704,33 +681,6 @@ export default function CorrelationsPage() {
     ),
     [data, visibleNumCols, visibleCatCols],
   );
-
-  useEffect(() => {
-    const top3Num   = topNumericPairs.slice(0, 3).map((p) => `${p.col1}↔${p.col2}: ${p.correlation.toFixed(2)}`).join(", ");
-    const top3Mixed = topMixedPairs.slice(0, 3).map((p) => `${p.cat_col}→${p.num_col}: η²=${p.eta_sq?.toFixed(2)}`).join(", ");
-    setPageContext({
-      page:  "correlations",
-      label: `Correlations (${method})`,
-      details: {
-        method,
-        view:             heatmapMode,
-        numeric_cols:     visibleNumCols.length,
-        categorical_cols: visibleCatCols.length,
-        total_cols:       allCols.length,
-        top_numeric_pairs: top3Num   || "none",
-        top_mixed_pairs:   top3Mixed || "none",
-      },
-      suggestedQuestions: [
-        "Which columns are most strongly correlated?",
-        "Are any correlations problematic for modeling?",
-        "Which categorical features have the most group-level variance?",
-        "What do the VIF scores indicate?",
-        "Are there near-redundant categorical columns?",
-      ],
-    });
-    return () => setPageContext(null);
-  }, [method, heatmapMode, topNumericPairs, topMixedPairs,
-      visibleNumCols.length, visibleCatCols.length, allCols.length, setPageContext]);
 
   // ── Sidebar handlers ───────────────────────────────────────────────────────
   const toggleCol  = useCallback((col: string) => {

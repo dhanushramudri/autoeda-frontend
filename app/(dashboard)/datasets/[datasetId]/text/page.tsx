@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -9,8 +8,6 @@ import { PageSpinner } from "@/components/shared/LoadingBar";
 import { SubNav } from "@/components/layout/SubNav";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { AskAiButton } from "@/components/ai/AskAiButton";
-import { useAiContextStore } from "@/store/aiContextStore";
 import { WordCloud } from "@/components/charts/WordCloud";
 import { cn } from "@/lib/utils";
 import { Type, AlertTriangle, XCircle, Info } from "lucide-react";
@@ -135,7 +132,6 @@ export default function TextAnalysisPage() {
   const { datasetId } = useParams<{ datasetId: string }>();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const { data: dataset } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
@@ -202,30 +198,6 @@ export default function TextAnalysisPage() {
     router.replace(`/datasets/${datasetId}/text?column=${encodeURIComponent(col)}`);
   };
 
-  useEffect(() => {
-    if (!data) return;
-    setPageContext({
-      page: "text-analysis",
-      label: `Text Analysis — ${data.column}`,
-      details: {
-        column: data.column,
-        total_texts: data.total_texts,
-        missing_pct: data.missing_pct,
-        duplicate_pct: data.duplicate_pct,
-        vocabulary_size: data.vocabulary_size,
-        sentiment_dist: data.sentiment_dist,
-        pii_emails: data.pii?.emails.count,
-        pii_phones: data.pii?.phone_numbers.count,
-        insights: data.insights?.map((i) => i.message).join(" | "),
-      },
-      suggestedQuestions: [
-        "Should I be concerned about the duplicate values in this column?",
-        "What does this PII detection mean for how I should handle this data?",
-        "Why is the sentiment skewed the way it is?",
-      ],
-    });
-    return () => setPageContext(null);
-  }, [data, setPageContext]);
 
   const sd = data?.sentiment_dist;
   const sentimentTotal = sd ? (sd.positive + sd.negative + sd.neutral) || 1 : 1;
@@ -309,11 +281,6 @@ export default function TextAnalysisPage() {
                           </div>
                         );
                       })}
-                      <AskAiButton
-                        question={`For the column "${data.column}": ${data.insights.map((i) => i.message).join(" ")} What should I do about these findings?`}
-                        label="What should I do about these?"
-                        variant="chip"
-                      />
                     </div>
                   )}
 

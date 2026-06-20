@@ -229,8 +229,6 @@ export const datasetsApi = {
     api.get(`/datasets/${datasetId}/text`, { params: { column } }),
   getQualityScore: (datasetId: string) =>
     api.get(`/datasets/${datasetId}/quality-score`),
-  getInsights: (datasetId: string) =>
-    api.get(`/datasets/${datasetId}/insights`),
   transformPreview: (datasetId: string, operations: unknown[]) =>
     api.post(`/datasets/${datasetId}/transform/preview`, { operations }),
   transformApply: (datasetId: string, operations: unknown[]) =>
@@ -238,9 +236,6 @@ export const datasetsApi = {
   transform: (datasetId: string, ops: unknown[]) =>
     api.post(`/datasets/${datasetId}/transform`, { operations: ops }),
   export: (datasetId: string) => api.get(`/datasets/${datasetId}/export`, { responseType: "blob" }),
-  // NL Query
-  nlQuery: (datasetId: string, query: string) =>
-    api.post(`/datasets/${datasetId}/nl-query`, { query }),
   // Filter Preview
   filterPreview: (datasetId: string, filters: unknown[], limit = 100) =>
     api.post(`/datasets/${datasetId}/filter-preview`, { filters, limit }),
@@ -296,16 +291,8 @@ export const datasetsApi = {
   getScatter3d: (datasetId: string, x: string, y: string, z: string) =>
     api.get(`/datasets/${datasetId}/scatter3d`, { params: { x, y, z } }),
   // AI features
-  getAiNarrative: (datasetId: string) =>
-    api.get(`/datasets/${datasetId}/ai/narrative`),
-  aiChat: (datasetId: string, message: string, history: { role: string; content: string }[], pageContext?: Record<string, unknown>) =>
-    api.post(`/datasets/${datasetId}/ai/chat`, { message, history, page_context: pageContext ?? null }),
-  getAiTransformSuggestions: (datasetId: string) =>
-    api.get(`/datasets/${datasetId}/ai/transform-suggestions`),
   nlTransform: (datasetId: string, prompt: string) =>
     api.post(`/datasets/${datasetId}/ai/nl-transform`, { prompt }),
-  getHypotheses: (datasetId: string) =>
-    api.get(`/datasets/${datasetId}/ai/hypotheses`),
   // SQL Editor
   sqlExecute: (datasetId: string, sql: string, limit = 1000) =>
     api.post(`/datasets/${datasetId}/sql/execute`, { sql, limit }),
@@ -313,9 +300,6 @@ export const datasetsApi = {
     api.post(`/datasets/${datasetId}/sql/explain`, { sql }),
   sqlSchema: (datasetId: string) =>
     api.get(`/datasets/${datasetId}/sql/schema`),
-  // Assumptions / Validation
-  validateAssumption: (datasetId: string, assumption: string, source: string = "user") =>
-    api.post(`/datasets/${datasetId}/assumptions/validate`, { assumption, source }),
 };
 
 // Workspaces extra
@@ -437,4 +421,103 @@ export const docsApi = {
   deleteAttachment: (attachmentId: number) => api.delete(`/doc-attachments/${attachmentId}`),
   searchDatasets: (q: string) => api.get("/doc-dataset-search", { params: { q } }),
   articlesForDataset: (datasetId: string) => api.get(`/datasets/${datasetId}/doc-articles`),
+};
+
+// Scout (AI data analyst agent)
+export const scoutApi = {
+  listConversations: (workspaceId: string) => api.get(`/workspaces/${workspaceId}/scout/conversations`),
+  createConversation: (workspaceId: string) => api.post(`/workspaces/${workspaceId}/scout/conversations`, {}),
+  deleteConversation: (workspaceId: string, conversationId: number) =>
+    api.delete(`/workspaces/${workspaceId}/scout/conversations/${conversationId}`),
+  getMessages: (workspaceId: string, conversationId: number) =>
+    api.get(`/workspaces/${workspaceId}/scout/conversations/${conversationId}/messages`),
+  sendMessage: (workspaceId: string, conversationId: number, data: { message: string; mode: "agent" | "chat" }) =>
+    api.post(`/workspaces/${workspaceId}/scout/conversations/${conversationId}/messages`, data),
+  getSuggestions: (workspaceId: string) => api.get(`/workspaces/${workspaceId}/scout/suggestions`),
+  /**
+   * SSE variant of sendMessage — yields progress events as they arrive
+   * instead of waiting for the full response. Uses fetch() directly since
+   * axios doesn't expose a readable stream for the response body.
+   */
+  streamMessage: async function* (
+    workspaceId: string,
+    conversationId: number,
+    data: { message: string; mode: "agent" | "chat" }
+  ): AsyncGenerator<Record<string, unknown>> {
+    const token = typeof window !== "undefined" ? sessionStorage.getItem("access_token") : null;
+    const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/scout/conversations/${conversationId}/messages/stream`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+    if (!res.ok || !res.body) {
+      throw new Error(`Scout stream failed: ${res.status}`);
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const chunks = buffer.split("\n\n");
+      buffer = chunks.pop() ?? "";
+      for (const chunk of chunks) {
+        const line = chunk.split("\n").find((l) => l.startsWith("data: "));
+        if (line) yield JSON.parse(line.slice(6));
+      }
+    }
+  },
+};
+
+async function* streamSSE(path: string, body: unknown): AsyncGenerator<Record<string, unknown>> {
+  const token = typeof window !== "undefined" ? sessionStorage.getItem("access_token") : null;
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+  if (!res.ok || !res.body) {
+    throw new Error(`Stream failed: ${res.status}`);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const chunks = buffer.split("\n\n");
+    buffer = chunks.pop() ?? "";
+    for (const chunk of chunks) {
+      const line = chunk.split("\n").find((l) => l.startsWith("data: "));
+      if (line) yield JSON.parse(line.slice(6));
+    }
+  }
+}
+
+// Hypotheses (workspace-level, agentic generation + validation via Scout's tools)
+export const hypothesesApi = {
+  list: (workspaceId: string, params?: { dataset_id?: string; status?: string }) =>
+    api.get(`/workspaces/${workspaceId}/hypotheses`, { params }),
+  create: (workspaceId: string, data: { statement: string; dataset_id?: string }) =>
+    api.post(`/workspaces/${workspaceId}/hypotheses`, data),
+  delete: (workspaceId: string, hypothesisId: number) =>
+    api.delete(`/workspaces/${workspaceId}/hypotheses/${hypothesisId}`),
+  generate: (workspaceId: string, data: { dataset_id?: string; count?: number }) =>
+    api.post(`/workspaces/${workspaceId}/hypotheses/generate`, data),
+  validate: (workspaceId: string, hypothesisId: number) =>
+    api.post(`/workspaces/${workspaceId}/hypotheses/${hypothesisId}/validate`),
+  streamGenerate: (workspaceId: string, data: { dataset_id?: string; count?: number }) =>
+    streamSSE(`/workspaces/${workspaceId}/hypotheses/generate/stream`, data),
+  streamValidate: (workspaceId: string, hypothesisId: number) =>
+    streamSSE(`/workspaces/${workspaceId}/hypotheses/${hypothesisId}/validate/stream`, {}),
 };

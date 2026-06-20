@@ -98,7 +98,6 @@ export interface ProfileResult {
   sampled: boolean;
   sample_size: number;
   columns: ColumnProfile[];
-  insights?: InsightCard[];
 }
 
 export interface MissingColumnStats {
@@ -345,13 +344,6 @@ export interface JobStatus {
 export interface ApiError {
   detail: string;
   code?: string;
-}
-
-// -- NL Query ------------------------------------------------------------------
-export interface NLQueryResult {
-  action: "navigate" | "transform" | "filter" | "unknown";
-  params: Record<string, string | number | boolean>;
-  message: string;
 }
 
 // -- Pipeline ------------------------------------------------------------------
@@ -689,4 +681,59 @@ export interface WorkspaceAnalytics {
   trends: TrendPoint[];
   worst_quality: DatasetSummary | null;
   most_missing: DatasetSummary | null;
+}
+
+// -- Scout (AI data analyst agent) ----------------------------------------------
+export interface ScoutToolCall {
+  tool: string;
+  arguments: Record<string, unknown>;
+  result: Record<string, unknown>;
+}
+
+export interface ScoutMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  mode: "agent" | "chat" | null;
+  tool_trace: ScoutToolCall[];
+  created_at: string;
+}
+
+export interface ScoutThread {
+  conversation_id: number;
+  messages: ScoutMessage[];
+}
+
+export interface ScoutConversation {
+  id: number;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScoutSuggestion {
+  label: string;
+}
+
+// -- Hypotheses (workspace-level, agentic generation + validation) -------------
+export type HypothesisStatus = "pending" | "validating" | "supported" | "refuted" | "inconclusive" | "error";
+
+export interface Hypothesis {
+  id: number;
+  workspace_id: number;
+  dataset_id: number | null;
+  origin: "ai" | "user";
+  title: string | null;
+  statement: string;
+  category: string | null;
+  status: HypothesisStatus;
+  verdict: string | null;
+  evidence_summary: string | null;
+  confidence: "high" | "medium" | "low" | null;
+  severity: "info" | "warning" | "danger" | null;
+  columns: string[];
+  tool_trace: ScoutToolCall[];
+  created_at: string;
+  updated_at: string;
+  validated_at: string | null;
 }

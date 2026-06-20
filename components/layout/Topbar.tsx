@@ -10,7 +10,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NLQueryBar } from "@/components/shared/NLQueryBar";
 import { NewFeatureNudge } from "@/components/shared/NewFeatureNudge";
 
 export function Topbar() {
@@ -88,9 +87,7 @@ export function Topbar() {
         )}
       </div>
 
-      <div className="flex-1 flex justify-center">
-        <NLQueryBar />
-      </div>
+      <div className="flex-1" />
 
       <div className="relative">
         {showNudge && (

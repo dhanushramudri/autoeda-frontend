@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { QualityGauge } from "@/components/charts/QualityGauge";
-import { InsightList } from "@/components/shared/InsightCard";
 import { StatCard } from "@/components/shared/StatCard";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -17,8 +16,7 @@ import {
   AlertTriangle, Zap, Download, RefreshCw,
   ChevronRight, CheckCircle
 } from "lucide-react";
-import type { ColumnProfile, QualityScore, InsightCard } from "@/types";
-import { useAiContextStore } from "@/store/aiContextStore";
+import type { ColumnProfile, QualityScore } from "@/types";
 
 const TYPE_COLORS: Record<string, string> = {
   numeric: "bg-blue-100 text-brand",
@@ -102,7 +100,6 @@ export default function DatasetOverviewPage() {
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [searchCol, setSearchCol] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const { data: dataset, isLoading: datasetLoading } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
@@ -121,38 +118,6 @@ export default function DatasetOverviewPage() {
     queryFn: () => datasetsApi.getProfile(datasetId).then((r) => r.data),
     enabled: !!datasetId && dataset?.status === "ready",
   });
-
-  const { data: insights } = useQuery({
-    queryKey: queryKeys.eda.insights(datasetId),
-    queryFn: () => datasetsApi.getInsights(datasetId).then((r) => r.data as InsightCard[]),
-    enabled: !!datasetId && dataset?.status === "ready",
-  });
-
-
-  useEffect(() => {
-    if (!quality && !profile) return;
-    setPageContext({
-      page: "overview",
-      label: "Overview",
-      details: {
-        quality_score: quality?.overall ?? "?",
-        missing_pct: profile
-          ? (
-              (profile.columns ?? []).reduce((s: number, c: ColumnProfile) => s + (c.missing_count ?? 0), 0) /
-              Math.max(1, (profile.total_rows ?? 1) * (profile.total_columns ?? 1)) * 100
-            ).toFixed(1) + "%"
-          : "?",
-        duplicate_pct: profile?.duplicate_pct != null ? profile.duplicate_pct.toFixed(1) + "%" : "?",
-        top_issue: quality?.issues?.[0]?.description ?? "none",
-      },
-      suggestedQuestions: [
-        "What should I fix first in this dataset?",
-        "Is this dataset ready for machine learning?",
-        "Which columns need the most attention?",
-      ],
-    });
-    return () => setPageContext(null);
-  }, [quality, profile, setPageContext]);
 
   const isLoading = datasetLoading || qualityLoading || profileLoading;
   if (isLoading) return <><SubNav datasetId={datasetId} /><PageSpinner /></>;
@@ -276,14 +241,6 @@ export default function DatasetOverviewPage() {
             )}
           </div>
         </div>
-
-        {/* Insights */}
-        {insights && insights.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3">Smart Insights</h2>
-            <InsightList insights={insights} />
-          </div>
-        )}
 
         {/* Column Summary Cards */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">

@@ -7,14 +7,12 @@ import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { InsightList } from "@/components/shared/InsightCard";
 import { SubNav } from "@/components/layout/SubNav";
 import { ColumnDetailPanel } from "@/components/shared/ColumnDetailPanel";
 import { MissingHeatmap } from "@/components/charts/MissingHeatmap";
 import { DistributionChart } from "@/components/charts/DistributionChart";
 import { StatCard } from "@/components/shared/StatCard";
 import { DataTable } from "@/components/shared/DataTable";
-import { AskAiButton } from "@/components/ai/AskAiButton";
 import { cn } from "@/lib/utils";
 import {
   Download, Tag, X, Search, ChevronUp, ChevronDown,
@@ -184,8 +182,6 @@ function OverviewTab({ data, allMeta, onSelectCol, onToggleTag, onExport }: Over
           <p className="text-[10px] text-gray-400 mt-0.5">{(data.duplicate_pct ?? 0).toFixed(1)}% duplicates</p>
         </div>
       </div>
-
-      {data.insights && data.insights.length > 0 && <InsightList insights={data.insights} />}
 
       {/* Toolbar */}
       <div className="flex items-center gap-2 flex-wrap">
@@ -384,11 +380,6 @@ function MissingTab({ datasetId, totalColumns }: { datasetId: string; totalColum
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-800">Column Breakdown</h3>
-              <AskAiButton
-                question="Looking at these missing values, which columns should I drop vs impute? What's the best strategy?"
-                label="How to fix?"
-                variant="chip"
-              />
             </div>
             <DataTable
               columns={[
@@ -606,14 +597,6 @@ function OutliersTab({ datasetId, numericCols }: { datasetId: string; numericCol
             ))}
           </select>
         )}
-
-        <div className="ml-auto">
-          <AskAiButton
-            question={`I'm looking at outlier detection using ${OUTLIER_LABELS[method]}. Should I remove, cap, or keep these outliers?`}
-            label="What should I do?"
-            variant="chip"
-          />
-        </div>
       </div>
 
       {isLoading ? (

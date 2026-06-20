@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -8,7 +8,6 @@ import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { SubNav } from "@/components/layout/SubNav";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { useAiContextStore } from "@/store/aiContextStore";
 import {
   Wand2, Download, Trash2, Plus, CheckCircle, Sparkles,
   Loader2, ChevronDown, ChevronRight, GripVertical,
@@ -103,7 +102,6 @@ export default function TransformStudioPage() {
   const [result, setResult] = useState<{ rows: number; columns: number; errors: { op: string; error: string }[] } | null>(null);
   const [activeTab, setActiveTab] = useState<"missing" | "columns" | "clean" | "feature">("missing");
   const [nlOpen, setNlOpen] = useState(false);
-  const setPageContext = useAiContextStore((s) => s.setPageContext);
 
   const { data: dataset } = useQuery({
     queryKey: queryKeys.datasets.detail(datasetId),
@@ -168,19 +166,6 @@ export default function TransformStudioPage() {
     },
   });
 
-  useEffect(() => {
-    setPageContext({
-      page: "transform",
-      label: "Transform Studio",
-      details: { pipeline_steps: ops.length, dataset: dataset?.name ?? "" },
-      suggestedQuestions: [
-        "What transforms should I apply before modelling?",
-        "Which columns should I encode for machine learning?",
-        "How should I handle skewed numeric columns?",
-      ],
-    });
-    return () => setPageContext(null);
-  }, [ops.length, dataset?.name, setPageContext]);
 
 
   if (isLoading) return <><SubNav datasetId={datasetId} /><PageSpinner /></>;

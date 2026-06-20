@@ -11,7 +11,7 @@ import {
   FileSearch, TrendingUp, AlertTriangle, Layers,
   Type, Wand2, Plug, Warehouse, ShieldCheck,
   Code2, PieChart, ChevronLeft, MessageSquarePlus,
-  HelpCircle, ChevronUp,
+  HelpCircle, ChevronUp, Compass, FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dataset } from "@/types";
@@ -66,6 +66,8 @@ const DATASET_GROUPS: NavGroup[] = [
 ];
 
 const WORKSPACE_LINKS = [
+  { label: "Scout",            href: "/scout",        icon: Compass },
+  { label: "Hypotheses",       href: "/hypotheses",   icon: FlaskConical },
   { label: "Warehouse",        href: "/warehouse",    icon: Warehouse },
   { label: "Join Builder",     href: "/join-builder", icon: Sliders },
   { label: "Data Sources",     href: "/sources",      icon: Plug },
@@ -494,6 +496,14 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
                     >
                       <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                       {sidebarOpen && <span>{link.label}</span>}
+                      {sidebarOpen && link.label === "Scout" && (
+                        <span
+                          className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full flex-shrink-0"
+                          style={{ color: "#ff6196", backgroundColor: "rgba(255, 97, 150, 0.12)" }}
+                        >
+                          Beta
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

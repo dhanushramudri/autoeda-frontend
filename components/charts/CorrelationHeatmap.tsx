@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import type { CorrelationResult } from "@/types";
-import { AskAiButton } from "@/components/ai/AskAiButton";
 import { cn } from "@/lib/utils";
 
 
@@ -346,11 +345,7 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
     const numMatrix = extractNumericMatrix(data, numCols);
     return (
       <div className="space-y-3">
-        <HeatmapHeader
-          label={`${numCols.length} columns · ${numCols.length * numCols.length} cells`}
-          askQuestion="Explain the top correlations in this heatmap. Which pairs are strongly correlated and could cause multicollinearity?"
-          askLabel="Explain correlations"
-        />
+        <HeatmapHeader label={`${numCols.length} columns · ${numCols.length * numCols.length} cells`} />
         <HeatmapGrid rowLabels={numCols} colLabels={numCols} values={numMatrix} mode="numeric" isDiag />
         <Legend mode="numeric" />
       </div>
@@ -364,11 +359,7 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
     const cramersMatrix = extractCramersMatrix(data, catCols);
     return (
       <div className="space-y-3">
-        <HeatmapHeader
-          label={`${catCols.length} categorical columns · bias-corrected`}
-          askQuestion="Looking at the Cramér's V matrix, which categorical columns are strongly associated? Should any be treated as near-duplicates?"
-          askLabel="Explain associations"
-        />
+        <HeatmapHeader label={`${catCols.length} categorical columns · bias-corrected`} />
         <HeatmapGrid rowLabels={catCols} colLabels={catCols} values={cramersMatrix} mode="cramers_v" isDiag />
         <Legend mode="cramers_v" />
         <p className="text-[10px] text-gray-400 mt-1">
@@ -386,11 +377,7 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
     const theilsMatrix = extractTheilsMatrix(data, catCols);
     return (
       <div className="space-y-3">
-        <HeatmapHeader
-          label={`${catCols.length} categorical columns · asymmetric (row → column)`}
-          askQuestion="Looking at the Theil's U (uncertainty coefficient) matrix, which categorical variables have the most directional predictive power?"
-          askLabel="Explain Theil's U"
-        />
+        <HeatmapHeader label={`${catCols.length} categorical columns · asymmetric (row → column)`} />
         <HeatmapGrid rowLabels={catCols} colLabels={catCols} values={theilsMatrix} mode="theils_u" isDiag />
         <Legend mode="theils_u" />
         <p className="text-[10px] text-gray-400 mt-1">
@@ -407,11 +394,7 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
     }
     return (
       <div className="space-y-3">
-        <HeatmapHeader
-          label={`${mixedData.rowLabels.length} numeric × ${mixedData.colLabels.length} categorical`}
-          askQuestion="Looking at the η² (eta-squared) matrix, which categorical features explain the most variance in numeric columns? Any strong group effects worth investigating?"
-          askLabel="Explain η² associations"
-        />
+        <HeatmapHeader label={`${mixedData.rowLabels.length} numeric × ${mixedData.colLabels.length} categorical`} />
         <p className="text-[10px] text-gray-400">
           η² = proportion of variance in the numeric variable explained by the categorical variable (one-way ANOVA).
           Hover cells for point-biserial r and rank-biserial r where applicable.
@@ -433,19 +416,10 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
 }
 
 
-function HeatmapHeader({
-  label,
-  askQuestion,
-  askLabel,
-}: {
-  label: string;
-  askQuestion: string;
-  askLabel: string;
-}) {
+function HeatmapHeader({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-xs text-gray-400">{label}</span>
-      <AskAiButton question={askQuestion} label={askLabel} variant="chip" />
     </div>
   );
 }

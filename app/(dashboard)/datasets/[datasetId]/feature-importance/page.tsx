@@ -7,8 +7,6 @@ import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { SubNav } from "@/components/layout/SubNav";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { AskAiButton } from "@/components/ai/AskAiButton";
-import { useAiContextStore } from "@/store/aiContextStore";
 import { cn } from "@/lib/utils";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -100,7 +98,13 @@ type MethodLoadingState = {
 const FI_LIST_FIELDS = [
   "importances", "permutation_importances", "mutual_info",
   "correlations", "anova", "shap_values", "stability", "interactions",
+  "redundant_groups", "leakage_suspects",
 ] as const;
+
+// Scalars that only the 'rf' method computes — every other progressive step's
+// response carries them as null, which would otherwise wipe out the real value
+// the moment the next step's response gets spread in.
+const FI_SCALAR_FIELDS = ["model_score", "cv_score_mean", "cv_score_std"] as const;
 
 function mergeFIResult(prev: FIResult, next: FIResult): FIResult {
   const merged: FIResult = { ...prev, ...next };
@@ -108,6 +112,12 @@ function mergeFIResult(prev: FIResult, next: FIResult): FIResult {
   for (const key of FI_LIST_FIELDS) {
     if ((next[key]?.length ?? 0) === 0 && (prev[key]?.length ?? 0) > 0) {
       (merged[key] as unknown[]) = prev[key] as unknown[];
+    }
+  }
+
+  for (const key of FI_SCALAR_FIELDS) {
+    if (next[key] == null && prev[key] != null) {
+      (merged[key] as number | null) = prev[key];
     }
   }
 
@@ -410,11 +420,6 @@ const maxSHAP = shapValues.length
                 </div>
               ))}
             </div>
-            <AskAiButton
-              question={`I found possible data leakage in features: ${leakageSuspects.map(s => s.feature).join(", ")}. How do I verify and fix this before training?`}
-              label="How to fix leakage?"
-              variant="chip"
-            />
           </div>
         </div>
       )}
@@ -490,11 +495,6 @@ const maxSHAP = shapValues.length
               <h3 className="text-sm font-bold text-gray-800">Top Features</h3>
               <p className="text-[10px] text-gray-400 mt-0.5">RF importance vs SHAP</p>
             </div>
-            <AskAiButton
-              question={`The top features are: ${data.top_features.slice(0, 5).join(", ")}. Explain why these might be important predictors for ${data.target}.`}
-              label="Explain"
-              variant="chip"
-            />
           </div>
           <div className="space-y-3">
             {topMeta.map((fm, i) => {
@@ -589,11 +589,6 @@ const maxSHAP = shapValues.length
             <h3 className="text-sm font-semibold text-amber-800">
               {data.drop_candidates.length} Low-Importance Feature{data.drop_candidates.length > 1 ? "s" : ""} to Consider Dropping
             </h3>
-            <AskAiButton
-              question={`These features score low on all importance methods: ${data.drop_candidates.join(", ")}. Should I drop them, and what's the risk of doing so for predicting ${data.target}?`}
-              label="Should I drop them?"
-              variant="chip"
-            />
           </div>
           <div className="flex flex-wrap gap-1.5">
             {data.drop_candidates.map(f => (
@@ -720,11 +715,6 @@ const maxPerm = useMemo(() =>
           <Download className="w-3.5 h-3.5" /> Export CSV
         </button>
 
-        <AskAiButton
-          question={`Feature importance rankings for target "${data.target}". Which features should I definitely keep and which ones can I drop?`}
-          label="Get recommendation"
-          variant="chip"
-        />
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -948,11 +938,6 @@ function ChartsTab({ data }: { data: FIResult }) {
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">{active.desc}</p>
             </div>
-            <AskAiButton
-              question={`Looking at the ${active.label} feature importance scores for target "${data.target}", which features stand out and why?`}
-              label="Explain scores"
-              variant="chip"
-            />
           </div>
           {chartData.length === 0 ? (
             <div className="flex items-center justify-center h-40 text-sm text-gray-400">No data available for this method.</div>
@@ -984,11 +969,6 @@ function ChartsTab({ data }: { data: FIResult }) {
               <h3 className="text-sm font-bold text-gray-800">All-Method Radar — Top 6 Features</h3>
               <p className="text-xs text-gray-400 mt-0.5">Normalised 0–100 across RF, SHAP, MI, ANOVA, Permutation</p>
             </div>
-            <AskAiButton
-              question={`Compare the top features across all importance methods for target "${data.target}". Which features are consistently important?`}
-              label="Compare methods"
-              variant="chip"
-            />
           </div>
           <ResponsiveContainer width="100%" height={360}>
             <RadarChart data={radarData}>
@@ -1078,11 +1058,6 @@ function StabilityTab({ data }: { data: FIResult }) {
             A CV (coefficient of variation) near 0 means the feature's importance is reliable;
             a high CV means it fluctuates — potentially unreliable for production use.
           </p>
-          <AskAiButton
-            question={`Explain feature stability in the context of predicting ${data.target}. Which unstable features should I be cautious about?`}
-            label="Explain stability"
-            variant="chip"
-          />
         </div>
       </div>
 
@@ -1220,11 +1195,6 @@ function InteractionsTab({ data }: { data: FIResult }) {
             Interaction score measures how much more predictive two features are <em>together</em> compared to each individually.
             High interaction = synergy. Pairs with high combined importance but low individual importance may benefit from an engineered cross-feature.
           </p>
-          <AskAiButton
-            question={`For target "${data.target}", which feature interactions are most synergistic and should I engineer cross-features from them?`}
-            label="Should I engineer features?"
-            variant="chip"
-          />
         </div>
       </div>
 
@@ -1414,11 +1384,6 @@ function InsightsTab({ data }: { data: FIResult }) {
     <div className="space-y-4 max-w-3xl">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <p className="text-xs text-gray-400">{insights.length} auto-generated insights based on all methods</p>
-        <AskAiButton
-          question={`Based on the feature importance analysis for target "${data.target}" (problem type: ${data.problem_type}, OOB score: ${data.model_score != null ? (data.model_score * 100).toFixed(1) + "%" : "N/A"}, top features: ${data.top_features.slice(0, 3).join(", ")}, leakage suspects: ${(data.leakage_suspects ?? []).map(s => s.feature).join(", ") || "none"}, redundant groups: ${(data.redundant_groups ?? []).length}), give me a comprehensive feature selection strategy with code examples.`}
-          label="Full AI analysis"
-          variant="chip"
-        />
       </div>
 
       {insights.map((item, i) => {
@@ -1471,7 +1436,6 @@ export default function FeatureImportancePage() {
   const { datasetId } = useParams<{ datasetId: string }>();
   const searchParams  = useSearchParams();
   const router        = useRouter();
-  const setPageContext = useAiContextStore(s => s.setPageContext);
 
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const targetCol  = searchParams.get("target") ?? "";
@@ -1592,34 +1556,6 @@ export default function FeatureImportancePage() {
     (col: string) => router.replace(`/datasets/${datasetId}/feature-importance?target=${encodeURIComponent(col)}`),
     [datasetId, router]
   );
-
-  useEffect(() => {
-    if (!data) return;
-    setPageContext({
-      page: "feature-importance",
-      label: `Feature Importance — ${data.target}`,
-      details: {
-        target: data.target,
-        problem_type: data.problem_type,
-        model_score: data.model_score,
-        cv_score: data.cv_score_mean,
-        top_features: data.top_features.join(", "),
-        drop_candidates: data.drop_candidates.join(", "),
-        leakage_suspects: (data.leakage_suspects ?? []).map(s => s.feature).join(", "),
-        redundant_groups: (data.redundant_groups ?? []).length,
-        n_features: data.n_features,
-        n_samples: data.n_samples,
-      },
-      suggestedQuestions: [
-        "Which features should I keep for modeling?",
-        "Are there any signs of data leakage?",
-        "Which feature interactions should I engineer?",
-        "How can I improve the model score?",
-        "Which features are unstable and unreliable?",
-      ],
-    });
-    return () => setPageContext(null);
-  }, [data, setPageContext]);
 
   return (
     <>
