@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/authStore";
 import {
-  LayoutDashboard, Database, BarChart2, GitBranch,
+  LayoutDashboard, Database, BarChart2,
   Sliders, ChevronDown, LogOut, Settings, Users,
   FileSearch, TrendingUp, AlertTriangle, Layers,
   Type, Wand2, Plug, Warehouse, ShieldCheck,
-  Code2, PieChart, ChevronLeft, MessageSquarePlus,
+  Code2, ChevronLeft, MessageSquarePlus,
   HelpCircle, ChevronUp, Compass, FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -53,14 +53,6 @@ const DATASET_GROUPS: NavGroup[] = [
     items: [
       { label: "Transform Studio", href: "/transform", icon: Wand2 },
       { label: "SQL Editor",       href: "/sql",       icon: Code2 },
-      { label: "Chart Builder",    href: "/charts",    icon: PieChart },
-      { label: "Pivot Table",      href: "/pivot",     icon: Layers },
-    ],
-  },
-  {
-    label: "Manage",
-    items: [
-      { label: "History", href: "/history", icon: GitBranch },
     ],
   },
 ];

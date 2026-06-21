@@ -257,9 +257,6 @@ export const datasetsApi = {
     api.post(`/datasets/${datasetId}/rules`, { rules }),
   getRuleResults: (datasetId: string) =>
     api.get(`/datasets/${datasetId}/rules/results`),
-  // Pivot
-  getPivot: (datasetId: string, params: { row_col: string; col_col: string; value_col: string; agg_func?: string }) =>
-    api.get(`/datasets/${datasetId}/pivot`, { params }),
   // Saved Charts
   getSavedCharts: (datasetId: string) => api.get(`/datasets/${datasetId}/charts/saved`),
   saveChart: (datasetId: string, data: { name: string; chart_type: string; config: unknown }) =>

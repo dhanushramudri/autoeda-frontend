@@ -20,7 +20,6 @@ const NAV_ITEMS = [
   { label: "Hypotheses",        href: "/hypotheses",        id: "hypotheses" },
   { label: "Transform",         href: "/transform",         id: "transform" },
   { label: "SQL",               href: "/sql",               id: "sql" },
-  { label: "Pivot",             href: "/pivot",             id: "pivot" },
   { label: "Rules",             href: "/rules",             id: "rules" },
 ];
 
