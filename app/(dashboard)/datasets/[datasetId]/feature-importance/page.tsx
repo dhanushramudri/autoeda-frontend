@@ -1204,7 +1204,7 @@ function InteractionsTab({ data }: { data: FIResult }) {
         <div className="space-y-3">
           {top.map((pair, i) => {
             const pct = (pair.interaction_score / maxScore) * 100;
-            const synergy = pair.combined - pair.a_alone - pair.b_alone;
+            const interactionShare = pair.combined > 0 ? (pair.interaction_score / pair.combined) * 100 : 0;
             return (
               <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-blue-50/50 transition-colors">
                 <span className="text-[10px] font-bold text-gray-300 w-4 flex-shrink-0 mt-1 tabular-nums">{i + 1}</span>
@@ -1213,9 +1213,9 @@ function InteractionsTab({ data }: { data: FIResult }) {
                     <span className="font-mono text-xs font-semibold text-gray-800 bg-blue-100 px-2 py-0.5 rounded">{pair.feature_a}</span>
                     <span className="text-gray-400 text-xs">×</span>
                     <span className="font-mono text-xs font-semibold text-gray-800 bg-purple-100 px-2 py-0.5 rounded">{pair.feature_b}</span>
-                    {synergy > 0.01 && (
+                    {interactionShare > 5 && (
                       <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
-                        +{(synergy * 100).toFixed(1)}% synergy
+                        {interactionShare.toFixed(0)}% of combined effect is interaction
                       </span>
                     )}
                   </div>
@@ -1359,9 +1359,12 @@ function InsightsTab({ data }: { data: FIResult }) {
 
     if (data.interactions?.length > 0) {
       const topPair = [...data.interactions].sort((a, b) => b.interaction_score - a.interaction_score)[0];
-      const synergy = topPair.combined - topPair.a_alone - topPair.b_alone;
-      if (synergy > 0.05) {
-        items.push({ level: "info", title: `Feature engineering opportunity: ${topPair.feature_a} × ${topPair.feature_b}`, body: `These two features together provide ${(synergy * 100).toFixed(1)}% more predictive power than individually. Consider creating an interaction feature (product, ratio, or concatenation).` });
+      // Share of the pair's combined SHAP effect coming from their interaction — not a
+      // claim about model performance (that would require actually training a model
+      // with vs. without an explicit interaction term, which this never measured).
+      const interactionShare = topPair.combined > 0 ? (topPair.interaction_score / topPair.combined) * 100 : 0;
+      if (interactionShare > 15) {
+        items.push({ level: "info", title: `Feature engineering opportunity: ${topPair.feature_a} × ${topPair.feature_b}`, body: `${interactionShare.toFixed(0)}% of this pair's combined SHAP effect comes from how they interact, not their separate contributions. Consider creating an explicit interaction feature (product, ratio) so simpler models can capture it directly.` });
       }
     }
 
