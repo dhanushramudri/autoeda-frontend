@@ -64,28 +64,28 @@ export const TourOverlay: React.FC = () => {
     <>
       {/* Overlay with spotlight cutout */}
       <div
-        className="fixed inset-0 z-[9998] bg-black/55 pointer-events-auto"
+        className="fixed inset-0 z-[9998] bg-black/70 pointer-events-auto transition-[clip-path] duration-500 ease-in-out"
         style={spotlightClip ? { clipPath: spotlightClip } : undefined}
         onClick={endTour}
       />
 
-      {/* Blue glow ring around the highlighted element */}
+      {/* Glow ring around the highlighted element */}
       {targetRect && (
         <div
-          className="fixed z-[9999] rounded-lg pointer-events-none"
+          className="fixed z-[9999] rounded-lg pointer-events-none transition-all duration-500 ease-in-out"
           style={{
             top: targetRect.top - PAD,
             left: targetRect.left - PAD,
             width: targetRect.width + PAD * 2,
             height: targetRect.height + PAD * 2,
-            boxShadow: "0 0 0 2px #3b82f6, 0 0 24px rgba(59,130,246,0.45)",
+            boxShadow: "0 0 0 2px hsl(var(--primary)), 0 0 24px hsl(var(--primary) / 0.45)",
           }}
         />
       )}
 
       {/* Tooltip card */}
       <div
-        className="fixed z-[10000] bg-white rounded-xl shadow-2xl p-5 w-80 pointer-events-auto border border-gray-100"
+        className="fixed z-[10000] bg-white rounded-xl shadow-2xl p-5 w-80 pointer-events-auto border border-gray-100 transition-all duration-500 ease-in-out"
         style={getTooltipStyle(targetRect, currentStep.position, isCenter)}
       >
         <div className="flex items-start justify-between mb-2">
@@ -113,7 +113,7 @@ export const TourOverlay: React.FC = () => {
                 className={cn(
                   "rounded-full transition-all duration-300",
                   idx === currentStepIndex
-                    ? "bg-blue-500 w-5 h-1.5"
+                    ? "bg-primary w-5 h-1.5"
                     : "bg-gray-300 w-1.5 h-1.5"
                 )}
               />
@@ -144,7 +144,7 @@ export const TourOverlay: React.FC = () => {
           {currentStepIndex < steps.length - 1 ? (
             <button
               onClick={nextStep}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-primary-foreground bg-primary rounded-lg hover:opacity-90 transition-opacity"
             >
               Next
               <ChevronRight size={14} />
@@ -152,7 +152,7 @@ export const TourOverlay: React.FC = () => {
           ) : (
             <button
               onClick={endTour}
-              className="px-3 py-1.5 text-xs font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-primary-foreground bg-primary rounded-lg hover:opacity-90 transition-opacity"
             >
               Finish
             </button>

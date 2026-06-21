@@ -24,35 +24,43 @@ export const tourSteps: TourStep[] = [
     position: "bottom",
   },
   {
+    id: "data-sources",
+    target: "[data-tour='data-sources-link']",
+    title: "Data Sources",
+    description:
+      "Connect databases, cloud storage, or APIs here — anything that feeds data into your workspace starts at this step.",
+    position: "right",
+  },
+  {
     id: "datasets-section",
     target: "[data-tour='datasets-section']",
     title: "Datasets",
     description:
-      "All your uploaded datasets live here. Expand the list to open any dataset and start exploring its contents.",
+      "Everything you've uploaded or connected lands here. Expand the list to open any dataset and start exploring its contents.",
     position: "right",
   },
   {
-    id: "warehouse",
-    target: "[data-tour='warehouse-link']",
-    title: "Warehouse",
+    id: "scout",
+    target: "[data-tour='scout-link']",
+    title: "Scout — your AI data analyst",
     description:
-      "Run SQL queries across all datasets in your workspace at once — perfect for cross-dataset analysis and ad-hoc exploration.",
+      "Ask Scout anything about your data. It runs real analysis — profiling, correlations, SQL, statistical tests — and shows its work instead of guessing.",
     position: "right",
   },
   {
-    id: "join-builder",
-    target: "[data-tour='join-builder-link']",
-    title: "Join Builder",
+    id: "hypotheses",
+    target: "[data-tour='hypotheses-link']",
+    title: "Hypotheses",
     description:
-      "Visually combine datasets using drag-and-drop joins. No SQL required — preview the merged result instantly.",
+      "Propose a claim about your data, or let AI generate one, and get a verdict backed by an actual computed test — not a narrative guess.",
     position: "right",
   },
   {
-    id: "subnav-bar",
-    target: "[data-tour='subnav-bar']",
-    title: "Analysis Features Bar",
+    id: "wrap-up",
+    target: "body",
+    title: "You're ready to explore",
     description:
-      "This bar gives you quick access to every analysis module — Overview, Profile, Missing Values, Correlations, Distributions, Charts, SQL, and more.",
-    position: "bottom",
+      "That's the core flow: connect a source, explore your datasets, investigate with Scout, and validate hypotheses.",
+    position: "center",
   },
 ];

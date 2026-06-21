@@ -475,6 +475,12 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
                       ? "warehouse-link"
                       : link.href === "/join-builder"
                       ? "join-builder-link"
+                      : link.href === "/sources"
+                      ? "data-sources-link"
+                      : link.href === "/scout"
+                      ? "scout-link"
+                      : link.href === "/hypotheses"
+                      ? "hypotheses-link"
                       : undefined;
                   return (
                     <Link
@@ -587,8 +593,8 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
               title={user?.full_name ?? user?.email ?? "Account"}
             >
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
-                style={{ backgroundColor: "hsl(var(--primary) / 0.10))" }}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+                style={{ backgroundColor: "#FF6196", color: "#FFF3E0" }}
               >
                 {userInitials}
               </div>
