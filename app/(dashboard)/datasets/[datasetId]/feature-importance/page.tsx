@@ -346,8 +346,8 @@ const TABS: { key: Tab; label: string; icon: React.ReactNode; badge?: string }[]
   { key: "overview",      label: "Overview",      icon: <Layers className="w-3.5 h-3.5" /> },
   { key: "rankings",      label: "Rankings",      icon: <Table2 className="w-3.5 h-3.5" /> },
   { key: "charts",        label: "Charts",        icon: <BarChart2 className="w-3.5 h-3.5" /> },
-  { key: "stability",     label: "Stability",     icon: <Shield className="w-3.5 h-3.5" />, badge: "New" },
-  { key: "interactions",  label: "Interactions",  icon: <Network className="w-3.5 h-3.5" />, badge: "New" },
+  { key: "stability",     label: "Stability",     icon: <Shield className="w-3.5 h-3.5" /> },
+  { key: "interactions",  label: "Interactions",  icon: <Network className="w-3.5 h-3.5" />},
   { key: "insights",      label: "Insights",      icon: <Lightbulb className="w-3.5 h-3.5" /> },
 ];
 
@@ -1313,8 +1313,7 @@ function InsightsTab({ data }: { data: FIResult }) {
 
     if (data.importances.length >= 2) {
       const top = data.importances[0].importance;
-      const total = data.importances.reduce((s, x) => s + x.importance, 0);
-      const topShare = top / total;
+      const topShare = top;
       if (topShare > 0.5) {
         items.push({ level: "warning", title: `"${data.importances[0].feature}" dominates (${(topShare * 100).toFixed(1)}%)`, body: "One feature explains the majority of RF variance. This may indicate leakage or a trivially predictive column. Validate with held-out data." });
       }
@@ -1325,7 +1324,7 @@ function InsightsTab({ data }: { data: FIResult }) {
       const hasMI = f.mi_score != null && f.mi_score > 0.01;
       const hasSHAP = f.shap_value != null && f.shap_value > 0.001;
       return (hasRF && hasMI) || (hasRF && hasSHAP) || (hasMI && hasSHAP);
-    }).filter(f => f.recommendation === "keep_strong");
+    });
     if (agreed.length > 0) {
       items.push({ level: "success", title: `${agreed.length} feature(s) confirmed important by multiple methods`, body: `${agreed.slice(0, 4).map(f => f.feature).join(", ")}${agreed.length > 4 ? "…" : ""} — high confidence, prioritise in model.` });
     }
@@ -1345,11 +1344,13 @@ function InsightsTab({ data }: { data: FIResult }) {
       items.push({ level: "warning", title: `${highMissing.length} feature(s) have >20% missing values`, body: `${highMissing.slice(0, 3).map(f => `${f.feature} (${f.missing_pct.toFixed(1)}%)`).join(", ")}. Use median/KNN/model-based imputation before training.` });
     }
 
-    if (data.problem_type === "classification" && data.class_distribution) {
-      const dominant = Math.max(...Object.values(data.class_distribution).map(v => v.pct));
-      if (dominant > 75) {
-        items.push({ level: "danger", title: "Severe class imbalance", body: `Dominant class = ${dominant.toFixed(1)}%. Use stratified K-fold, SMOTE, class_weight="balanced", or AUC/F1 metrics instead of accuracy.` });
-      }
+    const imbalanceWarning = data.warnings.find(w => w.type === "class_imbalance");
+    if (imbalanceWarning) {
+      items.push({
+        level: imbalanceWarning.level === "danger" ? "danger" : "warning",
+        title: imbalanceWarning.level === "danger" ? "Severe class imbalance" : "Moderate class imbalance",
+        body: imbalanceWarning.message,
+      });
     }
 
     if (data.stability?.filter(s => s.cv >= 0.5).length > 0) {
@@ -1411,10 +1412,10 @@ function InsightsTab({ data }: { data: FIResult }) {
         <div className="space-y-2.5">
           {[
             { done: data.top_features.length > 0,                                   text: `Identify strong predictors: ${data.top_features.slice(0, 3).join(", ") || "—"}` },
-            { done: data.drop_candidates.length > 0,                                text: `Remove low-importance features (${data.drop_candidates.length} candidates found)` },
+            { done: data.feature_meta.length > 0,                                    text: `Identify low-importance features (${data.drop_candidates.length} candidate${data.drop_candidates.length === 1 ? "" : "s"} found — drop them in Transform Studio)` },
             { done: data.model_score != null,                                        text: `Baseline score established: ${data.model_score != null ? (data.model_score * 100).toFixed(1) + "%" : "run model"}` },
             { done: (data.leakage_suspects ?? []).length === 0, text: `Verify no data leakage (${(data.leakage_suspects ?? []).length} suspects found)` },
-            { done: (data.redundant_groups ?? []).length === 0, text: `Resolve redundant feature groups (${(data.redundant_groups ?? []).length} found)` },
+            { done: data.feature_meta.length > 0, text: `Check for redundant feature groups (${(data.redundant_groups ?? []).length} found${(data.redundant_groups ?? []).length > 0 ? " — keep the best one per group" : ""})` },
             { done: data.feature_meta.every(f => f.missing_pct < 5),               text: "Handle missing values in features" },
             { done: data.stability?.length > 0 && data.stability.every(s => s.cv < 0.5), text: "Verify feature importance stability across samples" },
             { done: false,                                                           text: "Validate selected features with cross-validation" },
