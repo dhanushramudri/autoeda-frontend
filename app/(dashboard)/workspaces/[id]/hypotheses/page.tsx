@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { hypothesesApi, datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { renderMarkdown } from "@/lib/markdown";
+import { Markdown } from "@/components/shared/Markdown";
 import { cn } from "@/lib/utils";
 import type { Hypothesis, HypothesisStatus, ScoutToolCall } from "@/types";
 import {
@@ -97,10 +97,7 @@ function HypothesisRow({
 
           {h.verdict && expanded && (
             <div className="mt-3 space-y-2">
-              <span
-                className={cn("text-xs leading-relaxed block", cfg.text)}
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(h.verdict) }}
-              />
+              <Markdown content={h.verdict} className={cn("text-xs leading-relaxed", cfg.text)} />
               {h.evidence_summary && (
                 <code className="text-[11px] font-mono text-gray-500 bg-white border border-gray-100 px-1.5 py-0.5 rounded inline-block">
                   {h.evidence_summary}

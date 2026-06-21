@@ -423,6 +423,10 @@ export const docsApi = {
   articlesForDataset: (datasetId: string) => api.get(`/datasets/${datasetId}/doc-articles`),
 };
 
+export const aiApi = {
+  getProvider: () => api.get<{ provider: string }>("/ai/provider"),
+};
+
 // Scout (AI data analyst agent)
 export const scoutApi = {
   listConversations: (workspaceId: string) => api.get(`/workspaces/${workspaceId}/scout/conversations`),
@@ -431,9 +435,22 @@ export const scoutApi = {
     api.delete(`/workspaces/${workspaceId}/scout/conversations/${conversationId}`),
   getMessages: (workspaceId: string, conversationId: number) =>
     api.get(`/workspaces/${workspaceId}/scout/conversations/${conversationId}/messages`),
-  sendMessage: (workspaceId: string, conversationId: number, data: { message: string; mode: "agent" | "chat" }) =>
-    api.post(`/workspaces/${workspaceId}/scout/conversations/${conversationId}/messages`, data),
+  sendMessage: (
+    workspaceId: string,
+    conversationId: number,
+    data: { message: string; mode: "agent" | "chat"; image_key?: string; image_content_type?: string }
+  ) => api.post(`/workspaces/${workspaceId}/scout/conversations/${conversationId}/messages`, data),
   getSuggestions: (workspaceId: string) => api.get(`/workspaces/${workspaceId}/scout/suggestions`),
+  /** Deletes a message and everything after it in the conversation — the
+   * backend half of "edit & resend" (the new edited message is then sent
+   * as a normal new message once this resolves). */
+  truncateFrom: (workspaceId: string, conversationId: number, messageId: number) =>
+    api.delete(`/workspaces/${workspaceId}/scout/conversations/${conversationId}/messages/${messageId}/truncate`),
+  /** Step 1 of attaching an image: get a presigned S3 PUT URL + the key the
+   * browser should upload to directly. Step 2 (the actual PUT) happens
+   * straight against S3 from the frontend — see uploadScoutImage below. */
+  presignImage: (workspaceId: string, data: { filename: string; content_type: string; size_bytes: number }) =>
+    api.post(`/workspaces/${workspaceId}/scout/images/presign`, data),
   /**
    * SSE variant of sendMessage — yields progress events as they arrive
    * instead of waiting for the full response. Uses fetch() directly since
@@ -442,7 +459,8 @@ export const scoutApi = {
   streamMessage: async function* (
     workspaceId: string,
     conversationId: number,
-    data: { message: string; mode: "agent" | "chat" }
+    data: { message: string; mode: "agent" | "chat"; image_key?: string; image_content_type?: string },
+    signal?: AbortSignal
   ): AsyncGenerator<Record<string, unknown>> {
     const token = typeof window !== "undefined" ? sessionStorage.getItem("access_token") : null;
     const res = await fetch(`${API_BASE}/workspaces/${workspaceId}/scout/conversations/${conversationId}/messages/stream`, {
@@ -453,6 +471,7 @@ export const scoutApi = {
       },
       credentials: "include",
       body: JSON.stringify(data),
+      signal,
     });
     if (!res.ok || !res.body) {
       throw new Error(`Scout stream failed: ${res.status}`);
@@ -473,6 +492,20 @@ export const scoutApi = {
     }
   },
 };
+
+/** Uploads a file straight to S3 via a presigned PUT URL (from scoutApi.presignImage) —
+ * goes browser-to-S3 directly, never through our backend/proxy, so image size is never
+ * limited by the Vercel proxy's ~4.5MB request body cap. */
+export async function uploadToPresignedUrl(uploadUrl: string, file: File): Promise<void> {
+  const res = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+  if (!res.ok) {
+    throw new Error(`Image upload failed: ${res.status}`);
+  }
+}
 
 async function* streamSSE(path: string, body: unknown): AsyncGenerator<Record<string, unknown>> {
   const token = typeof window !== "undefined" ? sessionStorage.getItem("access_token") : null;

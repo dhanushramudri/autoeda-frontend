@@ -696,6 +696,7 @@ export interface ScoutMessage {
   content: string;
   mode: "agent" | "chat" | null;
   tool_trace: ScoutToolCall[];
+  image_url?: string | null;
   created_at: string;
 }
 

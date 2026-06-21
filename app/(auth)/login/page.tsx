@@ -216,6 +216,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@jmangroup.com"
                 autoComplete="email"
+                data-clarity-unmask="true"
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition"
               />
             </div>

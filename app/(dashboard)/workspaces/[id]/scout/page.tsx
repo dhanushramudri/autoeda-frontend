@@ -3,16 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { scoutApi } from "@/lib/api";
+import { scoutApi, datasetsApi, aiApi, uploadToPresignedUrl } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { renderMarkdown } from "@/lib/markdown";
+import { Markdown } from "@/components/shared/Markdown";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNowStrict } from "date-fns";
 import type { ScoutMessage, ScoutThread, ScoutSuggestion, ScoutToolCall, ScoutConversation } from "@/types";
 import {
   Compass, Send, Sparkles, Bot, Loader2, ChevronDown, ChevronUp,
   Database, Wand2, AlertCircle, ShieldAlert, Type, SearchCheck,
-  Plus, Trash2, MessageSquare, Link2,
+  Plus, Trash2, MessageSquare, Link2, PanelLeftClose, PanelLeftOpen,
+  Square, Pencil, X, Image as ImageIcon,
 } from "lucide-react";
 import { MissingHeatmap } from "@/components/charts/MissingHeatmap";
 import { CorrelationHeatmap } from "@/components/charts/CorrelationHeatmap";
@@ -367,16 +368,33 @@ function ToolTrace({ trace }: { trace: ScoutToolCall[] }) {
   );
 }
 
-function MessageBubble({ msg }: { msg: ScoutMessage }) {
+function MessageBubble({ msg, onEdit, editDisabled }: { msg: ScoutMessage; onEdit?: (msg: ScoutMessage) => void; editDisabled?: boolean }) {
   const isUser = msg.role === "user";
   return (
-    <div className={cn("flex gap-3", isUser ? "justify-end" : "justify-start")}>
+    <div className={cn("flex gap-3 group", isUser ? "justify-end" : "justify-start")}>
       {!isUser && (
         <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: "hsl(var(--primary) / 0.12)" }}>
           <Compass className="w-3.5 h-3.5" style={{ color: "hsl(var(--primary))" }} />
         </div>
       )}
+      {isUser && onEdit && (
+        <button
+          onClick={() => onEdit(msg)}
+          disabled={editDisabled}
+          title="Edit & resend"
+          className="self-center opacity-0 group-hover:opacity-100 disabled:opacity-0 p-1.5 rounded-md text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition flex-shrink-0"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+        </button>
+      )}
       <div className={cn("max-w-[78%] min-w-0", isUser && "order-first ml-auto")}>
+        {msg.image_url && (
+          <img
+            src={msg.image_url}
+            alt="Attached"
+            className={cn("max-w-[220px] max-h-[220px] rounded-xl border border-gray-200 object-cover mb-1.5", isUser && "ml-auto")}
+          />
+        )}
         <div
           className={cn(
             "px-4 py-2.5 rounded-2xl text-[13.5px] leading-relaxed",
@@ -389,7 +407,7 @@ function MessageBubble({ msg }: { msg: ScoutMessage }) {
           {isUser ? (
             <span className="whitespace-pre-wrap">{msg.content}</span>
           ) : (
-            <span className="scout-markdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(msg.content) }} />
+            <Markdown content={msg.content} />
           )}
         </div>
         {!isUser && msg.tool_trace?.length > 0 && <ToolTrace trace={msg.tool_trace} />}
@@ -434,13 +452,16 @@ function StreamingBubble({ state, mode }: { state: StreamState; mode: Mode }) {
         )}
         {state.answer && (
           <div className="px-4 py-2.5 rounded-2xl rounded-bl-md bg-gray-50 text-gray-800 border border-gray-100 text-[13.5px] leading-relaxed">
-            <span className="scout-markdown" dangerouslySetInnerHTML={{ __html: renderMarkdown(state.answer) }} />
+            <Markdown content={state.answer} />
+            <span className="scout-caret" />
           </div>
         )}
       </div>
     </div>
   );
 }
+
+const SIDEBAR_COLLAPSED_KEY = "scout_sidebar_collapsed";
 
 function ConversationRail({
   workspaceId, activeId, onSelect,
@@ -450,6 +471,14 @@ function ConversationRail({
   onSelect: (id: number | null) => void;
 }) {
   const qc = useQueryClient();
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
+  });
+
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, collapsed ? "1" : "0");
+  }, [collapsed]);
 
   const { data: conversations } = useQuery({
     queryKey: queryKeys.scout.conversations(workspaceId),
@@ -472,17 +501,47 @@ function ConversationRail({
     },
   });
 
-  return (
-    <div className="w-56 flex-shrink-0 border-r border-gray-100 flex flex-col bg-gray-50/50">
-      <div className="p-2.5">
+  if (collapsed) {
+    return (
+      <div className="w-12 flex-shrink-0 border-r border-gray-100 flex flex-col items-center bg-gray-50/50 py-2.5 gap-2 transition-all">
+        <button
+          onClick={() => setCollapsed(false)}
+          title="Expand conversations"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-white hover:text-gray-600 transition"
+        >
+          <PanelLeftOpen className="w-4 h-4" />
+        </button>
         <button
           onClick={() => createMutation.mutate()}
           disabled={createMutation.isPending}
-          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-50"
+          title="New chat"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-white transition hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: "hsl(var(--primary))" }}
+        >
+          <Plus className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-56 flex-shrink-0 border-r border-gray-100 flex flex-col bg-gray-50/50 transition-all">
+      <div className="p-2.5 flex items-center gap-1.5">
+        <button
+          onClick={() => createMutation.mutate()}
+          disabled={createMutation.isPending}
+          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-white transition hover:opacity-90 disabled:opacity-50"
           style={{ backgroundColor: "hsl(var(--primary))" }}
         >
           <Plus className="w-3.5 h-3.5" />
           New chat
+        </button>
+        <button
+          onClick={() => setCollapsed(true)}
+          title="Collapse"
+          className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg text-gray-400 hover:bg-white hover:text-gray-600 transition"
+        >
+          <PanelLeftClose className="w-4 h-4" />
         </button>
       </div>
       <div className="flex-1 overflow-y-auto scrollbar-thin px-2 pb-2 space-y-0.5">
@@ -523,8 +582,83 @@ export default function ScoutPage() {
   const [draft, setDraft] = useState("");
   const [mode, setMode] = useState<Mode>("agent");
   const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [optimistic, setOptimistic] = useState<ScoutMessage[]>([]);
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionStart, setMentionStart] = useState(0);
+  const [mentionIndex, setMentionIndex] = useState(0);
+
+  const { data: workspaceDatasets } = useQuery({
+    queryKey: queryKeys.datasets.list(workspaceId),
+    queryFn: () => datasetsApi.list(workspaceId).then((r) => r.data as Array<{ id: string; name: string }>),
+  });
+  const mentionMatches = (workspaceDatasets ?? [])
+    .filter((d) => d.name.toLowerCase().includes((mentionQuery ?? "").toLowerCase()))
+    .slice(0, 6);
+
+  const { data: providerInfo } = useQuery({
+    queryKey: ["ai", "provider"],
+    queryFn: () => aiApi.getProvider().then((r) => r.data),
+  });
+  const visionSupported = providerInfo?.provider === "claude";
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachedImage, setAttachedImage] = useState<{
+    previewUrl: string;
+    contentType: string;
+    key: string | null;
+    uploading: boolean;
+    error: string | null;
+  } | null>(null);
+
+  const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+  const handleFileSelect = async (file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    if (file.size > MAX_IMAGE_BYTES) {
+      setAttachedImage({ previewUrl: "", contentType: file.type, key: null, uploading: false, error: "Image exceeds 8MB" });
+      return;
+    }
+    const previewUrl = URL.createObjectURL(file);
+    setAttachedImage({ previewUrl, contentType: file.type, key: null, uploading: true, error: null });
+    try {
+      const { data } = await scoutApi.presignImage(workspaceId, {
+        filename: file.name, content_type: file.type, size_bytes: file.size,
+      });
+      await uploadToPresignedUrl(data.upload_url, file);
+      setAttachedImage((prev) => (prev ? { ...prev, key: data.image_key, uploading: false } : prev));
+    } catch {
+      setAttachedImage((prev) => (prev ? { ...prev, uploading: false, error: "Upload failed — try again" } : prev));
+    }
+  };
+
+  const handleRemoveImage = () => {
+    if (attachedImage?.previewUrl) URL.revokeObjectURL(attachedImage.previewUrl);
+    setAttachedImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const pendingAnswerRef = useRef("");
+  const rafRef = useRef<number | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const flushAnswer = () => {
+    rafRef.current = null;
+    if (pendingAnswerRef.current) {
+      const chunk = pendingAnswerRef.current;
+      pendingAnswerRef.current = "";
+      setStreamState((prev) => (prev ? { ...prev, answer: prev.answer + chunk } : prev));
+    }
+  };
+
+  const queueAnswerChunk = (text: string) => {
+    pendingAnswerRef.current += text;
+    if (rafRef.current == null) {
+      rafRef.current = requestAnimationFrame(flushAnswer);
+    }
+  };
 
   const { data: conversations } = useQuery({
     queryKey: queryKeys.scout.conversations(workspaceId),
@@ -558,12 +692,50 @@ export default function ScoutPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, streamState?.answer, streamState?.tools.length]);
 
+  useEffect(() => {
+    if (draft === "" && textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  }, [draft]);
+
   const handleSend = async (text?: string) => {
     const message = (text ?? draft).trim();
-    if (!message || isSending) return;
-    setOptimistic([{ id: -1, role: "user", content: message, mode: null, tool_trace: [], created_at: new Date().toISOString() }]);
+    if ((!message && !attachedImage?.key) || isSending || attachedImage?.uploading) return;
+
+    const editedId = editingId;
+    setEditingId(null);
+
+    const imageToSend = attachedImage?.key
+      ? { key: attachedImage.key, contentType: attachedImage.contentType, previewUrl: attachedImage.previewUrl }
+      : null;
+    setAttachedImage(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    if (editedId !== null && activeId !== null) {
+      try {
+        await scoutApi.truncateFrom(workspaceId, activeId, editedId);
+        qc.setQueryData<ScoutThread | undefined>(queryKeys.scout.thread(workspaceId, activeId), (prev) => {
+          if (!prev) return prev;
+          const idx = prev.messages.findIndex((m) => m.id === editedId);
+          return idx >= 0 ? { ...prev, messages: prev.messages.slice(0, idx) } : prev;
+        });
+      } catch {
+        setEditingId(editedId);
+        return;
+      }
+    }
+
+    setOptimistic([{
+      id: -1, role: "user", content: message, mode: null, tool_trace: [],
+      image_url: imageToSend?.previewUrl ?? null,
+      created_at: new Date().toISOString(),
+    }]);
     setDraft("");
+    setMentionQuery(null);
     setStreamState({ tools: [], answer: "" });
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     let conversationId = activeId;
     try {
@@ -573,31 +745,43 @@ export default function ScoutPage() {
         setActiveId(conversationId);
       }
 
-      for await (const event of scoutApi.streamMessage(workspaceId, conversationId, { message, mode })) {
+      const sendData = {
+        message, mode,
+        ...(imageToSend ? { image_key: imageToSend.key, image_content_type: imageToSend.contentType } : {}),
+      };
+      for await (const event of scoutApi.streamMessage(workspaceId, conversationId, sendData, controller.signal)) {
         if (event.type === "tool_call") {
-          setStreamState((prev) => ({
-            tools: [...prev!.tools, { tool: event.tool as string, arguments: event.arguments as Record<string, unknown> }],
-            answer: prev!.answer,
-          }));
+          setStreamState((prev) => prev ? {
+            tools: [...prev.tools, { tool: event.tool as string, arguments: event.arguments as Record<string, unknown> }],
+            answer: prev.answer,
+          } : prev);
         } else if (event.type === "tool_result") {
           setStreamState((prev) => {
-            const tools = [...prev!.tools];
+            if (!prev) return prev;
+            const tools = [...prev.tools];
             const idx = tools.map((t) => !t.result).lastIndexOf(true);
             if (idx >= 0) tools[idx] = { ...tools[idx], result: event.result as Record<string, unknown> };
-            return { tools, answer: prev!.answer };
+            return { tools, answer: prev.answer };
           });
         } else if (event.type === "answer_chunk") {
-          setStreamState((prev) => ({ tools: prev!.tools, answer: prev!.answer + (event.text as string) }));
+          queueAnswerChunk(event.text as string);
         } else if (event.type === "error") {
-          setStreamState((prev) => ({ tools: prev!.tools, answer: event.message as string }));
+          flushAnswer();
+          setStreamState((prev) => ({ tools: prev?.tools ?? [], answer: event.message as string }));
           break;
         } else if (event.type === "done") {
           break;
         }
       }
-    } catch {
-      setStreamState((prev) => ({ tools: prev?.tools ?? [], answer: "Something went wrong reaching Scout. Please try again." }));
+    } catch (err) {
+      const aborted = err instanceof DOMException && err.name === "AbortError";
+      if (!aborted) {
+        setStreamState((prev) => ({ tools: prev?.tools ?? [], answer: "Something went wrong reaching Scout. Please try again." }));
+      }
     } finally {
+      if (rafRef.current != null) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+      pendingAnswerRef.current = "";
+      abortControllerRef.current = null;
       setOptimistic([]);
       setStreamState(null);
       if (conversationId !== null) {
@@ -607,23 +791,64 @@ export default function ScoutPage() {
     }
   };
 
+  const handleStop = () => abortControllerRef.current?.abort();
+
+  const handleEditClick = (msg: ScoutMessage) => {
+    if (isSending) return;
+    setEditingId(msg.id);
+    setDraft(msg.content);
+    setMentionQuery(null);
+    textareaRef.current?.focus();
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setMentionQuery(null);
+    setDraft("");
+  };
+
+  const detectMention = (value: string, cursor: number) => {
+    const before = value.slice(0, cursor);
+    const at = before.lastIndexOf("@");
+    if (at === -1) { setMentionQuery(null); return; }
+    const prevChar = at === 0 ? " " : before[at - 1];
+    const query = before.slice(at + 1);
+    if (/\s/.test(prevChar) === false && at !== 0) { setMentionQuery(null); return; }
+    if (/\s/.test(query)) { setMentionQuery(null); return; }
+    setMentionQuery(query);
+    setMentionStart(at);
+    setMentionIndex(0);
+  };
+
+  const selectMention = (datasetName: string) => {
+    if (mentionQuery === null) return;
+    const before = draft.slice(0, mentionStart);
+    const after = draft.slice(mentionStart + 1 + mentionQuery.length);
+    const inserted = `${before}@${datasetName} ${after}`;
+    setDraft(inserted);
+    setMentionQuery(null);
+    const pos = before.length + datasetName.length + 2;
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(pos, pos);
+    });
+  };
+
   return (
     <div className="h-[calc(100vh-56px)] flex bg-white">
       <ConversationRail workspaceId={workspaceId} activeId={activeId} onSelect={setActiveId} />
       <div className="flex-1 flex flex-col min-w-0">
       <style jsx global>{`
-        .scout-markdown .ai-p { margin: 0 0 6px; }
-        .scout-markdown .ai-p:last-child { margin-bottom: 0; }
-        .scout-markdown .ai-heading { font-weight: 600; margin: 8px 0 4px; color: #111827; }
-        .scout-markdown .ai-h1 { font-size: 14.5px; }
-        .scout-markdown .ai-h2 { font-size: 13.5px; }
-        .scout-markdown .ai-h3 { font-size: 13px; }
-        .scout-markdown .ai-ul, .scout-markdown .ai-ol { margin: 4px 0 6px; padding-left: 18px; }
-        .scout-markdown .ai-ul { list-style: disc; }
-        .scout-markdown .ai-ol { list-style: decimal; }
-        .scout-markdown .ai-ul li, .scout-markdown .ai-ol li { margin-bottom: 2px; }
-        .scout-markdown .ai-inline-code { background: rgba(0,0,0,0.05); padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: ui-monospace, monospace; }
-        .scout-markdown strong { font-weight: 600; color: #111827; }
+        @keyframes scout-caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .scout-caret {
+          display: inline-block;
+          width: 2px;
+          height: 13px;
+          background: hsl(var(--primary));
+          margin-left: 2px;
+          vertical-align: text-bottom;
+          animation: scout-caret-blink 1s step-end infinite;
+        }
       `}</style>
 
       {/* Header */}
@@ -692,7 +917,9 @@ export default function ScoutPage() {
           </div>
         ) : (
           <div className="max-w-3xl mx-auto space-y-5">
-            {messages.map((m) => <MessageBubble key={m.id} msg={m} />)}
+            {messages.map((m) => (
+              <MessageBubble key={m.id} msg={m} onEdit={handleEditClick} editDisabled={isSending} />
+            ))}
             {streamState && <StreamingBubble state={streamState} mode={mode} />}
             <div ref={bottomRef} />
           </div>
@@ -701,25 +928,119 @@ export default function ScoutPage() {
 
       {/* Input bar */}
       <div className="border-t border-gray-100 px-6 py-4 flex-shrink-0">
-        <div className="max-w-3xl mx-auto flex items-end gap-2.5">
-          <div className="flex-1 flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 focus-within:border-gray-300 transition">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              placeholder={mode === "agent" ? "Ask Scout to investigate something…" : "Ask a quick question…"}
-              className="flex-1 text-sm outline-none placeholder:text-gray-400"
-              disabled={isSending}
-            />
-          </div>
-          <button
-            onClick={() => handleSend()}
-            disabled={!draft.trim() || isSending}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 disabled:opacity-40 transition hover:opacity-90"
-            style={{ backgroundColor: "hsl(var(--primary))" }}
+        <div className="max-w-3xl mx-auto">
+          {editingId !== null && (
+            <div className="flex items-center justify-between mb-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-700">
+              <span className="flex items-center gap-1.5"><Pencil className="w-3 h-3" /> Editing message — sending will replace it and everything after it</span>
+              <button onClick={handleCancelEdit} className="p-0.5 rounded hover:bg-amber-100 transition"><X className="w-3.5 h-3.5" /></button>
+            </div>
+          )}
+          {attachedImage && (
+            <div className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-200 w-fit">
+              <div className="relative w-9 h-9 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+                {attachedImage.previewUrl && <img src={attachedImage.previewUrl} alt="" className="w-full h-full object-cover" />}
+                {attachedImage.uploading && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                    <Loader2 className="w-3.5 h-3.5 text-white animate-spin" />
+                  </div>
+                )}
+              </div>
+              <span className={cn("text-[11px]", attachedImage.error ? "text-red-500" : "text-gray-500")}>
+                {attachedImage.error ?? (attachedImage.uploading ? "Uploading…" : "Image attached")}
+              </span>
+              <button onClick={handleRemoveImage} className="p-0.5 rounded hover:bg-gray-200 transition"><X className="w-3.5 h-3.5 text-gray-400" /></button>
+            </div>
+          )}
+          <div
+            className="flex items-end gap-2.5 relative"
+            onDragOver={(e) => { if (visionSupported) e.preventDefault(); }}
+            onDrop={(e) => {
+              if (!visionSupported) return;
+              e.preventDefault();
+              const file = e.dataTransfer.files?.[0];
+              if (file) handleFileSelect(file);
+            }}
           >
-            {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-          </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              hidden
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }}
+            />
+            {mentionQuery !== null && mentionMatches.length > 0 && (
+              <div className="absolute bottom-full left-0 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
+                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Reference a dataset</p>
+                {mentionMatches.map((d, i) => (
+                  <button
+                    key={d.id}
+                    onClick={() => selectMention(d.name)}
+                    onMouseEnter={() => setMentionIndex(i)}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition",
+                      i === mentionIndex ? "bg-gray-50 text-gray-900" : "text-gray-600 hover:bg-gray-50"
+                    )}
+                  >
+                    <Database className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span className="truncate">{d.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="flex-1 flex items-end gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 focus-within:border-gray-300 transition">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!visionSupported || isSending}
+                title={visionSupported ? "Attach an image" : "Image attachments require the Claude provider"}
+                className="flex-shrink-0 p-1 -ml-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition"
+              >
+                <ImageIcon className="w-4 h-4" />
+              </button>
+              <textarea
+                ref={textareaRef}
+                value={draft}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  const el = e.target;
+                  el.style.height = "auto";
+                  el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+                  detectMention(e.target.value, e.target.selectionStart ?? e.target.value.length);
+                }}
+                onKeyDown={(e) => {
+                  if (mentionQuery !== null && mentionMatches.length > 0) {
+                    if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex((i) => (i + 1) % mentionMatches.length); return; }
+                    if (e.key === "ArrowUp") { e.preventDefault(); setMentionIndex((i) => (i - 1 + mentionMatches.length) % mentionMatches.length); return; }
+                    if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); selectMention(mentionMatches[mentionIndex].name); return; }
+                    if (e.key === "Escape") { e.preventDefault(); setMentionQuery(null); return; }
+                  }
+                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+                }}
+                placeholder={mode === "agent" ? "Ask Scout to investigate something…" : "Ask a quick question…"}
+                className="flex-1 text-sm outline-none placeholder:text-gray-400 resize-none leading-relaxed py-0.5"
+                rows={1}
+                disabled={isSending}
+              />
+            </div>
+            {isSending ? (
+              <button
+                onClick={handleStop}
+                title="Stop generating"
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 transition hover:opacity-90"
+                style={{ backgroundColor: "hsl(var(--primary))" }}
+              >
+                <Square className="w-3.5 h-3.5 fill-current" />
+              </button>
+            ) : (
+              <button
+                onClick={() => handleSend()}
+                disabled={(!draft.trim() && !attachedImage?.key) || attachedImage?.uploading}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 disabled:opacity-40 transition hover:opacity-90"
+                style={{ backgroundColor: "hsl(var(--primary))" }}
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
         <p className="text-center text-[10px] text-gray-300 mt-2">Scout can make mistakes — verify important findings.</p>
       </div>
