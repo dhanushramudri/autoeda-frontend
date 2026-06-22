@@ -8,7 +8,7 @@ import StarterKit from "@tiptap/starter-kit";
 import TiptapLink from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import DOMPurify from "isomorphic-dompurify";
-import { docsApi, datasetsApi } from "@/lib/api";
+import { docsApi, datasetsApi, workspacesApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -16,9 +16,11 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import {
   Pencil, Trash2, Save, X, Database, Paperclip, Download,
-  Upload, ExternalLink, Search,
+  Upload, ExternalLink, Search, Import,
   Bold, Italic, List, ListOrdered, Quote, Link2,
 } from "lucide-react";
+
+interface WorkspaceOption { id: string; name: string }
 
 function ToolbarBtn({
   active, title, onClick, children,
@@ -68,6 +70,13 @@ function isContentEmpty(html: string): boolean {
   return !html || !html.replace(/<[^>]*>/g, "").trim();
 }
 
+const IMPORTABLE_DATASET_EXTENSIONS = new Set(["csv", "tsv", "xlsx", "xls", "json", "parquet"]);
+
+function isImportableDataset(filename: string): boolean {
+  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
+  return IMPORTABLE_DATASET_EXTENSIONS.has(ext);
+}
+
 export default function ArticleDetailPage() {
   const { articleId } = useParams<{ articleId: string }>();
   const router = useRouter();
@@ -91,7 +100,17 @@ export default function ArticleDetailPage() {
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [downloadingDatasetId, setDownloadingDatasetId] = useState<number | null>(null);
+  const [importPickerFor, setImportPickerFor] = useState<number | null>(null);
+  const [importingId, setImportingId] = useState<number | null>(null);
+  const [importSuccess, setImportSuccess] = useState("");
+  const [attachmentImportPickerFor, setAttachmentImportPickerFor] = useState<number | null>(null);
+  const [importingAttachmentId, setImportingAttachmentId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: workspaces } = useQuery<WorkspaceOption[]>({
+    queryKey: queryKeys.workspaces.list(),
+    queryFn: () => workspacesApi.list().then((r) => r.data),
+  });
 
   const { data: article, isLoading } = useQuery<Article>({
     queryKey: queryKeys.docs.article(id),
@@ -218,6 +237,22 @@ export default function ArticleDetailPage() {
     }
   };
 
+  const importAttachment = async (att: Attachment, workspaceId: string) => {
+    setAttachmentError(""); setSaveError(""); setImportSuccess("");
+    setImportingAttachmentId(att.id);
+    try {
+      await docsApi.importAttachment(att.id, workspaceId);
+      const wsName = workspaces?.find((w) => w.id === workspaceId)?.name ?? "your workspace";
+      setImportSuccess(`Imported "${att.filename}" into ${wsName}.`);
+      setAttachmentImportPickerFor(null);
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail;
+      setAttachmentError(detail ?? `Failed to import "${att.filename}".`);
+    } finally {
+      setImportingAttachmentId(null);
+    }
+  };
+
   const removeAttachment = async (att: Attachment) => {
     setAttachmentError(""); setSaveError("");
     setDeletingId(att.id);
@@ -246,6 +281,22 @@ export default function ArticleDetailPage() {
       setAttachmentError(`Failed to download "${ds.name}". You may not have access to it.`);
     } finally {
       setDownloadingDatasetId(null);
+    }
+  };
+
+  const importDataset = async (ds: LinkedDataset, workspaceId: string) => {
+    setAttachmentError(""); setSaveError(""); setImportSuccess("");
+    setImportingId(ds.id);
+    try {
+      await datasetsApi.importToWorkspace(ds.id, workspaceId);
+      const wsName = workspaces?.find((w) => w.id === workspaceId)?.name ?? "your workspace";
+      setImportSuccess(`Imported "${ds.name}" into ${wsName}.`);
+      setImportPickerFor(null);
+    } catch (err) {
+      const detail = (err as { response?: { data?: { detail?: string } } }).response?.data?.detail;
+      setAttachmentError(detail ?? `Failed to import "${ds.name}".`);
+    } finally {
+      setImportingId(null);
     }
   };
 
@@ -410,7 +461,7 @@ export default function ArticleDetailPage() {
         ) : (
           <div className="flex flex-wrap gap-2">
             {linkedDatasets.map((d) => (
-              <div key={d.id} className="flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-1.5">
+              <div key={d.id} className="relative flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-1.5">
                 <Database className="w-3.5 h-3.5 text-brand" />
                 <span className="text-xs font-medium text-gray-700">{d.name}</span>
                 {d.row_count != null && <span className="text-[10px] text-gray-400">{d.row_count.toLocaleString()} rows</span>}
@@ -428,9 +479,42 @@ export default function ArticleDetailPage() {
                         <Download className="w-3.5 h-3.5" />
                       )}
                     </button>
+                    <button
+                      onClick={() => setImportPickerFor(importPickerFor === d.id ? null : d.id)}
+                      disabled={importingId === d.id}
+                      title="Import into one of your workspaces"
+                      className="text-brand hover:text-[#2a0d8a] disabled:cursor-wait"
+                    >
+                      {importingId === d.id ? (
+                        <span className="w-3.5 h-3.5 inline-block border-[1.5px] border-blue-200 border-t-brand rounded-full animate-spin" />
+                      ) : (
+                        <Import className="w-3.5 h-3.5" />
+                      )}
+                    </button>
                     <a href={`/datasets/${d.id}`} title="Open dataset" className="text-gray-400 hover:text-gray-600">
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
+
+                    {importPickerFor === d.id && (
+                      <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-20 py-1.5">
+                        <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                          Import into…
+                        </p>
+                        {!workspaces || workspaces.length === 0 ? (
+                          <p className="px-3 py-2 text-xs text-gray-400">No workspaces available.</p>
+                        ) : (
+                          workspaces.map((w) => (
+                            <button
+                              key={w.id}
+                              onClick={() => importDataset(d, w.id)}
+                              className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 truncate"
+                            >
+                              {w.name}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
                 {editing && (
@@ -441,6 +525,9 @@ export default function ArticleDetailPage() {
               </div>
             ))}
           </div>
+        )}
+        {importSuccess && (
+          <p className="mt-2 text-xs text-emerald-600">{importSuccess}</p>
         )}
       </div>
 
@@ -513,11 +600,12 @@ export default function ArticleDetailPage() {
             {article.attachments.map((att) => {
               const isDownloading = downloadingId === att.id;
               const isDeleting = deletingId === att.id;
+              const isImporting = importingAttachmentId === att.id;
               return (
                 <div
                   key={att.id}
                   className={cn(
-                    "flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-gray-100 bg-gray-50/50 transition",
+                    "relative flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-gray-100 bg-gray-50/50 transition",
                     isDeleting && "opacity-40"
                   )}
                 >
@@ -537,6 +625,20 @@ export default function ArticleDetailPage() {
                       <span className="text-gray-400 flex-shrink-0 hidden sm:inline">· {att.uploaded_by_name}</span>
                     )}
                   </button>
+                  {isImportableDataset(att.filename) && (
+                    <button
+                      onClick={() => setAttachmentImportPickerFor(attachmentImportPickerFor === att.id ? null : att.id)}
+                      disabled={isImporting || isDeleting}
+                      title="Import into one of your workspaces"
+                      className="text-gray-400 hover:text-brand flex-shrink-0 disabled:cursor-wait"
+                    >
+                      {isImporting ? (
+                        <span className="w-3.5 h-3.5 inline-block border-[1.5px] border-gray-300 border-t-brand rounded-full animate-spin" />
+                      ) : (
+                        <Import className="w-3.5 h-3.5" />
+                      )}
+                    </button>
+                  )}
                   <button
                     onClick={() => removeAttachment(att)}
                     disabled={isDeleting || isDownloading}
@@ -544,6 +646,27 @@ export default function ArticleDetailPage() {
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
+
+                  {attachmentImportPickerFor === att.id && (
+                    <div className="absolute top-full right-0 mt-1 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-20 py-1.5">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                        Import into…
+                      </p>
+                      {!workspaces || workspaces.length === 0 ? (
+                        <p className="px-3 py-2 text-xs text-gray-400">No workspaces available.</p>
+                      ) : (
+                        workspaces.map((w) => (
+                          <button
+                            key={w.id}
+                            onClick={() => importAttachment(att, w.id)}
+                            className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 truncate"
+                          >
+                            {w.name}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}

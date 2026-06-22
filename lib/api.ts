@@ -75,6 +75,8 @@ export const workspacesApi = {
 export const datasetsApi = {
   list: (workspaceId: string) =>
     api.get(`/workspaces/${workspaceId}/datasets`),
+  importToWorkspace: (datasetId: number, workspaceId: string | number) =>
+    api.post(`/datasets/${datasetId}/import`, { workspace_id: Number(workspaceId) }),
   create: (workspaceId: string, formData: FormData) =>
     api.post(`/workspaces/${workspaceId}/datasets`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -448,6 +450,8 @@ export const docsApi = {
   downloadAttachment: (attachmentId: number) =>
     api.get<{ download_url: string }>(`/doc-attachments/${attachmentId}/download`),
   deleteAttachment: (attachmentId: number) => api.delete(`/doc-attachments/${attachmentId}`),
+  importAttachment: (attachmentId: number, workspaceId: string | number, name?: string) =>
+    api.post(`/doc-attachments/${attachmentId}/import`, { workspace_id: Number(workspaceId), name }),
   searchDatasets: (q: string) => api.get("/doc-dataset-search", { params: { q } }),
   articlesForDataset: (datasetId: string) => api.get(`/datasets/${datasetId}/doc-articles`),
 };
