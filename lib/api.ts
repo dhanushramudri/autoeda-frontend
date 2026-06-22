@@ -79,6 +79,38 @@ export const datasetsApi = {
     api.post(`/workspaces/${workspaceId}/datasets`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
+  // Uploads the file straight to S3 via a presigned URL, bypassing this app's
+  // own request body entirely — the Vercel proxy in front of the API caps
+  // bodies at ~4.5MB, which any real dataset file can easily exceed.
+  createViaUpload: async (
+    workspaceId: string,
+    file: File,
+    meta: { name: string; source_type: string; description?: string; config_json?: string },
+    onProgress?: (pct: number) => void
+  ) => {
+    const presign = await api.post(`/workspaces/${workspaceId}/datasets/presign-upload`, {
+      filename: file.name,
+      content_type: file.type || "application/octet-stream",
+      file_size_bytes: file.size,
+    });
+    const { s3_key, upload_url } = presign.data;
+    await axios.put(upload_url, file, {
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+      onUploadProgress: onProgress
+        ? (e) => onProgress(e.total ? Math.round((e.loaded / e.total) * 100) : 0)
+        : undefined,
+    });
+    const fd = new FormData();
+    fd.append("s3_key", s3_key);
+    fd.append("original_filename", file.name);
+    fd.append("name", meta.name);
+    fd.append("source_type", meta.source_type);
+    if (meta.description) fd.append("description", meta.description);
+    if (meta.config_json) fd.append("config_json", meta.config_json);
+    return api.post(`/workspaces/${workspaceId}/datasets/confirm-upload`, fd, {
+      headers: { "Content-Type": undefined },
+    });
+  },
   get: (datasetId: string) => api.get(`/datasets/${datasetId}`),
   delete: (workspaceId: string, datasetId: string) =>
   api.delete(`/workspaces/${workspaceId}/datasets/${datasetId}`),

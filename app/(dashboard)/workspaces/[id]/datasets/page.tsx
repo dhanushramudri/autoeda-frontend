@@ -265,12 +265,11 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
       let ok = true;
       for (const { sheet, name } of targets) {
         try {
-          const fd = new FormData();
-          fd.append("file", entry.file);
-          fd.append("name", name);
-          fd.append("source_type", "file");
-          if (sheet) fd.append("config_json", JSON.stringify({ sheet_name: sheet }));
-          await datasetsApi.create(workspaceId, fd);
+          await datasetsApi.createViaUpload(workspaceId, entry.file, {
+            name,
+            source_type: "file",
+            config_json: sheet ? JSON.stringify({ sheet_name: sheet }) : undefined,
+          });
         } catch {
           ok = false;
         }
