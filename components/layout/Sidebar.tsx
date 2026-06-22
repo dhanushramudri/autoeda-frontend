@@ -287,81 +287,95 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
         <nav className="flex-1 overflow-y-auto py-4 scrollbar-thin">
 
           {/* -- 1. All Workspaces -- */}
-          {workspaceId && (
-            <div className="px-3 pb-1">
-              <Link
-                href="/workspaces"
-                className={cn(
-                  "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
-                  sidebarOpen ? "justify-start" : "justify-center",
-                  pathname === "/workspaces"
-                    ? "font-semibold"
-                    : "text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                )}
-                style={pathname === "/workspaces" ? {
-                      backgroundColor: "hsl(var(--primary) / 0.10)",
-                      color: "hsl(var(--primary))",
-                      borderLeft: "1px solid hsl(var(--primary))",
-                    } : {}}
-                title="All Workspaces"
-              >
-                <LayoutDashboard className="w-3.5 h-3.5 flex-shrink-0" />
-                {sidebarOpen && <span>All Workspaces</span>}
-              </Link>
-            </div>
-          )}
+          <div className="px-3 pb-1">
+            <Link
+              href="/workspaces"
+              className={cn(
+                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
+                sidebarOpen ? "justify-start" : "justify-center",
+                pathname === "/workspaces"
+                  ? "font-semibold"
+                  : "text-sidebar-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+              )}
+              style={pathname === "/workspaces" ? {
+                    backgroundColor: "hsl(var(--primary) / 0.10)",
+                    color: "hsl(var(--primary))",
+                    borderLeft: "1px solid hsl(var(--primary))",
+                  } : {}}
+              title="All Workspaces"
+            >
+              <LayoutDashboard className="w-3.5 h-3.5 flex-shrink-0" />
+              {sidebarOpen && <span>All Workspaces</span>}
+            </Link>
+          </div>
 
-          {workspaceId && (
-            <>
+          <>
               {/* -- 2. Datasets -- */}
               <SectionLabel collapsed={!sidebarOpen}>Datasets</SectionLabel>
 
               <div className="px-3 mt-2" data-tour="datasets-section">
-                <Link
-                  href={`/workspaces/${workspaceId}/datasets`}
-                  onClick={() => setDatasetsExpanded((p) => !p)}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition",
-                    sidebarOpen ? "justify-start" : "justify-center"
-                  )}
-                  title="Datasets"
-                >
-                  <Database className="w-3.5 h-3.5 text-sidebar-foreground" />
+                {workspaceId ? (
+                  <Link
+                    href={`/workspaces/${workspaceId}/datasets`}
+                    onClick={() => setDatasetsExpanded((p) => !p)}
+                    className={cn(
+                      "w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent transition",
+                      sidebarOpen ? "justify-start" : "justify-center"
+                    )}
+                    title="Datasets"
+                  >
+                    <Database className="w-3.5 h-3.5 text-sidebar-foreground" />
 
-                  {sidebarOpen && (
-                    <>
+                    {sidebarOpen && (
+                      <>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-sidebar-foreground/70">
+                          Datasets
+                        </span>
+
+                        {datasets.length > 0 && (
+                          <span
+                            className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+                            style={{
+                              backgroundColor: "hsl(var(--primary) / 0.10) / 0.12)",
+                              color: "hsl(var(--primary))",
+                            }}
+                          >
+                            {datasets.length}
+                          </span>
+                        )}
+
+                        <div className="flex-1" />
+                      </>
+                    )}
+
+                    {sidebarOpen && (
+                      <ChevronDown
+                        className={cn(
+                          "w-3.5 h-3.5 text-sidebar-foreground/40 transition-transform",
+                          datasetsExpanded ? "rotate-0" : "-rotate-90"
+                        )}
+                      />
+                    )}
+                  </Link>
+                ) : (
+                  <div
+                    className={cn(
+                      "w-full flex items-center gap-2 px-3 py-2 rounded-lg opacity-40 cursor-not-allowed",
+                      sidebarOpen ? "justify-start" : "justify-center"
+                    )}
+                    title="Select a workspace first"
+                  >
+                    <Database className="w-3.5 h-3.5 text-sidebar-foreground" />
+                    {sidebarOpen && (
                       <span className="text-[11px] font-bold uppercase tracking-wider text-sidebar-foreground/70">
                         Datasets
                       </span>
-
-                      {datasets.length > 0 && (
-                        <span
-                          className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
-                          style={{
-                            backgroundColor: "hsl(var(--primary) / 0.10) / 0.12)",
-                            color: "hsl(var(--primary))",
-                          }}
-                        >
-                          {datasets.length}
-                        </span>
-                      )}
-
-                      <div className="flex-1" />
-                    </>
-                  )}
-
-                  {sidebarOpen && (
-                    <ChevronDown
-                      className={cn(
-                        "w-3.5 h-3.5 text-sidebar-foreground/40 transition-transform",
-                        datasetsExpanded ? "rotate-0" : "-rotate-90"
-                      )}
-                    />
-                  )}
-                </Link>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {datasetsExpanded && (
+              {workspaceId && datasetsExpanded && (
                 <div className={cn(
                   "mt-1 space-y-0.5 transition-all duration-300",
                   sidebarOpen ? "px-4" : "hidden"
@@ -459,8 +473,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
 
               <div className="px-3 space-y-0.5">
                 {WORKSPACE_LINKS.map((link) => {
-                  const href     = `/workspaces/${workspaceId}${link.href}`;
-                  const isActive = pathname.includes(link.href);
+                  const isActive = workspaceId ? pathname.includes(link.href) : false;
                   const Icon     = link.icon;
                   const tourAttr =
                     link.href === "/warehouse"
@@ -474,10 +487,41 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
                       : link.href === "/hypotheses"
                       ? "hypotheses-link"
                       : undefined;
+
+                  const content = (
+                    <>
+                      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+                      {sidebarOpen && <span>{link.label}</span>}
+                      {sidebarOpen && link.label === "Scout" && (
+                        <span
+                          className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full flex-shrink-0"
+                          style={{ color: "#ff6196", backgroundColor: "rgba(255, 97, 150, 0.12)" }}
+                        >
+                          Beta
+                        </span>
+                      )}
+                    </>
+                  );
+
+                  if (!workspaceId) {
+                    return (
+                      <div
+                        key={link.href}
+                        className={cn(
+                          "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium opacity-40 cursor-not-allowed",
+                          sidebarOpen ? "justify-start" : "justify-center"
+                        )}
+                        title="Select a workspace first"
+                      >
+                        {content}
+                      </div>
+                    );
+                  }
+
                   return (
                     <Link
                       key={link.href}
-                      href={href}
+                      href={`/workspaces/${workspaceId}${link.href}`}
                       data-tour={tourAttr}
                       className={cn(
                         "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
@@ -492,22 +536,13 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
 } : {}}
                       title={sidebarOpen ? undefined : link.label}
                     >
-                      <Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                      {sidebarOpen && <span>{link.label}</span>}
-                      {sidebarOpen && link.label === "Scout" && (
-                        <span
-                          className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full flex-shrink-0"
-                          style={{ color: "#ff6196", backgroundColor: "rgba(255, 97, 150, 0.12)" }}
-                        >
-                          Beta
-                        </span>
-                      )}
+                      {content}
                     </Link>
                   );
                 })}
               </div>
             </>
-          )}
+
         </nav>
 
         {/* -- Bottom -- */}
