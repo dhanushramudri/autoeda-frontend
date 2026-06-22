@@ -235,7 +235,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
 
   return (
     <aside className={cn(
-      "relative min-h-screen bg-sidebar flex flex-col border-r border-sidebar-border shadow-sm transition-all duration-300 ease-in-out overflow-hidden",
+      "relative h-full bg-sidebar flex flex-col border-r border-sidebar-border shadow-sm transition-all duration-300 ease-in-out overflow-hidden",
       sidebarOpen ? "w-64" : "w-20"
     )}>
 
@@ -243,7 +243,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
       <SidebarBackground />
 
       {/* All content sits above the SVG */}
-      <div className="relative z-10 flex flex-col flex-1 min-h-screen">
+      <div className="relative z-10 flex flex-col flex-1 h-full">
 
         {/* -- Logo & Toggle -- */}
         <div className="px-3 min-h-14  border-sidebar-border flex items-center gap-2">

@@ -9,6 +9,7 @@ import { datasetsApi, workspacesApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
+import { PROMO_TICKER_HEIGHT } from "@/components/layout/PromoTicker";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -47,7 +48,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!isHydrated || !token) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex overflow-hidden" style={{ height: `calc(100vh - ${PROMO_TICKER_HEIGHT}px)` }}>
       <Sidebar
         datasets={datasets ?? []}
         workspaceId={activeWorkspaceId}
