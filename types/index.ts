@@ -195,19 +195,21 @@ export interface CorrelationResult {
   /** Correlation method used: 'pearson' | 'spearman' | 'kendall'. */
   method: string;
 
-  /** Column classification from the backend profiler. */
-  column_profile: CorrelationColumnProfile;
+  /** Column classification from the backend profiler. Always present. */
+  column_profile?: CorrelationColumnProfile;
+
+  computed_methods?: string[];
 
   // ── Numeric × Numeric ──────────────────────────────────────────────────────
 
   /** Full r matrix: { col → { col → r } }. Diagonal = 1. */
-  matrix: Record<string, Record<string, number | null>>;
+  matrix?: Record<string, Record<string, number | null>>;
 
   /** Matching p-value matrix. Diagonal = null. */
-  p_values: Record<string, Record<string, number | null>>;
+  p_values?: Record<string, Record<string, number | null>>;
 
   /** Top-25 numeric pairs sorted by |r|. */
-  top_pairs: CorrelationPair[];
+  top_pairs?: CorrelationPair[];
 
   /** VIF scores (Pearson only). Empty array when not applicable. */
   vif?: Array<{ column: string; vif: number }> | null;

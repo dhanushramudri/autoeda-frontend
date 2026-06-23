@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -11,9 +11,83 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { cn } from "@/lib/utils";
 import {
   Search, X, CheckSquare, Square, Hash, Tag, Shuffle,
-  ChevronDown, ChevronRight, Lightbulb, AlertTriangle, Info,
+  ChevronDown, ChevronRight, Lightbulb, AlertTriangle, Info, RefreshCw,
 } from "lucide-react";
 import type { CorrelationResult, MixedPair, CatPair } from "@/types";
+
+
+type CorrMethodLoadingState = {
+  id: "categorical" | "mixed";
+  name: string;
+  status: "pending" | "loading" | "done" | "error";
+  estimatedTime: number;
+};
+
+const CORR_METHOD_ORDER: CorrMethodLoadingState["id"][] = ["categorical", "mixed"];
+const CORR_METHOD_NAMES: Record<CorrMethodLoadingState["id"], string> = {
+  categorical: "Categorical associations",
+  mixed: "Mixed numeric × categorical",
+};
+const CORR_METHOD_TIMES: Record<CorrMethodLoadingState["id"], number> = {
+  categorical: 20,
+  mixed: 15,
+};
+
+function mergeCorrResult(prev: CorrelationResult, next: CorrelationResult): CorrelationResult {
+  const merged: CorrelationResult = { ...prev, ...next };
+  const seen = new Set<string>();
+  merged.insights = [...(prev.insights ?? []), ...(next.insights ?? [])].filter((i) => {
+    const key = `${i.category}|${i.message}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  merged.computed_methods = Array.from(
+    new Set([...(prev.computed_methods ?? []), ...(next.computed_methods ?? [])]),
+  );
+  return merged;
+}
+
+function CorrMethodLoadingIndicator({ methods }: { methods: CorrMethodLoadingState[] }) {
+  const allDone = methods.every((m) => m.status === "done" || m.status === "error");
+  const totalComplete = methods.filter((m) => m.status === "done").length;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-3 mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-gray-600">
+          Loading additional associations ({totalComplete}/{methods.length})
+        </p>
+        {!allDone && (
+          <span className="flex items-center gap-1 text-[10px] text-gray-400">
+            <RefreshCw className="w-3 h-3 animate-spin" /> Computing…
+          </span>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {methods.map((m) => (
+          <span
+            key={m.id}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border",
+              m.status === "done"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : m.status === "error"
+                ? "bg-red-50 text-red-700 border-red-200"
+                : m.status === "loading"
+                ? "bg-blue-50 text-blue-700 border-blue-200"
+                : "bg-gray-50 text-gray-400 border-gray-200",
+            )}
+          >
+            {m.status === "loading" && <RefreshCw className="w-2.5 h-2.5 animate-spin" />}
+            {m.name}
+            {m.status === "loading" && <span className="opacity-60">~{m.estimatedTime}s</span>}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -620,11 +694,53 @@ export default function CorrelationsPage() {
     queryFn:  () => datasetsApi.get(datasetId).then((r) => r.data),
   });
 
-  const { data, isLoading } = useQuery({
+  const { data: initialData, isLoading } = useQuery({
     queryKey: queryKeys.eda.correlations(datasetId, method),
     queryFn:  () =>
-      datasetsApi.getCorrelations(datasetId, method).then((r) => r.data as CorrelationResult),
+      datasetsApi.getCorrelations(datasetId, method, "numeric").then((r) => r.data as CorrelationResult),
   });
+
+  const [progressiveData, setProgressiveData] = useState<CorrelationResult | null>(null);
+  const [loadingMethods, setLoadingMethods] = useState<CorrMethodLoadingState[]>([]);
+  const corrLoadingRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!initialData) return;
+    setProgressiveData(initialData);
+
+    setLoadingMethods(
+      CORR_METHOD_ORDER.map((id) => ({
+        id, name: CORR_METHOD_NAMES[id], status: "pending" as const, estimatedTime: CORR_METHOD_TIMES[id],
+      })),
+    );
+
+    const loadNext = (index: number) => {
+      if (index >= CORR_METHOD_ORDER.length) return;
+      const m = CORR_METHOD_ORDER[index];
+
+      setLoadingMethods((prev) => prev.map((x) => (x.id === m ? { ...x, status: "loading" as const } : x)));
+
+      datasetsApi.getCorrelations(datasetId, method, m)
+        .then((response) => {
+          setProgressiveData((prev) => (prev ? mergeCorrResult(prev, response.data as CorrelationResult) : (response.data as CorrelationResult)));
+          setLoadingMethods((prev) => prev.map((x) => (x.id === m ? { ...x, status: "done" as const } : x)));
+          if (corrLoadingRef.current) clearTimeout(corrLoadingRef.current);
+          corrLoadingRef.current = setTimeout(() => loadNext(index + 1), 300);
+        })
+        .catch(() => {
+          setLoadingMethods((prev) => prev.map((x) => (x.id === m ? { ...x, status: "error" as const } : x)));
+          if (corrLoadingRef.current) clearTimeout(corrLoadingRef.current);
+          corrLoadingRef.current = setTimeout(() => loadNext(index + 1), 500);
+        });
+    };
+    loadNext(0);
+
+    return () => {
+      if (corrLoadingRef.current) clearTimeout(corrLoadingRef.current);
+    };
+  }, [initialData, datasetId, method]);
+
+  const data = progressiveData ?? initialData;
 
   const allNumCols = useMemo(() => (data ? deriveNumCols(data) : []), [data]);
   const allCatCols = useMemo(() => (data ? deriveCatCols(data) : []), [data]);
@@ -657,11 +773,12 @@ export default function CorrelationsPage() {
 
   // ── Top pairs (filtered) ───────────────────────────────────────────────────
   const topNumericPairs = useMemo(() => {
-    if (!data?.matrix || visibleNumCols.length < 2) return [];
+    const matrix = data?.matrix;
+    if (!matrix || visibleNumCols.length < 2) return [];
     const pairs: Array<{ col1: string; col2: string; correlation: number }> = [];
     visibleNumCols.forEach((c1, i) => {
       visibleNumCols.slice(i + 1).forEach((c2) => {
-        const r = data.matrix[c1]?.[c2];
+        const r = matrix[c1]?.[c2];
         if (r != null) pairs.push({ col1: c1, col2: c2, correlation: r });
       });
     });
@@ -745,7 +862,9 @@ export default function CorrelationsPage() {
             <div className="flex-1 h-64 bg-gray-100 rounded-xl animate-pulse" />
           </div>
         ) : data ? (
-          <div className="flex gap-5 items-start">
+          <>
+            {loadingMethods.length > 0 && <CorrMethodLoadingIndicator methods={loadingMethods} />}
+            <div className="flex gap-5 items-start">
             {/* Sidebar */}
             <ColumnSidebar
               numCols={allNumCols}
@@ -801,6 +920,7 @@ export default function CorrelationsPage() {
               </div>
             </div>
           </div>
+          </>
         ) : null}
       </div>
     </>

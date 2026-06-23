@@ -124,8 +124,8 @@ export const datasetsApi = {
     api.get(`/datasets/${datasetId}/missing`),
   getDistributions: (datasetId: string, column: string) =>
     api.get(`/datasets/${datasetId}/distributions`, { params: { column } }),
-  getCorrelations: (datasetId: string, method: string = "pearson") =>
-    api.get(`/datasets/${datasetId}/correlations`, { params: { method } }),
+  getCorrelations: (datasetId: string, method: string = "pearson", methods?: string) =>
+    api.get(`/datasets/${datasetId}/correlations`, { params: { method, methods } }),
   getOutliers: (datasetId: string, method: string = "iqr", column?: string) =>
     api.get(`/datasets/${datasetId}/outliers`, { params: { method, column } }),
   getFeatureImportance: (

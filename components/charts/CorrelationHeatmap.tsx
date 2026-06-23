@@ -335,6 +335,9 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
     return extractMixedMatrix(data, mxNumCols, mxCatCols);
   }, [data.mixed]);
 
+  const profileNumCount = data.column_profile?.num_cols?.length ?? numCols.length;
+  const profileCatCount = data.column_profile?.cat_cols?.length ?? catCols.length;
+
   if (mode === "numeric") {
     if (!matrix || numCols.length === 0) {
       return <EmptyState message="No numeric correlation data available." />;
@@ -353,6 +356,9 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
   }
 
   if (mode === "cramers_v") {
+    if (!data.cramers_v && profileCatCount >= 2) {
+      return <EmptyState loading message="Computing categorical associations…" />;
+    }
     if (!data.cramers_v || catCols.length < 2) {
       return <EmptyState message="Not enough categorical columns for Cramér's V matrix." />;
     }
@@ -371,6 +377,9 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
   }
 
   if (mode === "theils_u") {
+    if (!data.theils_u && profileCatCount >= 2) {
+      return <EmptyState loading message="Computing categorical associations…" />;
+    }
     if (!data.theils_u || catCols.length < 2) {
       return <EmptyState message="Not enough categorical columns for Theil's U matrix." />;
     }
@@ -389,6 +398,9 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
   }
 
   if (mode === "eta_sq") {
+    if (!data.mixed && profileNumCount >= 1 && profileCatCount >= 1) {
+      return <EmptyState loading message="Computing mixed numeric × categorical associations…" />;
+    }
     if (!data.mixed || mixedData.rowLabels.length === 0 || mixedData.colLabels.length === 0) {
       return <EmptyState message="No mixed numeric×categorical data available." />;
     }
@@ -424,16 +436,19 @@ function HeatmapHeader({ label }: { label: string }) {
   );
 }
 
-function EmptyState({ message, warn }: { message: string; warn?: boolean }) {
+function EmptyState({ message, warn, loading }: { message: string; warn?: boolean; loading?: boolean }) {
   return (
     <p
       className={cn(
-        "text-sm py-8 text-center rounded-xl",
+        "text-sm py-8 text-center rounded-xl flex items-center justify-center gap-2",
         warn
           ? "text-amber-600 bg-amber-50"
+          : loading
+          ? "text-blue-500 bg-blue-50/50"
           : "text-gray-400",
       )}
     >
+      {loading && <span className="w-3 h-3 border-2 border-blue-300 border-t-blue-500 rounded-full animate-spin" />}
       {message}
     </p>
   );
