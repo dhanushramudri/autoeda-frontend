@@ -231,3 +231,9 @@
 }
 .mascot-hover { transform-origin: 50% 95%; cursor: pointer; }
 .mascot-hover:hover { animation: mascot-wiggle 0.4s linear; }
+
+.mascot-energize-clip { transform-box: fill-box; transform-origin: center bottom; transform: scaleY(0); transition: transform 1.8s linear; }
+.mascot-hover:hover .mascot-energize-clip { transform: scaleY(1); }
+
+.mascot-antenna-color { stroke: #7C3AED; transition: stroke 0.5s linear; }
+.mascot-hover:hover .mascot-antenna-color { stroke: #EC4899; transition-delay: 1.3s; }
