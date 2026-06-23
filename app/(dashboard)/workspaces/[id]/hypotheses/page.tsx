@@ -161,6 +161,7 @@ export default function HypothesesPage() {
   const [genCount, setGenCount] = useState(6);
   const [isGenerating, setIsGenerating] = useState(false);
   const [genProgress, setGenProgress] = useState<StreamingToolCall[]>([]);
+  const [genError, setGenError] = useState<string | null>(null);
   const [validating, setValidating] = useState<Record<number, StreamingToolCall[]>>({});
   const [statusFilter, setStatusFilter] = useState<HypothesisStatus | "all">("all");
 
@@ -235,6 +236,7 @@ export default function HypothesesPage() {
   const handleGenerate = async () => {
     setIsGenerating(true);
     setGenProgress([]);
+    setGenError(null);
     try {
       for await (const event of hypothesesApi.streamGenerate(workspaceId, { dataset_id: scopedDatasetId, count: genCount })) {
         if (event.type === "tool_call") {
@@ -246,6 +248,8 @@ export default function HypothesesPage() {
             if (idx >= 0) tools[idx] = { ...tools[idx], result: event.result as Record<string, unknown> };
             return tools;
           });
+        } else if (event.type === "error") {
+          setGenError(event.message as string);
         } else if (event.type === "persisted") {
           break;
         }
@@ -347,6 +351,12 @@ export default function HypothesesPage() {
       </div>
       {isGenerating && (
         <div className="mb-5 px-1"><LiveProgress tools={genProgress} /></div>
+      )}
+      {genError && !isGenerating && (
+        <div className="mb-5 flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          <span>{genError}</span>
+        </div>
       )}
 
       {/* Add input */}
