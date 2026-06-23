@@ -11,12 +11,13 @@ import {
   FileSearch, TrendingUp, AlertTriangle, Layers,
   Type, Wand2, Plug, Warehouse, ShieldCheck,
   Code2, ChevronLeft, MessageSquarePlus,
-  HelpCircle, ChevronUp, Compass, FlaskConical,
+  HelpCircle, ChevronUp, FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dataset } from "@/types";
 import { useTour } from "@/hooks/useTourContext";
 import { tourSteps } from "@/lib/tourSteps";
+import { Mascot } from "@/components/shared/Mascot";
 
 // -- Dataset sub-nav  --  grouped by priority -------------------------------------
 interface NavItem  { label: string; href: string; icon: React.ComponentType<{ className?: string }> }
@@ -58,7 +59,7 @@ const DATASET_GROUPS: NavGroup[] = [
 ];
 
 const WORKSPACE_LINKS = [
-  { label: "Scout",            href: "/scout",        icon: Compass },
+  { label: "Scout",            href: "/scout",        icon: Mascot },
   { label: "Hypotheses",       href: "/hypotheses",   icon: FlaskConical },
   { label: "Warehouse",        href: "/warehouse",    icon: Warehouse },
   { label: "Join Builder",     href: "/join-builder", icon: Sliders },

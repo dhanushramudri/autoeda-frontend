@@ -6,11 +6,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { scoutApi, datasetsApi, aiApi, uploadToPresignedUrl } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { Markdown } from "@/components/shared/Markdown";
+import { Mascot } from "@/components/shared/Mascot";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNowStrict } from "date-fns";
 import type { ScoutMessage, ScoutThread, ScoutSuggestion, ScoutToolCall, ScoutConversation } from "@/types";
 import {
-  Compass, Send, Sparkles, Bot, Loader2, ChevronDown, ChevronUp,
+  Send, Sparkles, Bot, Loader2, ChevronDown, ChevronUp,
   Database, Wand2, AlertCircle, ShieldAlert, Type, SearchCheck,
   Plus, Trash2, MessageSquare, Link2, PanelLeftClose, PanelLeftOpen,
   Square, Pencil, X, Image as ImageIcon,
@@ -374,7 +375,7 @@ function MessageBubble({ msg, onEdit, editDisabled }: { msg: ScoutMessage; onEdi
     <div className={cn("flex gap-3 group", isUser ? "justify-end" : "justify-start")}>
       {!isUser && (
         <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: "hsl(var(--primary) / 0.12)" }}>
-          <Compass className="w-3.5 h-3.5" style={{ color: "hsl(var(--primary))" }} />
+          <Mascot className="w-5 h-5" />
         </div>
       )}
       {isUser && onEdit && (
@@ -431,12 +432,12 @@ function StreamingBubble({ state, mode }: { state: StreamState; mode: Mode }) {
   return (
     <div className="flex gap-3 justify-start">
       <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: "hsl(var(--primary) / 0.12)" }}>
-        <Compass className="w-3.5 h-3.5" style={{ color: "hsl(var(--primary))" }} />
+        <Mascot className="w-5 h-5" />
       </div>
       <div className="max-w-[78%] min-w-0 space-y-2.5">
         {!state.answer && state.tools.length === 0 && (
           <div className="px-4 py-2.5 rounded-2xl rounded-bl-md bg-gray-50 border border-gray-100 flex items-center gap-2 text-xs text-gray-400">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <Mascot className="w-5 h-5" />
             {mode === "agent" ? "Scout is investigating…" : "Scout is thinking…"}
           </div>
         )}
@@ -854,9 +855,7 @@ export default function ScoutPage() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-3.5 border-b border-gray-100 flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.12)" }}>
-            <Compass className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
-          </div>
+          <Mascot className="w-8 h-8" />
           <div>
             <h1 className="text-sm font-bold text-gray-900 leading-tight">Scout</h1>
             <p className="text-[11px] text-gray-400 leading-tight">Your AI data analyst for this workspace</p>
@@ -891,9 +890,7 @@ export default function ScoutPage() {
           </div>
         ) : messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto gap-5">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.10)" }}>
-              <Compass className="w-7 h-7" style={{ color: "hsl(var(--primary))" }} />
-            </div>
+            <Mascot className="w-14 h-14" glow />
             <div>
               <h2 className="text-base font-bold text-gray-900 mb-1">Ask Scout anything about your data</h2>
               <p className="text-sm text-gray-400">

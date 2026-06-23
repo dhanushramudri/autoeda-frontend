@@ -13,6 +13,7 @@ import {
   ChevronDown, ChevronUp, Sparkles, Trash2, Database, Layers,
 } from "lucide-react";
 import { HypothesisToolTrace } from "@/components/hypotheses/HypothesisToolResultPreview";
+import { Mascot } from "@/components/shared/Mascot";
 
 const CONF_COLOR: Record<string, string> = {
   high: "bg-emerald-50 text-emerald-700",
@@ -28,7 +29,7 @@ const SEV_DOT: Record<string, string> = {
 
 const STATUS_CFG: Record<HypothesisStatus, { icon: React.ReactNode; cls: string; label: string; text: string }> = {
   pending: { icon: <FlaskConical className="w-3.5 h-3.5 text-gray-400" />, cls: "bg-gray-50 border-gray-200", label: "Pending", text: "text-gray-500" },
-  validating: { icon: <Loader2 className="w-3.5 h-3.5 text-blue-400 animate-spin" />, cls: "bg-blue-50 border-blue-200", label: "Validating…", text: "text-blue-600" },
+  validating: { icon: <Mascot className="w-4 h-4" />, cls: "bg-blue-50 border-blue-200", label: "Validating…", text: "text-blue-600" },
   supported: { icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />, cls: "bg-emerald-50 border-emerald-200", label: "Supported", text: "text-emerald-700" },
   refuted: { icon: <XCircle className="w-3.5 h-3.5 text-red-500" />, cls: "bg-red-50 border-red-200", label: "Refuted", text: "text-red-700" },
   inconclusive: { icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />, cls: "bg-amber-50 border-amber-200", label: "Inconclusive", text: "text-amber-700" },
@@ -45,7 +46,7 @@ function LiveProgress({ tools }: { tools: StreamingToolCall[] }) {
   if (tools.length === 0) {
     return (
       <div className="flex items-center gap-2 text-xs text-gray-400">
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Mascot className="w-5 h-5" />
         Investigating…
       </div>
     );
@@ -53,7 +54,7 @@ function LiveProgress({ tools }: { tools: StreamingToolCall[] }) {
   const last = tools[tools.length - 1];
   return (
     <div className="flex items-center gap-2 text-xs text-gray-400">
-      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+      <Mascot className="w-5 h-5" />
       {tools.length} step{tools.length !== 1 ? "s" : ""} so far — running {last.tool}…
     </div>
   );
