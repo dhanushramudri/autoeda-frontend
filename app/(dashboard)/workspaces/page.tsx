@@ -168,6 +168,7 @@ function WorkspaceCard({ workspace }: { workspace: Workspace }) {
           >
             <Warehouse className="w-3 h-3" /> Warehouse
           </Link>
+          {/* Join Builder — hidden, redundant with Warehouse + no measured usage. See commit for context.
           <Link
             href={`/workspaces/${wid}/join-builder`}
             onClick={handleClick}
@@ -175,6 +176,7 @@ function WorkspaceCard({ workspace }: { workspace: Workspace }) {
           >
             <Database className="w-3 h-3" /> Join Builder
           </Link>
+          */}
           <button
             onClick={(e) => {
               e.preventDefault();

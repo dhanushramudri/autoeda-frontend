@@ -62,7 +62,8 @@ const WORKSPACE_LINKS = [
   { label: "Scout",            href: "/scout",        icon: Mascot },
   { label: "Hypotheses",       href: "/hypotheses",   icon: FlaskConical },
   { label: "Warehouse",        href: "/warehouse",    icon: Warehouse },
-  { label: "Join Builder",     href: "/join-builder", icon: Sliders },
+  // Join Builder — hidden, redundant with Warehouse + no measured usage. See commit for context.
+  // { label: "Join Builder",  href: "/join-builder", icon: Sliders },
   { label: "Data Sources",     href: "/sources",      icon: Plug },
   { label: "Members",          href: "/members",      icon: Users },
 ];
