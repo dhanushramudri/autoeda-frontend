@@ -93,7 +93,95 @@ interface TSData {
     has_trend?: boolean;
     has_seasonality?: boolean;
   };
+  computed_methods?: string[];
   error?: string;
+}
+
+type TSMethodLoadingState = {
+  id: string;
+  name: string;
+  status: "pending" | "loading" | "done" | "error";
+  estimatedTime: number;
+};
+
+const TS_METHOD_ORDER = ["stationarity", "decomposition", "acf_pacf", "anomalies", "change_points", "granger", "readiness"] as const;
+const TS_METHOD_NAMES: Record<typeof TS_METHOD_ORDER[number], string> = {
+  stationarity: "Stationarity & Trend",
+  decomposition: "STL Decomposition",
+  acf_pacf: "ACF / PACF",
+  anomalies: "Anomalies & Rolling Stats",
+  change_points: "Change Points",
+  granger: "Granger Causality",
+  readiness: "Forecasting Readiness",
+};
+const TS_METHOD_TIMES: Record<typeof TS_METHOD_ORDER[number], number> = {
+  stationarity: 10,
+  decomposition: 30,
+  acf_pacf: 8,
+  anomalies: 10,
+  change_points: 30,
+  granger: 20,
+  readiness: 8,
+};
+
+function mergeTSResult(prev: TSData, next: TSData): TSData {
+  const merged: TSData = { ...prev, ...next };
+  if (!next.line_data?.dates?.length && prev.line_data?.dates?.length) {
+    merged.line_data = prev.line_data;
+  }
+  if (!next.rolling?.mean?.length && prev.rolling?.mean?.length) {
+    merged.rolling = prev.rolling;
+  }
+  if (!next.anomalies?.length && prev.anomalies?.length) {
+    merged.anomalies = prev.anomalies;
+  }
+  if (!next.has_trend && prev.has_trend) {
+    merged.has_trend = prev.has_trend;
+  }
+  merged.computed_methods = Array.from(
+    new Set([...(prev.computed_methods ?? []), ...(next.computed_methods ?? [])])
+  );
+  return merged;
+}
+
+function TSMethodLoadingIndicator({ methods }: { methods: TSMethodLoadingState[] }) {
+  const allDone = methods.every(m => m.status === "done" || m.status === "error");
+  const totalComplete = methods.filter(m => m.status === "done").length;
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-semibold text-gray-600">
+          Loading additional analyses ({totalComplete}/{methods.length})
+        </p>
+        {!allDone && (
+          <span className="flex items-center gap-1 text-[10px] text-gray-400">
+            <RefreshCw className="w-3 h-3 animate-spin" /> Computing…
+          </span>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {methods.map(m => (
+          <span
+            key={m.id}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border ${
+              m.status === "done"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : m.status === "error"
+                ? "bg-red-50 text-red-700 border-red-200"
+                : m.status === "loading"
+                ? "bg-blue-50 text-blue-700 border-blue-200"
+                : "bg-gray-50 text-gray-400 border-gray-200"
+            }`}
+          >
+            {m.status === "loading" && <RefreshCw className="w-2.5 h-2.5 animate-spin" />}
+            {m.name}
+            {m.status === "loading" && <span className="opacity-60">~{m.estimatedTime}s</span>}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 
@@ -1057,12 +1145,54 @@ export default function TimeSeriesPage() {
   const timeCol = searchParams.get("time_col") ?? datetimeCols[0] ?? "";
   const valueCol = searchParams.get("value_col") ?? numericCols[0] ?? "";
 
-  const { data, isLoading, isError, refetch } = useQuery<TSData>({
+  const { data: initialData, isLoading, isError, refetch } = useQuery<TSData>({
     queryKey: queryKeys.eda.timeseries(datasetId, timeCol, valueCol),
-    queryFn: () => datasetsApi.getTimeSeries(datasetId, timeCol, valueCol).then(r => r.data),
+    queryFn: () => datasetsApi.getTimeSeries(datasetId, timeCol, valueCol, "overview").then(r => r.data),
     enabled: !!timeCol && !!valueCol,
     staleTime: 5 * 60 * 1000,
   });
+
+  const [progressiveData, setProgressiveData] = useState<TSData | null>(null);
+  const [loadingMethods, setLoadingMethods] = useState<TSMethodLoadingState[]>([]);
+  const tsLoadingRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!initialData || !timeCol || !valueCol) return;
+    setProgressiveData(initialData);
+
+    if (initialData.error) return;
+
+    setLoadingMethods(TS_METHOD_ORDER.map(id => ({
+      id, name: TS_METHOD_NAMES[id], status: "pending" as const, estimatedTime: TS_METHOD_TIMES[id],
+    })));
+
+    const loadNext = (index: number) => {
+      if (index >= TS_METHOD_ORDER.length) return;
+      const method = TS_METHOD_ORDER[index];
+
+      setLoadingMethods(prev => prev.map(m => (m.id === method ? { ...m, status: "loading" as const } : m)));
+
+      datasetsApi.getTimeSeries(datasetId, timeCol, valueCol, method)
+        .then(response => {
+          setProgressiveData(prev => (prev ? mergeTSResult(prev, response.data as TSData) : (response.data as TSData)));
+          setLoadingMethods(prev => prev.map(m => (m.id === method ? { ...m, status: "done" as const } : m)));
+          if (tsLoadingRef.current) clearTimeout(tsLoadingRef.current);
+          tsLoadingRef.current = setTimeout(() => loadNext(index + 1), 300);
+        })
+        .catch(() => {
+          setLoadingMethods(prev => prev.map(m => (m.id === method ? { ...m, status: "error" as const } : m)));
+          if (tsLoadingRef.current) clearTimeout(tsLoadingRef.current);
+          tsLoadingRef.current = setTimeout(() => loadNext(index + 1), 500);
+        });
+    };
+    loadNext(0);
+
+    return () => {
+      if (tsLoadingRef.current) clearTimeout(tsLoadingRef.current);
+    };
+  }, [initialData, datasetId, timeCol, valueCol]);
+
+  const data = progressiveData ?? initialData;
 
   const setParams = useCallback((key: string, val: string) => {
     const p = new URLSearchParams(searchParams.toString());
@@ -1168,6 +1298,10 @@ export default function TimeSeriesPage() {
             ) : (
               <>
                 <SummaryCards data={data} />
+
+                {loadingMethods.length > 0 && (
+                  <TSMethodLoadingIndicator methods={loadingMethods} />
+                )}
 
                 {data.data_quality && (
                   <Section 

@@ -257,8 +257,8 @@ export const datasetsApi = {
     return accumulated;
   },
 
-  getTimeSeries: (datasetId: string, time_col: string, value_col: string) =>
-    api.get(`/datasets/${datasetId}/timeseries`, { params: { time_col, value_col } }),
+  getTimeSeries: (datasetId: string, time_col: string, value_col: string, methods?: string) =>
+    api.get(`/datasets/${datasetId}/timeseries`, { params: { time_col, value_col, methods } }),
   getText: (datasetId: string, column: string) =>
     api.get(`/datasets/${datasetId}/text`, { params: { column } }),
   getQualityScore: (datasetId: string) =>
