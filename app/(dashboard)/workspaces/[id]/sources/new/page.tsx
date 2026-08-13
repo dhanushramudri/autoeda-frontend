@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ConnectorLogo } from "@/components/shared/ConnectorLogo";
 
 // -- Types ----------------------------------------------------------------------
 
@@ -138,6 +139,19 @@ const SOURCE_FIELDS: Record<string, FieldDef[]> = {
     { key: "url",   label: "GraphQL Endpoint", required: true },
     { key: "query", label: "GraphQL Query",    type: "textarea", required: true },
     { key: "token", label: "Auth Token",       type: "password", isCredential: true },
+  ],
+  databricks: [
+    { key: "server_hostname", label: "Server Hostname", placeholder: "<instance>.azuredatabricks.net", required: true },
+    { key: "http_path",       label: "HTTP Path",       placeholder: "/sql/1.0/warehouses/<id>",       required: true },
+    { key: "access_token",    label: "Access Token",    type: "password", isCredential: true, required: true },
+    { key: "catalog",         label: "Catalog",         placeholder: "hive_metastore (optional)" },
+    { key: "schema",          label: "Schema",          placeholder: "default (optional)" },
+  ],
+  fabric: [
+    { key: "server",   label: "Server",   placeholder: "<workspace>.datawarehouse.fabric.microsoft.com", required: true },
+    { key: "database", label: "Database", placeholder: "Warehouse or Lakehouse name",                    required: true },
+    { key: "username", label: "Username", placeholder: "user@org.com or service-principal client ID",    isCredential: true, required: true },
+    { key: "password", label: "Password", type: "password", isCredential: true, required: true },
   ],
 };
 
@@ -361,14 +375,10 @@ export default function NewSourcePage() {
               {/* Grid  --  filtered */}
               {search.trim() ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {filtered.map((entry) => {
-                    const meta = GROUP_META[entry.group] ?? { icon: Plug, color: "text-gray-500", bg: "bg-gray-50" };
-                    const Icon = meta.icon;
-                    return (
-                      <ConnectorCard key={entry.id} entry={entry} Icon={Icon} meta={meta}
-                        onClick={() => { setSelectedType(entry.id); setStep("configure"); }} />
-                    );
-                  })}
+                  {filtered.map((entry) => (
+                    <ConnectorCard key={entry.id} entry={entry}
+                      onClick={() => { setSelectedType(entry.id); setStep("configure"); }} />
+                  ))}
                   {filtered.length === 0 && (
                     <p className="col-span-4 text-sm text-gray-400 py-8 text-center">No connectors match "{search}"</p>
                   )}
@@ -386,7 +396,7 @@ export default function NewSourcePage() {
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                         {entries.map((entry) => (
-                          <ConnectorCard key={entry.id} entry={entry} Icon={Icon} meta={meta}
+                          <ConnectorCard key={entry.id} entry={entry}
                             onClick={() => { setSelectedType(entry.id); setStep("configure"); }} />
                         ))}
                       </div>
@@ -580,9 +590,9 @@ export default function NewSourcePage() {
 
               <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden mb-4">
                 {/* Source header */}
-                <div className={cn("flex items-center gap-4 px-6 py-5 border-b border-gray-100", selectedMeta?.bg)}>
-                  <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center bg-white/70 shadow-sm flex-shrink-0")}>
-                    {selectedMeta && <selectedMeta.icon className={cn("w-6 h-6", selectedMeta.color)} />}
+                <div className={cn("flex items-center gap-4 px-6 py-5 border-b border-gray-100 bg-gray-50")}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm border border-gray-100 flex-shrink-0">
+                    <ConnectorLogo id={selectedType ?? ""} className="w-8 h-8" />
                   </div>
                   <div>
                     <p className="font-bold text-gray-900">{name}</p>
@@ -642,10 +652,8 @@ export default function NewSourcePage() {
 
 // -- Sub-components ------------------------------------------------------------
 
-function ConnectorCard({ entry, Icon, meta, onClick }: {
+function ConnectorCard({ entry, onClick }: {
   entry: CatalogEntry;
-  Icon: React.ComponentType<{ className?: string }>;
-  meta: { color: string; bg: string };
   onClick: () => void;
 }) {
   return (
@@ -653,8 +661,8 @@ function ConnectorCard({ entry, Icon, meta, onClick }: {
       onClick={onClick}
       className="group flex flex-col items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-brand/40 hover:shadow-md transition-all text-center"
     >
-      <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center transition-all group-hover:scale-110", meta.bg)}>
-        <Icon className={cn("w-5 h-5", meta.color)} />
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 bg-white border border-gray-100 shadow-sm">
+        <ConnectorLogo id={entry.id} className="w-8 h-8" />
       </div>
       <span className="text-xs font-semibold text-gray-700 leading-snug group-hover:text-brand transition-colors">
         {entry.label}

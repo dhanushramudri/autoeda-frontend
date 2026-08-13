@@ -6,10 +6,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sourcesApi } from "@/lib/api";
 import {
   Plug, Plus, Search, Trash2, TestTube2, ExternalLink,
-  CheckCircle2, XCircle, Clock, AlertCircle, Database,
-  Cloud, Globe, FileText,
+  CheckCircle2, XCircle, Clock, AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
+import { ConnectorLogo } from "@/components/shared/ConnectorLogo";
 
 interface DataSource {
   id: number;
@@ -21,27 +21,6 @@ interface DataSource {
   last_error?: string;
   created_at: string;
 }
-
-const GROUP_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
-  postgresql: Database,
-  mysql: Database,
-  mssql: Database,
-  sqlite: Database,
-  redshift: Database,
-  snowflake: Database,
-  bigquery: Database,
-  mongodb: Database,
-  s3: Cloud,
-  azure_blob: Cloud,
-  gcs: Cloud,
-  google_drive: Cloud,
-  rest_api: Globe,
-  graphql: Globe,
-  csv: FileText,
-  excel: FileText,
-  json: FileText,
-  parquet: FileText,
-};
 
 const TYPE_LABEL: Record<string, string> = {
   postgresql: "PostgreSQL",
@@ -62,6 +41,8 @@ const TYPE_LABEL: Record<string, string> = {
   excel: "Excel",
   json: "JSON",
   parquet: "Parquet",
+  databricks: "Databricks",
+  fabric: "Microsoft Fabric",
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -169,15 +150,14 @@ export default function SourcesPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map((src) => {
-              const Icon = GROUP_ICON[src.source_type] ?? Database;
               return (
                 <div
                   key={src.id}
                   className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 hover:border-brand/30 hover:shadow-sm transition group"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-5 h-5 text-brand" />
+                    <div className="w-9 h-9 rounded-lg bg-white border border-gray-100 shadow-sm flex items-center justify-center flex-shrink-0">
+                      <ConnectorLogo id={src.source_type} className="w-7 h-7" />
                     </div>
                     <StatusBadge status={src.status} />
                   </div>
@@ -229,6 +209,7 @@ export default function SourcesPage() {
                 </div>
               );
             })}
+
           </div>
         )}
       </div>
