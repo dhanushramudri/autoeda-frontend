@@ -54,7 +54,7 @@ export default function MembersPage() {
   const ROLE_BADGE: Record<string, string> = {
     admin: "bg-red-100 text-red-700",
     analyst: "bg-blue-100 text-brand",
-    viewer: "bg-gray-100 text-gray-600",
+    viewer: "bg-muted text-muted-foreground",
   };
 
   return (
@@ -68,16 +68,16 @@ export default function MembersPage() {
       />
 
       <div className="mt-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Workspace Members</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <h1 className="text-2xl font-bold text-foreground">Workspace Members</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Manage access and roles for {workspace?.name}
         </p>
       </div>
 
       {/* Invite form */}
       {user?.is_admin && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-          <h2 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+        <div className="bg-card rounded-xl border border-border p-5 mb-6">
+          <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
             <UserPlus className="w-4 h-4" />
             Invite Member
           </h2>
@@ -94,12 +94,12 @@ export default function MembersPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="colleague@jmangroup.com"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+              className="flex-1 px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as typeof role)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+              className="px-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
             >
               {ROLES.map((r) => (
                 <option key={r} value={r} className="capitalize">{r}</option>
@@ -120,35 +120,35 @@ export default function MembersPage() {
       {isLoading ? (
         <PageSpinner />
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-card rounded-xl border border-border overflow-hidden">
           {(members ?? []).map((member: WorkspaceMember, i: number) => (
             <div
               key={member.id}
               className={`flex items-center gap-4 px-5 py-3.5 ${
-                i > 0 ? "border-t border-gray-50" : ""
+                i > 0 ? "border-t border-border" : ""
               }`}
             >
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 text-sm font-semibold">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground text-sm font-semibold">
                 {(member.user?.full_name ?? member.user?.email ?? "?")[0]?.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-800 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {member.user?.full_name ?? member.user?.email}
                 </p>
-                <p className="text-xs text-gray-400 truncate">{member.user?.email}</p>
+                <p className="text-xs text-muted-foreground truncate">{member.user?.email}</p>
               </div>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${ROLE_BADGE[member.role] ?? "bg-gray-100 text-gray-600"}`}>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${ROLE_BADGE[member.role] ?? "bg-muted text-muted-foreground"}`}>
                 {member.role}
               </span>
               {member.joined_at && (
-                <span className="text-xs text-gray-400 hidden sm:block">
+                <span className="text-xs text-muted-foreground hidden sm:block">
                   {formatDistanceToNow(new Date(member.joined_at), { addSuffix: true })}
                 </span>
               )}
               {user?.is_admin && member.user?.email !== user.email && (
                 <button
                   onClick={() => removeMutation.mutate(member.id)}
-                  className="p-1.5 text-gray-400 hover:text-red-500 transition"
+                  className="p-1.5 text-muted-foreground hover:text-red-500 transition"
                   title="Remove member"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -157,7 +157,7 @@ export default function MembersPage() {
             </div>
           ))}
           {!members?.length && (
-            <div className="px-5 py-8 text-center text-sm text-gray-400">
+            <div className="px-5 py-8 text-center text-sm text-muted-foreground">
               No members yet
             </div>
           )}

@@ -53,7 +53,7 @@ export function OutlierPlot({
           <select
             value={column}
             onChange={(e) => onColumnChange(e.target.value)}
-            className="rounded border border-gray-300 px-2 py-1 text-sm"
+            className="rounded border border-border px-2 py-1 text-sm"
           >
             {data.columns.map((col) => (
               <option key={col.name} value={col.name}>
@@ -64,7 +64,7 @@ export function OutlierPlot({
         </div>
       )}
 
-      <div className="rounded border border-gray-200 bg-white p-4">
+      <div className="rounded border border-border bg-card p-4">
         <Plot
           data={plotData}
           layout={layout}
@@ -74,9 +74,9 @@ export function OutlierPlot({
       </div>
 
       {/* Outlier Summary Table */}
-      <div className="rounded border border-gray-200 bg-white">
+      <div className="rounded border border-border bg-card">
         <table className="w-full">
-          <thead className="border-b bg-gray-50">
+          <thead className="border-b bg-muted">
             <tr>
               <th className="px-4 py-2 text-left text-sm font-semibold">
                 Column
@@ -94,13 +94,13 @@ export function OutlierPlot({
           </thead>
           <tbody>
             {data.columns.map((col) => (
-              <tr key={col.name} className="border-b hover:bg-gray-50">
+              <tr key={col.name} className="border-b hover:bg-muted">
                 <td className="px-4 py-2 text-sm">{col.name}</td>
                 <td className="px-4 py-2 text-sm">{col.outlier_count}</td>
                 <td className="px-4 py-2 text-sm">
                   {col.outlier_pct.toFixed(2)}%
                 </td>
-                <td className="px-4 py-2 text-sm text-gray-600">
+                <td className="px-4 py-2 text-sm text-muted-foreground">
                   [{col.bounds.lower?.toFixed(2)}, {col.bounds.upper?.toFixed(2)}]
                 </td>
               </tr>

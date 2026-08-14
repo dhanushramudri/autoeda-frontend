@@ -30,14 +30,14 @@ function TextSummary({ result }: { result: Record<string, unknown> }) {
   const r = result as unknown as TextResult;
   if (!r?.word_freq) return null;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-3.5 space-y-2.5">
-      <div className="flex items-center gap-4 text-xs text-gray-500">
-        <span className="flex items-center gap-1.5"><Type className="w-3.5 h-3.5 text-gray-400" />{r.total_texts.toLocaleString()} texts</span>
+    <div className="rounded-xl border border-border bg-card p-3.5 space-y-2.5">
+      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5"><Type className="w-3.5 h-3.5 text-muted-foreground" />{r.total_texts.toLocaleString()} texts</span>
         <span>avg length {Math.round(r.avg_length)}</span>
         {r.sentiment_dist && (
           <span className="ml-auto flex items-center gap-1.5">
             <span className="text-emerald-600">+{r.sentiment_dist.positive}</span>
-            <span className="text-gray-400">·{r.sentiment_dist.neutral}</span>
+            <span className="text-muted-foreground">·{r.sentiment_dist.neutral}</span>
             <span className="text-red-500">-{r.sentiment_dist.negative}</span>
           </span>
         )}
@@ -45,8 +45,8 @@ function TextSummary({ result }: { result: Record<string, unknown> }) {
       {r.word_freq.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {r.word_freq.slice(0, 12).map((w) => (
-            <span key={w.word} className="px-2 py-0.5 rounded-full bg-gray-50 border border-gray-100 text-[11px] text-gray-600">
-              {w.word} <span className="text-gray-400">{w.count}</span>
+            <span key={w.word} className="px-2 py-0.5 rounded-full bg-muted border border-border text-[11px] text-muted-foreground">
+              {w.word} <span className="text-muted-foreground">{w.count}</span>
             </span>
           ))}
         </div>
@@ -59,15 +59,15 @@ function RelationshipsSummary({ result }: { result: Record<string, unknown> }) {
   const rels = result.relationships as Array<{ dataset_a: string; dataset_b: string; description: string }> | undefined;
   if (!rels?.length) return null;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-3 space-y-2">
+    <div className="rounded-xl border border-border bg-card p-3 space-y-2">
       {rels.map((r, i) => (
         <div key={i} className="flex items-start gap-2 text-xs">
           <Link2 className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 mt-0.5" />
           <div>
-            <span className="font-medium text-gray-700">{r.dataset_a}</span>
-            <span className="text-gray-400"> ↔ </span>
-            <span className="font-medium text-gray-700">{r.dataset_b}</span>
-            <p className="text-gray-400 mt-0.5">{r.description}</p>
+            <span className="font-medium text-foreground">{r.dataset_a}</span>
+            <span className="text-muted-foreground"> ↔ </span>
+            <span className="font-medium text-foreground">{r.dataset_b}</span>
+            <p className="text-muted-foreground mt-0.5">{r.description}</p>
           </div>
         </div>
       ))}
@@ -79,16 +79,16 @@ function SearchColumnsSummary({ result }: { result: Record<string, unknown> }) {
   const matches = result.matches as Array<{ dataset_id: number; dataset_name: string; column: string; type: string }> | undefined;
   if (!matches) return null;
   if (!matches.length) {
-    return <p className="text-xs text-gray-400 italic px-1">No matching columns found.</p>;
+    return <p className="text-xs text-muted-foreground italic px-1">No matching columns found.</p>;
   }
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-3 space-y-1.5">
+    <div className="rounded-xl border border-border bg-card p-3 space-y-1.5">
       {matches.map((m, i) => (
         <div key={i} className="flex items-center gap-2 text-xs">
-          <SearchCheck className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-          <span className="font-medium text-gray-700">{m.column}</span>
-          <span className="text-gray-400">in {m.dataset_name}</span>
-          <span className="ml-auto text-gray-300 font-mono">{m.type}</span>
+          <SearchCheck className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+          <span className="font-medium text-foreground">{m.column}</span>
+          <span className="text-muted-foreground">in {m.dataset_name}</span>
+          <span className="ml-auto text-muted-foreground/60 font-mono">{m.type}</span>
         </div>
       ))}
     </div>
@@ -103,12 +103,12 @@ function OutlierSummary({ result }: { result: Record<string, unknown> }) {
   const columns = result.columns as Array<{ name: string; outlier_count: number; outlier_pct: number; bounds?: { lower?: number; upper?: number } }> | undefined;
   if (!columns?.length) return null;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-3.5 space-y-2">
+    <div className="rounded-xl border border-border bg-card p-3.5 space-y-2">
       {columns.map((c) => (
         <div key={c.name} className="flex items-center gap-3">
           <ShieldAlert className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-          <span className="text-xs font-medium text-gray-700 flex-1 truncate">{c.name}</span>
-          <span className="text-xs text-gray-400">{c.outlier_count.toLocaleString()} rows</span>
+          <span className="text-xs font-medium text-foreground flex-1 truncate">{c.name}</span>
+          <span className="text-xs text-muted-foreground">{c.outlier_count.toLocaleString()} rows</span>
           <span className="text-xs font-semibold text-amber-600 w-12 text-right">{c.outlier_pct.toFixed(1)}%</span>
         </div>
       ))}
@@ -122,16 +122,16 @@ function ShapSummary({ result }: { result: Record<string, unknown> }) {
   const sorted = [...shapValues].sort((a, b) => (b.mean_abs_shap ?? b.importance ?? 0) - (a.mean_abs_shap ?? a.importance ?? 0)).slice(0, 10);
   const max = Math.max(...sorted.map((s) => s.mean_abs_shap ?? s.importance ?? 0), 1e-9);
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-3.5 space-y-2">
+    <div className="rounded-xl border border-border bg-card p-3.5 space-y-2">
       {sorted.map((s) => {
         const v = s.mean_abs_shap ?? s.importance ?? 0;
         return (
           <div key={s.feature} className="flex items-center gap-2.5">
-            <span className="text-xs text-gray-600 w-32 truncate flex-shrink-0">{s.feature}</span>
-            <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+            <span className="text-xs text-muted-foreground w-32 truncate flex-shrink-0">{s.feature}</span>
+            <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
               <div className="h-full rounded-full" style={{ width: `${(v / max) * 100}%`, backgroundColor: "hsl(var(--primary))" }} />
             </div>
-            <span className="text-[11px] text-gray-400 w-12 text-right">{v.toFixed(3)}</span>
+            <span className="text-[11px] text-muted-foreground w-12 text-right">{v.toFixed(3)}</span>
           </div>
         );
       })}
@@ -142,9 +142,9 @@ function ShapSummary({ result }: { result: Record<string, unknown> }) {
 function QualityRulesSummary({ result }: { result: Record<string, unknown> }) {
   const rules = result.rules as Array<{ label: string; pass_pct: number; fail_count: number }> | undefined;
   if (!rules) return null;
-  if (!rules.length) return <p className="text-xs text-gray-400 italic px-1">No quality rules configured for this dataset yet.</p>;
+  if (!rules.length) return <p className="text-xs text-muted-foreground italic px-1">No quality rules configured for this dataset yet.</p>;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-3.5 space-y-2">
+    <div className="rounded-xl border border-border bg-card p-3.5 space-y-2">
       {rules.map((r, i) => (
         <div key={i} className="flex items-center gap-3">
           {r.fail_count === 0 ? (
@@ -152,8 +152,8 @@ function QualityRulesSummary({ result }: { result: Record<string, unknown> }) {
           ) : (
             <span className="w-3.5 h-3.5 rounded-full bg-amber-500 flex-shrink-0" />
           )}
-          <span className="text-xs font-medium text-gray-700 flex-1 truncate">{r.label}</span>
-          <span className="text-xs text-gray-400">{r.fail_count.toLocaleString()} failing</span>
+          <span className="text-xs font-medium text-foreground flex-1 truncate">{r.label}</span>
+          <span className="text-xs text-muted-foreground">{r.fail_count.toLocaleString()} failing</span>
           <span className="text-xs font-semibold w-12 text-right" style={{ color: r.fail_count === 0 ? "#059669" : "#d97706" }}>{r.pass_pct.toFixed(0)}%</span>
         </div>
       ))}
@@ -166,14 +166,14 @@ function StatTestSummary({ result }: { result: Record<string, unknown> }) {
   const p = result.p_value as number;
   const significant = p < 0.05;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-3.5 space-y-1.5">
+    <div className="rounded-xl border border-border bg-card p-3.5 space-y-1.5">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold text-gray-700">{String(result.label ?? result.test)}</span>
-        <span className={cn("ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full", significant ? "bg-violet-50 text-violet-700" : "bg-gray-50 text-gray-500")}>
+        <span className="text-xs font-semibold text-foreground">{String(result.label ?? result.test)}</span>
+        <span className={cn("ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full", significant ? "bg-violet-50 text-violet-700" : "bg-muted text-muted-foreground")}>
           p = {p.toFixed(4)}
         </span>
       </div>
-      <p className="text-xs text-gray-500">{String(result.interpretation)}</p>
+      <p className="text-xs text-muted-foreground">{String(result.interpretation)}</p>
     </div>
   );
 }
@@ -191,7 +191,7 @@ function PythonResultSummary({ result }: { result: Record<string, unknown> }) {
   const value = result.result;
   const stdout = result.stdout as string | undefined;
   return (
-    <div className="rounded-xl border border-gray-100 bg-white p-3 space-y-2">
+    <div className="rounded-xl border border-border bg-card p-3 space-y-2">
       {Array.isArray(value) && value.length > 0 && typeof value[0] === "object" ? (
         <DataTable
           columns={Object.keys(value[0] as object).map((k) => ({ key: k, label: k }))}
@@ -199,10 +199,10 @@ function PythonResultSummary({ result }: { result: Record<string, unknown> }) {
           compact
         />
       ) : (
-        <pre className="text-xs font-mono text-gray-700 whitespace-pre-wrap break-all">{JSON.stringify(value, null, 2)}</pre>
+        <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-all">{JSON.stringify(value, null, 2)}</pre>
       )}
       {stdout && (
-        <pre className="text-[11px] font-mono text-gray-400 border-t border-gray-100 pt-2 whitespace-pre-wrap break-all">{stdout}</pre>
+        <pre className="text-[11px] font-mono text-muted-foreground border-t border-border pt-2 whitespace-pre-wrap break-all">{stdout}</pre>
       )}
     </div>
   );
@@ -221,14 +221,14 @@ function ToolResultPreview({ call }: { call: ScoutToolCall }) {
   switch (call.tool) {
     case "get_missing":
       return (
-        <div className="rounded-xl border border-gray-100 bg-white p-3">
+        <div className="rounded-xl border border-border bg-card p-3">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <MissingHeatmap data={r as any} />
         </div>
       );
     case "get_correlations":
       return (
-        <div className="rounded-xl border border-gray-100 bg-white p-3 overflow-x-auto">
+        <div className="rounded-xl border border-border bg-card p-3 overflow-x-auto">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <CorrelationHeatmap data={r as any} />
         </div>
@@ -237,7 +237,7 @@ function ToolResultPreview({ call }: { call: ScoutToolCall }) {
       return <OutlierSummary result={r} />;
     case "get_quality_score":
       return (
-        <div className="rounded-xl border border-gray-100 bg-white p-3">
+        <div className="rounded-xl border border-border bg-card p-3">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <QualityGauge data={r as any} />
         </div>
@@ -251,7 +251,7 @@ function ToolResultPreview({ call }: { call: ScoutToolCall }) {
         Object.fromEntries(columns.map((c, i) => [c, row[i]])) as Record<string, unknown>
       );
       return (
-        <div className="rounded-xl border border-gray-100 bg-white p-2 overflow-x-auto">
+        <div className="rounded-xl border border-border bg-card p-2 overflow-x-auto">
           <DataTable
             columns={columns.map((c) => ({ key: c, label: c }))}
             data={tableData}
@@ -264,7 +264,7 @@ function ToolResultPreview({ call }: { call: ScoutToolCall }) {
       const column = call.arguments.column as string;
       if (!r.histogram && !r.is_numeric) return null;
       return (
-        <div className="rounded-xl border border-gray-100 bg-white p-3">
+        <div className="rounded-xl border border-border bg-card p-3">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <DistributionChart data={r as any} column={column} />
         </div>
@@ -274,7 +274,7 @@ function ToolResultPreview({ call }: { call: ScoutToolCall }) {
       const timeCol = call.arguments.time_col as string;
       const valueCol = call.arguments.value_col as string;
       return (
-        <div className="rounded-xl border border-gray-100 bg-white p-3">
+        <div className="rounded-xl border border-border bg-card p-3">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           <TimeSeriesChart data={r as any} timeCol={timeCol} valueCol={valueCol} />
         </div>
@@ -298,7 +298,7 @@ function ToolResultPreview({ call }: { call: ScoutToolCall }) {
       const preview = r.preview as Array<Record<string, unknown>> | undefined;
       if (!preview?.length) return null;
       return (
-        <div className="rounded-xl border border-gray-100 bg-white p-2 overflow-x-auto">
+        <div className="rounded-xl border border-border bg-card p-2 overflow-x-auto">
           <DataTable columns={Object.keys(preview[0]).map((c) => ({ key: c, label: c }))} data={preview} compact />
         </div>
       );
@@ -315,10 +315,10 @@ function ToolResultPreview({ call }: { call: ScoutToolCall }) {
       return (
         <div className="flex flex-wrap gap-2">
           {datasets.map((d) => (
-            <span key={String(d.id)} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200">
+            <span key={String(d.id)} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
               <Database className="w-3 h-3" />
               {String(d.name)}
-              <span className="text-gray-400">· {String(d.row_count ?? "?")} rows</span>
+              <span className="text-muted-foreground">· {String(d.row_count ?? "?")} rows</span>
             </span>
           ))}
         </div>
@@ -349,7 +349,7 @@ function ToolTrace({ trace }: { trace: ScoutToolCall[] }) {
 
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-[11px] font-medium text-gray-400 hover:text-gray-600 transition"
+        className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-muted-foreground transition"
       >
         {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
         {trace.length} tool {trace.length === 1 ? "call" : "calls"} used
@@ -358,9 +358,9 @@ function ToolTrace({ trace }: { trace: ScoutToolCall[] }) {
       {open && (
         <div className="space-y-1.5 pl-1">
           {trace.map((t, i) => (
-            <div key={i} className="text-[11px] font-mono text-gray-400 bg-gray-50 rounded-lg px-2.5 py-1.5 border border-gray-100">
+            <div key={i} className="text-[11px] font-mono text-muted-foreground bg-muted rounded-lg px-2.5 py-1.5 border border-border">
               <span className="text-violet-500">{t.tool}</span>
-              <span className="text-gray-400">({JSON.stringify(t.arguments)})</span>
+              <span className="text-muted-foreground">({JSON.stringify(t.arguments)})</span>
             </div>
           ))}
         </div>
@@ -383,7 +383,7 @@ function MessageBubble({ msg, onEdit, editDisabled }: { msg: ScoutMessage; onEdi
           onClick={() => onEdit(msg)}
           disabled={editDisabled}
           title="Edit & resend"
-          className="self-center opacity-0 group-hover:opacity-100 disabled:opacity-0 p-1.5 rounded-md text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition flex-shrink-0"
+          className="self-center opacity-0 group-hover:opacity-100 disabled:opacity-0 p-1.5 rounded-md text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted transition flex-shrink-0"
         >
           <Pencil className="w-3.5 h-3.5" />
         </button>
@@ -393,7 +393,7 @@ function MessageBubble({ msg, onEdit, editDisabled }: { msg: ScoutMessage; onEdi
           <img
             src={msg.image_url}
             alt="Attached"
-            className={cn("max-w-[220px] max-h-[220px] rounded-xl border border-gray-200 object-cover mb-1.5", isUser && "ml-auto")}
+            className={cn("max-w-[220px] max-h-[220px] rounded-xl border border-border object-cover mb-1.5", isUser && "ml-auto")}
           />
         )}
         <div
@@ -401,7 +401,7 @@ function MessageBubble({ msg, onEdit, editDisabled }: { msg: ScoutMessage; onEdi
             "px-4 py-2.5 rounded-2xl text-[13.5px] leading-relaxed",
             isUser
               ? "text-white rounded-br-md"
-              : "bg-gray-50 text-gray-800 rounded-bl-md border border-gray-100"
+              : "bg-muted text-foreground rounded-bl-md border border-border"
           )}
           style={isUser ? { backgroundColor: "hsl(var(--primary))" } : undefined}
         >
@@ -436,7 +436,7 @@ function StreamingBubble({ state, mode }: { state: StreamState; mode: Mode }) {
       </div>
       <div className="max-w-[78%] min-w-0 space-y-2.5">
         {!state.answer && state.tools.length === 0 && (
-          <div className="px-4 py-2.5 rounded-2xl rounded-bl-md bg-gray-50 border border-gray-100 flex items-center gap-2 text-xs text-gray-400">
+          <div className="px-4 py-2.5 rounded-2xl rounded-bl-md bg-muted border border-border flex items-center gap-2 text-xs text-muted-foreground">
             <Mascot className="w-5 h-5" />
             {mode === "agent" ? "Scout is investigating…" : "Scout is thinking…"}
           </div>
@@ -445,14 +445,14 @@ function StreamingBubble({ state, mode }: { state: StreamState; mode: Mode }) {
           t.result ? (
             <ToolResultPreview key={i} call={t as ScoutToolCall} />
           ) : (
-            <div key={i} className="flex items-center gap-2 text-xs text-gray-400 px-1">
+            <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground px-1">
               <Loader2 className="w-3 h-3 animate-spin" />
               Running {t.tool}…
             </div>
           )
         )}
         {state.answer && (
-          <div className="px-4 py-2.5 rounded-2xl rounded-bl-md bg-gray-50 text-gray-800 border border-gray-100 text-[13.5px] leading-relaxed">
+          <div className="px-4 py-2.5 rounded-2xl rounded-bl-md bg-muted text-foreground border border-border text-[13.5px] leading-relaxed">
             <Markdown content={state.answer} />
             <span className="scout-caret" />
           </div>
@@ -504,11 +504,11 @@ function ConversationRail({
 
   if (collapsed) {
     return (
-      <div className="w-12 flex-shrink-0 border-r border-gray-100 flex flex-col items-center bg-gray-50/50 py-2.5 gap-2 transition-all">
+      <div className="w-12 flex-shrink-0 border-r border-border flex flex-col items-center bg-muted/50 py-2.5 gap-2 transition-all">
         <button
           onClick={() => setCollapsed(false)}
           title="Expand conversations"
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-white hover:text-gray-600 transition"
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-card hover:text-muted-foreground transition"
         >
           <PanelLeftOpen className="w-4 h-4" />
         </button>
@@ -526,7 +526,7 @@ function ConversationRail({
   }
 
   return (
-    <div className="w-56 flex-shrink-0 border-r border-gray-100 flex flex-col bg-gray-50/50 transition-all">
+    <div className="w-56 flex-shrink-0 border-r border-border flex flex-col bg-muted/50 transition-all">
       <div className="p-2.5 flex items-center gap-1.5">
         <button
           onClick={() => createMutation.mutate()}
@@ -540,7 +540,7 @@ function ConversationRail({
         <button
           onClick={() => setCollapsed(true)}
           title="Collapse"
-          className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg text-gray-400 hover:bg-white hover:text-gray-600 transition"
+          className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-card hover:text-muted-foreground transition"
         >
           <PanelLeftClose className="w-4 h-4" />
         </button>
@@ -552,25 +552,25 @@ function ConversationRail({
             onClick={() => onSelect(c.id)}
             className={cn(
               "w-full group flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition",
-              c.id === activeId ? "bg-white shadow-sm" : "hover:bg-white/70"
+              c.id === activeId ? "bg-card shadow-sm" : "hover:bg-card/70"
             )}
           >
-            <MessageSquare className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
+            <MessageSquare className="w-3.5 h-3.5 flex-shrink-0 text-muted-foreground" />
             <div className="flex-1 min-w-0">
-              <p className={cn("text-xs truncate", c.id === activeId ? "text-gray-900 font-medium" : "text-gray-600")}>{c.title}</p>
-              <p className="text-[10px] text-gray-400">{formatDistanceToNowStrict(new Date(c.updated_at), { addSuffix: true })}</p>
+              <p className={cn("text-xs truncate", c.id === activeId ? "text-foreground font-medium" : "text-muted-foreground")}>{c.title}</p>
+              <p className="text-[10px] text-muted-foreground">{formatDistanceToNowStrict(new Date(c.updated_at), { addSuffix: true })}</p>
             </div>
             <span
               role="button"
               onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(c.id); }}
-              className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-gray-100 text-gray-300 hover:text-red-400 transition flex-shrink-0"
+              className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-muted text-muted-foreground/60 hover:text-red-400 transition flex-shrink-0"
             >
               <Trash2 className="w-3 h-3" />
             </span>
           </button>
         ))}
         {conversations?.length === 0 && (
-          <p className="text-[11px] text-gray-300 text-center py-6 px-2">No conversations yet</p>
+          <p className="text-[11px] text-muted-foreground/60 text-center py-6 px-2">No conversations yet</p>
         )}
       </div>
     </div>
@@ -836,7 +836,7 @@ export default function ScoutPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-56px)] flex bg-white">
+    <div className="h-[calc(100vh-56px)] flex bg-card">
       <ConversationRail workspaceId={workspaceId} activeId={activeId} onSelect={setActiveId} />
       <div className="flex-1 flex flex-col min-w-0">
       <style jsx global>{`
@@ -853,25 +853,25 @@ export default function ScoutPage() {
       `}</style>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3.5 border-b border-gray-100 flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-3.5 border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <Mascot className="w-8 h-8" />
           <div>
-            <h1 className="text-sm font-bold text-gray-900 leading-tight">Scout</h1>
-            <p className="text-[11px] text-gray-400 leading-tight">Your AI data analyst for this workspace</p>
+            <h1 className="text-sm font-bold text-foreground leading-tight">Scout</h1>
+            <p className="text-[11px] text-muted-foreground leading-tight">Your AI data analyst for this workspace</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           {/* Agent / Chat toggle */}
-          <div className="flex items-center bg-gray-100 rounded-full p-0.5 text-xs font-medium">
+          <div className="flex items-center bg-muted rounded-full p-0.5 text-xs font-medium">
             {(["agent", "chat"] as Mode[]).map((m) => (
               <button
                 key={m}
                 onClick={() => setMode(m)}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all",
-                  mode === m ? "bg-white shadow-sm text-gray-900" : "text-gray-400 hover:text-gray-600"
+                  mode === m ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-muted-foreground"
                 )}
               >
                 {m === "agent" ? <Wand2 className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
@@ -885,15 +885,15 @@ export default function ScoutPage() {
       {/* Message area */}
       <div className="flex-1 overflow-y-auto scrollbar-thin px-6 py-5">
         {isLoading ? (
-          <div className="flex items-center justify-center h-full text-gray-300">
+          <div className="flex items-center justify-center h-full text-muted-foreground/60">
             <Loader2 className="w-5 h-5 animate-spin" />
           </div>
         ) : messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto gap-5">
             <Mascot className="w-14 h-14" glow />
             <div>
-              <h2 className="text-base font-bold text-gray-900 mb-1">Ask Scout anything about your data</h2>
-              <p className="text-sm text-gray-400">
+              <h2 className="text-base font-bold text-foreground mb-1">Ask Scout anything about your data</h2>
+              <p className="text-sm text-muted-foreground">
                 Every answer is backed by real analysis Scout ran on your data — not a guess.
               </p>
             </div>
@@ -903,7 +903,7 @@ export default function ScoutPage() {
                   <button
                     key={i}
                     onClick={() => handleSend(s.label)}
-                    className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition text-left"
+                    className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl border border-border text-sm text-muted-foreground hover:border-border hover:bg-muted transition text-left"
                   >
                     <Sparkles className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "hsl(var(--primary))" }} />
                     {s.label}
@@ -924,7 +924,7 @@ export default function ScoutPage() {
       </div>
 
       {/* Input bar */}
-      <div className="border-t border-gray-100 px-6 py-4 flex-shrink-0">
+      <div className="border-t border-border px-6 py-4 flex-shrink-0">
         <div className="max-w-3xl mx-auto">
           {editingId !== null && (
             <div className="flex items-center justify-between mb-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-700">
@@ -933,8 +933,8 @@ export default function ScoutPage() {
             </div>
           )}
           {attachedImage && (
-            <div className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-200 w-fit">
-              <div className="relative w-9 h-9 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
+            <div className="flex items-center gap-2 mb-2 px-2.5 py-1.5 rounded-lg bg-muted border border-border w-fit">
+              <div className="relative w-9 h-9 rounded-md overflow-hidden flex-shrink-0 bg-muted">
                 {attachedImage.previewUrl && <img src={attachedImage.previewUrl} alt="" className="w-full h-full object-cover" />}
                 {attachedImage.uploading && (
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
@@ -942,10 +942,10 @@ export default function ScoutPage() {
                   </div>
                 )}
               </div>
-              <span className={cn("text-[11px]", attachedImage.error ? "text-red-500" : "text-gray-500")}>
+              <span className={cn("text-[11px]", attachedImage.error ? "text-red-500" : "text-muted-foreground")}>
                 {attachedImage.error ?? (attachedImage.uploading ? "Uploading…" : "Image attached")}
               </span>
-              <button onClick={handleRemoveImage} className="p-0.5 rounded hover:bg-gray-200 transition"><X className="w-3.5 h-3.5 text-gray-400" /></button>
+              <button onClick={handleRemoveImage} className="p-0.5 rounded hover:bg-muted transition"><X className="w-3.5 h-3.5 text-muted-foreground" /></button>
             </div>
           )}
           <div
@@ -966,8 +966,8 @@ export default function ScoutPage() {
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }}
             />
             {mentionQuery !== null && mentionMatches.length > 0 && (
-              <div className="absolute bottom-full left-0 mb-2 w-64 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-20">
-                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Reference a dataset</p>
+              <div className="absolute bottom-full left-0 mb-2 w-64 bg-card border border-border rounded-xl shadow-lg overflow-hidden z-20">
+                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Reference a dataset</p>
                 {mentionMatches.map((d, i) => (
                   <button
                     key={d.id}
@@ -975,21 +975,21 @@ export default function ScoutPage() {
                     onMouseEnter={() => setMentionIndex(i)}
                     className={cn(
                       "w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition",
-                      i === mentionIndex ? "bg-gray-50 text-gray-900" : "text-gray-600 hover:bg-gray-50"
+                      i === mentionIndex ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted"
                     )}
                   >
-                    <Database className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <Database className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                     <span className="truncate">{d.name}</span>
                   </button>
                 ))}
               </div>
             )}
-            <div className="flex-1 flex items-end gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 focus-within:border-gray-300 transition">
+            <div className="flex-1 flex items-end gap-2 rounded-2xl border border-border bg-card px-4 py-2.5 focus-within:border-border transition">
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={!visionSupported || isSending}
                 title={visionSupported ? "Attach an image" : "Image attachments require the Claude provider"}
-                className="flex-shrink-0 p-1 -ml-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition"
+                className="flex-shrink-0 p-1 -ml-1 rounded-md text-muted-foreground hover:text-muted-foreground hover:bg-muted disabled:opacity-30 disabled:hover:bg-transparent transition"
               >
                 <ImageIcon className="w-4 h-4" />
               </button>
@@ -1013,7 +1013,7 @@ export default function ScoutPage() {
                   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
                 }}
                 placeholder={mode === "agent" ? "Ask Scout to investigate something…" : "Ask a quick question…"}
-                className="flex-1 text-sm outline-none placeholder:text-gray-400 resize-none leading-relaxed py-0.5"
+                className="flex-1 text-sm outline-none placeholder:text-muted-foreground resize-none leading-relaxed py-0.5"
                 rows={1}
                 disabled={isSending}
               />
@@ -1039,7 +1039,7 @@ export default function ScoutPage() {
             )}
           </div>
         </div>
-        <p className="text-center text-[10px] text-gray-300 mt-2">Scout can make mistakes — verify important findings.</p>
+        <p className="text-center text-[10px] text-muted-foreground/60 mt-2">Scout can make mistakes — verify important findings.</p>
       </div>
       </div>
     </div>

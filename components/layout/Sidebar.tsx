@@ -586,18 +586,18 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
             {/* User popover — opens above */}
             {userMenuOpen && (
               <div className={cn(
-                "absolute bottom-full mb-2 bg-white dark:bg-gray-900 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 py-1.5 z-50 animate-fade-in",
+                "absolute bottom-full mb-2 bg-card dark:bg-gray-900 rounded-xl shadow-xl border border-border dark:border-gray-700 py-1.5 z-50 animate-fade-in",
                 sidebarOpen ? "left-0 right-0" : "left-0 w-52"
               )}>
-                <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-800">
-                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 truncate">
+                <div className="px-4 py-2.5 border-b border-border dark:border-gray-800">
+                  <p className="text-xs font-semibold text-foreground dark:text-muted-foreground/60 truncate">
                     {user?.full_name ?? "User"}
                   </p>
-                  <p className="text-[10px] text-gray-400 truncate mt-0.5">{user?.email}</p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
                 </div>
                 <button
                   onClick={() => { router.push("/settings"); setUserMenuOpen(false); }}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-foreground dark:text-muted-foreground/60 hover:bg-muted dark:hover:bg-gray-800 transition-colors"
                 >
                   <Settings className="w-3.5 h-3.5 opacity-60" />
                   Settings

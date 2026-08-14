@@ -70,10 +70,10 @@ export function DataTable<T extends Record<string, unknown>>({
                   key={key}
                   onClick={() => col.sortable && handleSort(key)}
                   className={cn(
-                    "px-4 py-2.5 text-left text-xs font-semibold text-gray-500 whitespace-nowrap",
+                    "px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground whitespace-nowrap",
                     col.align === "right" && "text-right",
                     col.align === "center" && "text-center",
-                    col.sortable && "cursor-pointer select-none hover:text-gray-700 hover:bg-gray-50",
+                    col.sortable && "cursor-pointer select-none hover:text-foreground hover:bg-muted",
                     compact && "py-1.5",
                     col.className
                   )}
@@ -81,7 +81,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   <span className="inline-flex items-center gap-1">
                     {col.label}
                     {col.sortable && (
-                      <span className="text-gray-300">
+                      <span className="text-muted-foreground/60">
                         {isSorted ? (
                           sortDir === "asc" ? (
                             <ChevronUp className="w-3 h-3" />
@@ -101,7 +101,7 @@ export function DataTable<T extends Record<string, unknown>>({
         </thead>
         <tbody>
           {sorted.map((row, i) => (
-            <tr key={getKey(row, i)} className="border-t border-gray-50">
+            <tr key={getKey(row, i)} className="border-t border-border">
               {columns.map((col) => {
                 const key = String(col.key);
                 const val = row[key];
@@ -109,7 +109,7 @@ export function DataTable<T extends Record<string, unknown>>({
                   <td
                     key={key}
                     className={cn(
-                      "px-4 py-2.5 text-gray-700",
+                      "px-4 py-2.5 text-foreground",
                       col.align === "right" && "text-right",
                       col.align === "center" && "text-center",
                       compact && "py-1.5 text-xs",
@@ -126,7 +126,7 @@ export function DataTable<T extends Record<string, unknown>>({
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-4 py-8 text-center text-sm text-gray-400"
+                className="px-4 py-8 text-center text-sm text-muted-foreground"
               >
                 No data
               </td>

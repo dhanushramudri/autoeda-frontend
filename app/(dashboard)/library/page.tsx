@@ -89,10 +89,10 @@ export default function LibraryPage() {
 
       <div className="px-8 pb-10">
         {showNew && (
-          <div className="mb-6 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+          <div className="mb-6 bg-card border border-border rounded-2xl p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-800">New Category</h3>
-              <button onClick={() => setShowNew(false)} className="text-gray-400 hover:text-gray-600">
+              <h3 className="text-sm font-semibold text-foreground">New Category</h3>
+              <button onClick={() => setShowNew(false)} className="text-muted-foreground hover:text-muted-foreground">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -101,7 +101,7 @@ export default function LibraryPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Churn, Forecasting, Revenue Prediction"
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition"
+                className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition"
                 autoFocus
               />
               <textarea
@@ -109,11 +109,11 @@ export default function LibraryPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What kind of datasets/use cases belong here? (optional)"
                 rows={2}
-                className="w-full px-3.5 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition resize-none"
+                className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition resize-none"
               />
               {error && <p className="text-xs text-red-600">{error}</p>}
               <div className="flex justify-end gap-2">
-                <button onClick={() => setShowNew(false)} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700">
+                <button onClick={() => setShowNew(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
                   Cancel
                 </button>
                 <button
@@ -153,7 +153,7 @@ export default function LibraryPage() {
                 <button
                   key={cat.id}
                   onClick={() => router.push(`/library/${cat.id}`)}
-                  className="text-left bg-white border border-gray-200 rounded-2xl p-5 transition-all duration-200 group hover:-translate-y-1 hover:shadow-xl"
+                  className="text-left bg-card border border-border rounded-2xl p-5 transition-all duration-200 group hover:-translate-y-1 hover:shadow-xl"
                   onMouseEnter={(e) => (e.currentTarget.style.borderColor = color.ring)}
                   onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}
                 >
@@ -171,8 +171,8 @@ export default function LibraryPage() {
                       <FileText className="w-3 h-3" /> {cat.article_count}
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-gray-900 group-hover:text-brand transition">{cat.name}</h3>
-                  <p className="text-xs text-gray-400 mt-1 line-clamp-2 min-h-[2.5em]">
+                  <h3 className="text-base font-bold text-foreground group-hover:text-brand transition">{cat.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 min-h-[2.5em]">
                     {cat.description || "No description yet."}
                   </p>
                   <div className="flex items-center gap-1 mt-3 text-xs font-semibold opacity-0 group-hover:opacity-100 transition" style={{ color: color.solid }}>

@@ -70,10 +70,10 @@ const LEVEL_CFG = {
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
-      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+    <div className="bg-card border border-border rounded-xl p-4">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
       <p className="text-lg font-bold truncate" style={color ? { color } : undefined}>{value}</p>
-      {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
+      {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -81,7 +81,7 @@ function StatCard({ label, value, sub, color }: { label: string; value: string |
 function HBarChart({ data, dataKey, nameKey, color, height = 280 }: {
   data: Array<Record<string, unknown>>; dataKey: string; nameKey: string; color: string; height?: number;
 }) {
-  if (data.length === 0) return <p className="text-xs text-gray-400 py-6 text-center">No data</p>;
+  if (data.length === 0) return <p className="text-xs text-muted-foreground py-6 text-center">No data</p>;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, bottom: 4, left: 90 }}>
@@ -96,7 +96,7 @@ function HBarChart({ data, dataKey, nameKey, color, height = 280 }: {
 }
 
 function HistogramChart({ bins, counts, color }: { bins: number[]; counts: number[]; height?: number; color: string }) {
-  if (!bins?.length || !counts?.length) return <p className="text-xs text-gray-400 py-6 text-center">No data</p>;
+  if (!bins?.length || !counts?.length) return <p className="text-xs text-muted-foreground py-6 text-center">No data</p>;
   const data = counts.map((c, i) => ({
     range: `${bins[i]}–${bins[i + 1]}`,
     count: c,
@@ -115,7 +115,7 @@ function HistogramChart({ bins, counts, color }: { bins: number[]; counts: numbe
 }
 
 function NgramChips({ items, color }: { items: Array<{ ngram: string; count: number }>; color: string }) {
-  if (items.length === 0) return <p className="text-xs text-gray-400">None found</p>;
+  if (items.length === 0) return <p className="text-xs text-muted-foreground">None found</p>;
   return (
     <div className="flex flex-wrap gap-2">
       {items.slice(0, 20).map((item) => (
@@ -216,8 +216,8 @@ export default function TextAnalysisPage() {
         />
 
         <div className="mt-4 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Text Analysis</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-foreground">Text Analysis</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Vocabulary, n-grams, sentiment, data quality, and PII detection
           </p>
         </div>
@@ -232,7 +232,7 @@ export default function TextAnalysisPage() {
           <div className="flex gap-6">
             {/* Column list */}
             <div className="w-48 flex-shrink-0">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Columns</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Columns</p>
               <div className="space-y-0.5">
                 {textCols.map((col) => (
                   <button
@@ -240,7 +240,7 @@ export default function TextAnalysisPage() {
                     onClick={() => setCol(col)}
                     className={cn(
                       "w-full text-left px-3 py-2 rounded-lg text-xs transition truncate",
-                      col === activeCol ? "bg-blue-50 text-brand font-semibold" : "text-gray-600 hover:bg-gray-50"
+                      col === activeCol ? "bg-blue-50 text-brand font-semibold" : "text-muted-foreground hover:bg-muted"
                     )}
                     title={col}
                   >
@@ -263,7 +263,7 @@ export default function TextAnalysisPage() {
               ) : (
                 <>
                   {data.sampled && (
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[10px] text-muted-foreground">
                       Word/sentiment/keyword stats computed from a random sample of {data.sample_size?.toLocaleString()} rows
                       (out of {data.total_texts.toLocaleString()}) for performance. Row-count stats (missing, empty, duplicates) reflect the full column.
                     </p>
@@ -309,11 +309,11 @@ export default function TextAnalysisPage() {
                           ["URLs", data.pii.urls],
                           ["Phone Numbers", data.pii.phone_numbers],
                         ] as const).map(([label, stat]) => (
-                          <div key={label} className="bg-white rounded-lg p-3 border border-red-100">
-                            <p className="text-[10px] text-gray-400 mb-1">{label}</p>
+                          <div key={label} className="bg-card rounded-lg p-3 border border-red-100">
+                            <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
                             <p className="text-base font-bold text-red-700">{stat.count.toLocaleString()}</p>
                             {stat.samples.length > 0 && (
-                              <p className="text-[10px] text-gray-500 font-mono truncate mt-1" title={stat.samples.join(", ")}>
+                              <p className="text-[10px] text-muted-foreground font-mono truncate mt-1" title={stat.samples.join(", ")}>
                                 e.g. {stat.samples[0]}
                               </p>
                             )}
@@ -324,18 +324,18 @@ export default function TextAnalysisPage() {
                   )}
 
                   {/* Sentiment */}
-                  <div className="bg-white rounded-xl border border-gray-200 p-5">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-3">Sentiment Distribution</h3>
+                  <div className="bg-card rounded-xl border border-border p-5">
+                    <h3 className="text-sm font-semibold text-foreground mb-3">Sentiment Distribution</h3>
                     <div className="grid grid-cols-3 gap-3">
                       {([
                         ["Positive", sd?.positive ?? 0, "text-emerald-600"],
-                        ["Neutral", sd?.neutral ?? 0, "text-gray-500"],
+                        ["Neutral", sd?.neutral ?? 0, "text-muted-foreground"],
                         ["Negative", sd?.negative ?? 0, "text-red-500"],
                       ] as const).map(([label, value, color]) => (
-                        <div key={label} className="text-center bg-gray-50 rounded-lg p-3">
-                          <p className="text-xs text-gray-500 mb-1">{label}</p>
+                        <div key={label} className="text-center bg-muted rounded-lg p-3">
+                          <p className="text-xs text-muted-foreground mb-1">{label}</p>
                           <p className={cn("text-xl font-bold", color)}>{((value / sentimentTotal) * 100).toFixed(1)}%</p>
-                          <p className="text-xs text-gray-400">{value.toLocaleString()} texts</p>
+                          <p className="text-xs text-muted-foreground">{value.toLocaleString()} texts</p>
                         </div>
                       ))}
                     </div>
@@ -343,8 +343,8 @@ export default function TextAnalysisPage() {
 
                   {/* Word cloud + top words */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Word Cloud</h3>
+                    <div className="bg-card rounded-xl border border-border p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-3">Word Cloud</h3>
                       {data.word_freq.length > 0 ? (
                         <WordCloud
                           words={data.word_freq.map((w) => ({ text: w.word, value: w.count }))}
@@ -352,11 +352,11 @@ export default function TextAnalysisPage() {
                           height={260}
                         />
                       ) : (
-                        <p className="text-xs text-gray-400 py-10 text-center">No words found</p>
+                        <p className="text-xs text-muted-foreground py-10 text-center">No words found</p>
                       )}
                     </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Top 20 Words (by frequency)</h3>
+                    <div className="bg-card rounded-xl border border-border p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-3">Top 20 Words (by frequency)</h3>
                       <HBarChart
                         data={[...data.word_freq].sort((a, b) => b.count - a.count).slice(0, 20)}
                         dataKey="count" nameKey="word" color="#3b82f6"
@@ -365,11 +365,11 @@ export default function TextAnalysisPage() {
                   </div>
 
                   {/* TF-IDF keywords */}
-                  <div className="bg-white rounded-xl border border-gray-200 p-5">
+                  <div className="bg-card rounded-xl border border-border p-5">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-sm font-semibold text-gray-800">TF-IDF Keywords</h3>
+                      <h3 className="text-sm font-semibold text-foreground">TF-IDF Keywords</h3>
                     </div>
-                    <p className="text-[10px] text-gray-400 mb-3">Down-weights generic words — different signal than raw frequency above</p>
+                    <p className="text-[10px] text-muted-foreground mb-3">Down-weights generic words — different signal than raw frequency above</p>
                     <HBarChart
                       data={data.tfidf_keywords.slice(0, 20)}
                       dataKey="score" nameKey="word" color="#7C3AED"
@@ -378,32 +378,32 @@ export default function TextAnalysisPage() {
 
                   {/* Bigrams + Trigrams */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Top Bigrams</h3>
+                    <div className="bg-card rounded-xl border border-border p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-3">Top Bigrams</h3>
                       <NgramChips items={data.bigrams} color="bg-blue-50 text-brand" />
                     </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Top Trigrams</h3>
+                    <div className="bg-card rounded-xl border border-border p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-3">Top Trigrams</h3>
                       <NgramChips items={data.trigrams} color="bg-purple-50 text-purple-700" />
                     </div>
                   </div>
 
                   {/* Length distributions */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Word-Length Distribution</h3>
+                    <div className="bg-card rounded-xl border border-border p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-3">Word-Length Distribution</h3>
                       <HistogramChart bins={data.length_distribution.bins} counts={data.length_distribution.counts} color="#0891B2" />
                     </div>
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Character-Length Distribution</h3>
+                    <div className="bg-card rounded-xl border border-border p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-3">Character-Length Distribution</h3>
                       <HistogramChart bins={data.char_length_distribution.bins} counts={data.char_length_distribution.counts} color="#059669" />
                     </div>
                   </div>
 
                   {/* Quality flags + duplicates */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Quality Flags</h3>
+                    <div className="bg-card rounded-xl border border-border p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-3">Quality Flags</h3>
                       <div className="space-y-2 text-xs">
                         {[
                           ["Outlier-short values", data.quality_flags.outlier_short_count, data.quality_flags.outlier_short_pct],
@@ -411,30 +411,30 @@ export default function TextAnalysisPage() {
                           ["ALL-CAPS values", data.quality_flags.all_caps_count, data.quality_flags.all_caps_pct],
                           ["Numeric-only values", data.quality_flags.numeric_only_count, data.quality_flags.numeric_only_pct],
                         ].map(([label, count, pct]) => (
-                          <div key={label as string} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-b-0">
-                            <span className="text-gray-600">{label}</span>
-                            <span className="font-mono font-semibold text-gray-800">
-                              {(count as number).toLocaleString()} <span className="text-gray-400">({pct}%)</span>
+                          <div key={label as string} className="flex items-center justify-between py-1.5 border-b border-border last:border-b-0">
+                            <span className="text-muted-foreground">{label}</span>
+                            <span className="font-mono font-semibold text-foreground">
+                              {(count as number).toLocaleString()} <span className="text-muted-foreground">({pct}%)</span>
                             </span>
                           </div>
                         ))}
                         <div className="flex items-center justify-between py-1.5">
-                          <span className="text-gray-600">Avg special-char ratio</span>
-                          <span className="font-mono font-semibold text-gray-800">{data.quality_flags.avg_special_char_ratio}</span>
+                          <span className="text-muted-foreground">Avg special-char ratio</span>
+                          <span className="font-mono font-semibold text-foreground">{data.quality_flags.avg_special_char_ratio}</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="bg-white rounded-xl border border-gray-200 p-5">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Most Repeated Values</h3>
+                    <div className="bg-card rounded-xl border border-border p-5">
+                      <h3 className="text-sm font-semibold text-foreground mb-3">Most Repeated Values</h3>
                       {data.top_duplicates.length === 0 ? (
-                        <p className="text-xs text-gray-400">No duplicate values found.</p>
+                        <p className="text-xs text-muted-foreground">No duplicate values found.</p>
                       ) : (
                         <div className="space-y-1.5">
                           {data.top_duplicates.map((d, i) => (
-                            <div key={i} className="flex items-center justify-between gap-2 py-1 border-b border-gray-50 last:border-b-0">
-                              <span className="text-xs text-gray-600 truncate font-mono" title={d.text}>{d.text}</span>
-                              <span className="text-[10px] font-bold text-gray-400 flex-shrink-0">×{d.count}</span>
+                            <div key={i} className="flex items-center justify-between gap-2 py-1 border-b border-border last:border-b-0">
+                              <span className="text-xs text-muted-foreground truncate font-mono" title={d.text}>{d.text}</span>
+                              <span className="text-[10px] font-bold text-muted-foreground flex-shrink-0">×{d.count}</span>
                             </div>
                           ))}
                         </div>
@@ -443,9 +443,9 @@ export default function TextAnalysisPage() {
                   </div>
 
                   {/* Language */}
-                  <div className="bg-white rounded-xl border border-gray-200 p-5">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-1">Detected Language</h3>
-                    <p className="text-base font-mono text-gray-700">{data.language}</p>
+                  <div className="bg-card rounded-xl border border-border p-5">
+                    <h3 className="text-sm font-semibold text-foreground mb-1">Detected Language</h3>
+                    <p className="text-base font-mono text-foreground">{data.language}</p>
                   </div>
                 </>
               )}

@@ -152,19 +152,19 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         >
           <Table2 className="w-3 h-3 text-white" />
         </div>
-        <span className="text-xs font-semibold text-gray-800 flex-1 truncate">{data.label}</span>
-        <span className="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full font-medium">
+        <span className="text-xs font-semibold text-foreground flex-1 truncate">{data.label}</span>
+        <span className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full font-medium">
           {data.columns.length}
         </span>
         <button
           onClick={() => setCollapsed((v) => !v)}
-          className="p-0.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition"
+          className="p-0.5 rounded-md hover:bg-muted text-muted-foreground hover:text-muted-foreground transition"
         >
           {collapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
         </button>
         <button
           onClick={() => data.onDelete(id)}
-          className="p-0.5 rounded-md hover:bg-red-50 text-gray-300 hover:text-red-500 transition"
+          className="p-0.5 rounded-md hover:bg-red-50 text-muted-foreground/60 hover:text-red-500 transition"
         >
           <X className="w-3 h-3" />
         </button>
@@ -175,10 +175,10 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         <>
           {data.columns.length > 6 && (
             <div className="px-2.5 pt-2 pb-1">
-              <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-1.5">
-                <Search className="w-2.5 h-2.5 text-gray-400 flex-shrink-0" />
+              <div className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-2.5 py-1.5">
+                <Search className="w-2.5 h-2.5 text-muted-foreground flex-shrink-0" />
                 <input
-                  className="text-[10px] bg-transparent outline-none flex-1 text-gray-600 placeholder-gray-300"
+                  className="text-[10px] bg-transparent outline-none flex-1 text-muted-foreground placeholder-muted-foreground"
                   placeholder="Find column..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -200,14 +200,14 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
                   className="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors"
                   style={{ background: "#cbd5e1" }}
                 />
-                <span className="text-[10px] font-mono text-gray-500 group-hover:text-[hsl(var(--primary))] truncate transition-colors">{col}</span>
+                <span className="text-[10px] font-mono text-muted-foreground group-hover:text-[hsl(var(--primary))] truncate transition-colors">{col}</span>
               </button>
             ))}
             {filtered.length > 30 && (
-              <div className="px-3 py-1.5 text-[9px] text-gray-400 italic">+{filtered.length - 30} more columns</div>
+              <div className="px-3 py-1.5 text-[9px] text-muted-foreground italic">+{filtered.length - 30} more columns</div>
             )}
             {filtered.length === 0 && (
-              <div className="px-3 py-3 text-[10px] text-gray-400 text-center">No matches</div>
+              <div className="px-3 py-3 text-[10px] text-muted-foreground text-center">No matches</div>
             )}
           </div>
         </>
@@ -218,10 +218,10 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         className="px-3 py-1.5 flex items-center justify-between"
         style={{ borderTop: "1px solid rgba(0,0,0,0.04)", background: "#fafafa" }}
       >
-        <span className="text-[9px] text-gray-400">
+        <span className="text-[9px] text-muted-foreground">
           <span style={{ color: "hsl(var(--primary))" }} className="font-semibold">→</span> drag to connect
         </span>
-        <span className="text-[9px] text-gray-400">click col to key</span>
+        <span className="text-[9px] text-muted-foreground">click col to key</span>
       </div>
 
       {/* Right (source) handle */}
@@ -334,7 +334,7 @@ function CollapsiblePanel({
 }) {
   return (
     <div
-      className="flex flex-col bg-white flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
+      className="flex flex-col bg-card flex-shrink-0 transition-all duration-300 ease-in-out overflow-hidden"
       style={{
         width: collapsed ? 52 : width,
         borderRight: side === "left" ? "1px solid hsl(var(--sidebar-border))" : undefined,
@@ -349,7 +349,7 @@ function CollapsiblePanel({
         className={`h-12 flex items-center justify-between px-3 border-b flex-shrink-0 ${
           side === "left"
             ? "bg-gradient-to-r border-b"
-            : "bg-white border-gray-100"
+            : "bg-card border-border"
         }`}
         style={{
           background: side === "left" 
@@ -366,7 +366,7 @@ function CollapsiblePanel({
               </div>
               <span
                 className={`text-[11px] font-semibold ${
-                  side === "left" ? "text-white" : "text-gray-700"
+                  side === "left" ? "text-white" : "text-foreground"
                 }`}
               >
                 {label}
@@ -378,13 +378,13 @@ function CollapsiblePanel({
               className={`p-1.5 rounded-lg transition ${
                 side === "left"
                   ? "hover:bg-white/10"
-                  : "hover:bg-gray-100"
+                  : "hover:bg-muted"
               }`}
             >
               {side === "left" ? (
                 <ChevronLeft className="w-4 h-4 text-white" />
               ) : (
-                <ChevronRight className="w-4 h-4 text-gray-500" />
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
               )}
             </button>
           </>
@@ -394,7 +394,7 @@ function CollapsiblePanel({
             className={`w-full h-full flex items-center justify-center transition ${
               side === "left"
                 ? "bg-gradient-to-b hover:opacity-80"
-                : "hover:bg-gray-50"
+                : "hover:bg-muted"
             }`}
             style={side === "left" ? {
               background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.85))",
@@ -403,7 +403,7 @@ function CollapsiblePanel({
             {side === "left" ? (
               <Database className="w-4 h-4 text-white/90" />
             ) : (
-              <Settings className="w-4 h-4 text-gray-400" />
+              <Settings className="w-4 h-4 text-muted-foreground" />
             )}
           </button>
         )}
@@ -694,7 +694,7 @@ function JoinBuilderInner() {
         icon={<Database className="w-4 h-4" />}
       >
         {/* Status bar */}
-        <div className="px-3 py-2 flex-shrink-0 flex gap-2 border-b border-gray-100">
+        <div className="px-3 py-2 flex-shrink-0 flex gap-2 border-b border-border">
           <div className="flex-1 rounded-lg border px-2 py-1 text-center" style={{ backgroundColor: "hsl(var(--primary) / 0.08)", borderColor: "hsl(var(--primary) / 0.2)" }}>
             <div className="text-sm font-bold" style={{ color: "hsl(var(--primary))" }}>{nodes.length}</div>
             <div className="text-[9px] font-medium" style={{ color: "hsl(var(--primary) / 0.6)" }}>Tables</div>
@@ -711,10 +711,10 @@ function JoinBuilderInner() {
 
         {/* Dataset search */}
         <div className="px-3 py-2 flex-shrink-0">
-          <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-2.5 py-2">
-            <Search className="w-3 h-3 text-gray-400 flex-shrink-0" />
+          <div className="flex items-center gap-1.5 bg-muted border border-border rounded-lg px-2.5 py-2">
+            <Search className="w-3 h-3 text-muted-foreground flex-shrink-0" />
             <input
-              className="text-[10px] bg-transparent outline-none flex-1 text-gray-600 placeholder-gray-300"
+              className="text-[10px] bg-transparent outline-none flex-1 text-muted-foreground placeholder-muted-foreground"
               placeholder="Search tables..."
               value={datasetSearch}
               onChange={(e) => setDatasetSearch(e.target.value)}
@@ -724,7 +724,7 @@ function JoinBuilderInner() {
 
         {/* Dataset list */}
         <div className="flex-1 overflow-y-auto px-3 pb-2 space-y-1">
-          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
             {filteredDatasets.length} Tables
           </p>
           {filteredDatasets.map((ds: Dataset) => {
@@ -745,10 +745,10 @@ function JoinBuilderInner() {
                 >
                   <Database className="w-3 h-3" style={{ color: onCanvas > 0 ? "white" : "#94a3b8" }} />
                 </div>
-                <span className="text-[11px] font-medium text-gray-700 truncate flex-1 group-hover:transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50" >{ds.name}</span>
+                <span className="text-[11px] font-medium text-foreground truncate flex-1 group-hover:transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50" >{ds.name}</span>
                 {onCanvas > 0
                   ? <span className="text-[9px] px-1.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: "hsl(var(--primary) / 0.1)", color: "hsl(var(--primary))" }}>×{onCanvas}</span>
-                  : <Plus className="w-3 h-3 text-gray-300 group-hover:text-[hsl(var(--primary))] transition-colors flex-shrink-0" />
+                  : <Plus className="w-3 h-3 text-muted-foreground/60 group-hover:text-[hsl(var(--primary))] transition-colors flex-shrink-0" />
                 }
               </button>
             );
@@ -756,19 +756,19 @@ function JoinBuilderInner() {
         </div>
 
         {/* Bottom actions */}
-        <div className="px-3 py-2 flex-shrink-0 space-y-1 border-t border-gray-100">
+        <div className="px-3 py-2 flex-shrink-0 space-y-1 border-t border-border">
           <button
             onClick={undo}
             disabled={history.current.length === 0}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-medium text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-medium text-muted-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <Undo2 className="w-3.5 h-3.5" />
             Undo
-            <span className="ml-auto text-[9px] text-gray-400">⌘Z</span>
+            <span className="ml-auto text-[9px] text-muted-foreground">⌘Z</span>
           </button>
           <button
             onClick={() => fitView()}
-            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-medium text-muted-foreground hover:bg-muted transition-colors"
           >
             <Maximize2 className="w-3.5 h-3.5" />
             Fit View
@@ -794,11 +794,11 @@ function JoinBuilderInner() {
           >
             {/* Canvas stats */}
             {nodes.length > 0 && (
-              <div className="flex items-center gap-1 mr-1 pr-3 border-r border-gray-200">
-                <Layers className="w-3 h-3 text-gray-400" />
-                <span className="text-[10px] text-gray-500">
-                  <span className="font-semibold text-gray-700">{nodes.length}</span> tables,{" "}
-                  <span className="font-semibold text-gray-700">{edges.length}</span> joins
+              <div className="flex items-center gap-1 mr-1 pr-3 border-r border-border">
+                <Layers className="w-3 h-3 text-muted-foreground" />
+                <span className="text-[10px] text-muted-foreground">
+                  <span className="font-semibold text-foreground">{nodes.length}</span> tables,{" "}
+                  <span className="font-semibold text-foreground">{edges.length}</span> joins
                 </span>
               </div>
             )}
@@ -832,7 +832,7 @@ function JoinBuilderInner() {
               <>
                 <button
                   onClick={exportCsv}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-muted-foreground hover:bg-muted transition-colors border border-border"
                 >
                   <Download className="w-3 h-3" />
                   CSV
@@ -854,7 +854,7 @@ function JoinBuilderInner() {
                 ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
                 : <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
               }
-              <span className="text-[9px] text-gray-400">{readyToRun ? "Ready" : "Configure joins"}</span>
+              <span className="text-[9px] text-muted-foreground">{readyToRun ? "Ready" : "Configure joins"}</span>
             </div>
           </div>
 
@@ -894,8 +894,8 @@ function JoinBuilderInner() {
                 >
                   <GitMerge className="w-8 h-8" style={{ color: "hsl(var(--primary) / 0.4)" }} />
                 </div>
-                <p className="text-sm font-semibold text-gray-400">Add tables from the left panel</p>
-                <p className="text-[11px] text-gray-300 mt-1">Drag the blue handle → to the purple ← to create a join</p>
+                <p className="text-sm font-semibold text-muted-foreground">Add tables from the left panel</p>
+                <p className="text-[11px] text-muted-foreground/60 mt-1">Drag the blue handle → to the purple ← to create a join</p>
               </div>
             </div>
           )}
@@ -933,7 +933,7 @@ function JoinBuilderInner() {
         {/* ── Bottom results drawer ── */}
         {(result || generatedSql) && (
           <div
-            className="flex-shrink-0 flex flex-col bg-white overflow-hidden transition-all duration-300"
+            className="flex-shrink-0 flex flex-col bg-card overflow-hidden transition-all duration-300"
             style={{
               height: resultsOpen ? 300 : 0,
               borderTop: resultsOpen ? "1px solid #e2e8f0" : "none",
@@ -944,12 +944,12 @@ function JoinBuilderInner() {
               <>
                 {/* Drawer header */}
                 <div
-                  className="flex items-center gap-3 px-4 h-10 flex-shrink-0 border-b border-gray-100"
+                  className="flex items-center gap-3 px-4 h-10 flex-shrink-0 border-b border-border"
                 >
-                  <Table2 className="w-3.5 h-3.5 text-gray-400" />
+                  <Table2 className="w-3.5 h-3.5 text-muted-foreground" />
                   {result && !showSqlInDrawer ? (
                     <>
-                      <span className="text-[11px] font-semibold text-gray-700">Results</span>
+                      <span className="text-[11px] font-semibold text-foreground">Results</span>
                       <span
                         className="text-[9px] px-2 py-0.5 rounded-full font-semibold"
                         style={{ backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}
@@ -958,16 +958,16 @@ function JoinBuilderInner() {
                       </span>
                     </>
                   ) : (
-                    <span className="text-[11px] font-semibold text-gray-700">Generated SQL</span>
+                    <span className="text-[11px] font-semibold text-foreground">Generated SQL</span>
                   )}
 
                   <div className="ml-auto flex items-center gap-1.5">
                     {/* Row limit */}
-                    <span className="text-[9px] text-gray-400">Limit</span>
+                    <span className="text-[9px] text-muted-foreground">Limit</span>
                     <select
                       value={rowLimit}
                       onChange={(e) => setRowLimit(Number(e.target.value))}
-                      className="text-[10px] border border-gray-200 rounded-lg px-2 py-1 outline-none bg-white"
+                      className="text-[10px] border border-border rounded-lg px-2 py-1 outline-none bg-card"
                     >
                       {[100, 500, 1000, 5000].map((v) => <option key={v} value={v}>{v.toLocaleString()}</option>)}
                     </select>
@@ -975,7 +975,7 @@ function JoinBuilderInner() {
                     {generatedSql && (
                       <button
                         onClick={() => navigator.clipboard.writeText(generatedSql)}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition"
+                        className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition"
                         title="Copy SQL"
                       >
                         <Copy className="w-3 h-3" />
@@ -984,7 +984,7 @@ function JoinBuilderInner() {
 
                     <button
                       onClick={() => setResultsOpen(false)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 transition"
+                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition"
                       title="Close results"
                     >
                       <X className="w-3.5 h-3.5" />
@@ -1022,7 +1022,7 @@ function JoinBuilderInner() {
         {(result || generatedSql) && !resultsOpen && (
           <button
             onClick={() => setResultsOpen(true)}
-            className="flex-shrink-0 flex items-center justify-center gap-2 h-9 w-full text-[11px] font-semibold text-gray-600 hover:bg-white transition-colors border-t border-gray-100"
+            className="flex-shrink-0 flex items-center justify-center gap-2 h-9 w-full text-[11px] font-semibold text-muted-foreground hover:bg-card transition-colors border-t border-border"
             style={{ background: "#f8fafc" }}
           >
             <ChevronUp className="w-3.5 h-3.5" />
@@ -1042,7 +1042,7 @@ function JoinBuilderInner() {
           onClick={(e) => { if (e.target === e.currentTarget) setShowSaveModal(false); }}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 border"
+            className="bg-card rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 border"
             style={{ borderColor: "hsl(var(--sidebar-border))" }}
           >
             <div className="flex items-center gap-3 mb-5">
@@ -1050,20 +1050,20 @@ function JoinBuilderInner() {
                 <Save className="w-5 h-5" style={{ color: "hsl(var(--primary))" }} />
               </div>
               <div>
-                <h2 className="text-sm font-bold text-gray-900">Save as Dataset</h2>
-                <p className="text-[10px] text-gray-400 mt-0.5">
+                <h2 className="text-sm font-bold text-foreground">Save as Dataset</h2>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
                   {result?.row_count?.toLocaleString()} rows · {result?.columns?.length} columns
                 </p>
               </div>
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="ml-auto p-1.5 rounded-lg hover:bg-gray-100 transition"
+                className="ml-auto p-1.5 rounded-lg hover:bg-muted transition"
               >
-                <X className="w-4 h-4 text-gray-400" />
+                <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
 
-            <label className="block text-[11px] font-semibold text-gray-700 mb-1.5">Dataset name</label>
+            <label className="block text-[11px] font-semibold text-foreground mb-1.5">Dataset name</label>
             <input
               autoFocus
               type="text"
@@ -1071,7 +1071,7 @@ function JoinBuilderInner() {
               onChange={(e) => setSaveName(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && saveName.trim()) saveMutation.mutate(); }}
               placeholder="e.g. Customer Orders Joined"
-              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:border-transparent transition focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full text-sm border border-border rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:border-transparent transition focus:outline-none focus:ring-2 focus:ring-primary/50"
             />
 
             {saveMutation.isError && (
@@ -1081,7 +1081,7 @@ function JoinBuilderInner() {
               </p>
             )}
 
-            <p className="mt-3 text-[10px] text-gray-400 leading-relaxed">
+            <p className="mt-3 text-[10px] text-muted-foreground leading-relaxed">
               The full join result will be saved and EDA analysis will run automatically.
               You can track progress in the Datasets tab.
             </p>
@@ -1089,7 +1089,7 @@ function JoinBuilderInner() {
             <div className="flex gap-2 mt-5">
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition"
+                className="flex-1 py-2.5 rounded-xl border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition"
               >
                 Cancel
               </button>
@@ -1131,16 +1131,16 @@ function JoinBuilderInner() {
                   <p className="text-[10px] font-bold" style={{ color: JOIN_META[edgeConfig.joinType].color }}>
                     {srcNode?.data.label} → {tgtNode?.data.label}
                   </p>
-                  <p className="text-[9px] text-gray-500 mt-0.5">{JOIN_META[edgeConfig.joinType].desc}</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5">{JOIN_META[edgeConfig.joinType].desc}</p>
                 </div>
-                <button onClick={() => setSelectedEdgeId(null)} className="p-1 rounded-lg hover:bg-white/60">
-                  <X className="w-3.5 h-3.5 text-gray-400" />
+                <button onClick={() => setSelectedEdgeId(null)} className="p-1 rounded-lg hover:bg-card/60">
+                  <X className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </div>
 
               {/* Join type */}
               <div>
-                <label className="text-[10px] font-bold text-gray-600 block mb-2 uppercase tracking-wider">Join Type</label>
+                <label className="text-[10px] font-bold text-muted-foreground block mb-2 uppercase tracking-wider">Join Type</label>
                 <div className="grid grid-cols-2 gap-1.5">
                   {JOIN_TYPES.map((jt) => (
                     <button
@@ -1157,7 +1157,7 @@ function JoinBuilderInner() {
                         <span className="text-[11px] font-bold" style={{ color: edgeConfig.joinType === jt ? JOIN_META[jt].color : "#64748b" }}>{jt}</span>
                         <span className="text-sm">{JOIN_META[jt].symbol}</span>
                       </div>
-                      <p className="text-[8px] text-gray-400 leading-tight">{JOIN_META[jt].desc}</p>
+                      <p className="text-[8px] text-muted-foreground leading-tight">{JOIN_META[jt].desc}</p>
                     </button>
                   ))}
                 </div>
@@ -1165,7 +1165,7 @@ function JoinBuilderInner() {
 
               {/* Conditions */}
               <div>
-                <label className="text-[10px] font-bold text-gray-600 block mb-2 uppercase tracking-wider">Join Keys</label>
+                <label className="text-[10px] font-bold text-muted-foreground block mb-2 uppercase tracking-wider">Join Keys</label>
 
                 {matchingSuggestions.length > 0 && edgeConfig.conditions.length === 0 && (
                   <div className="mb-2 p-2.5 rounded-xl border" style={{ backgroundColor: "hsl(var(--primary) / 0.08)", borderColor: "hsl(var(--primary) / 0.2)" }}>
@@ -1193,7 +1193,7 @@ function JoinBuilderInner() {
 
                 <div className="space-y-2">
                   {edgeConfig.conditions.length === 0 ? (
-                    <p className="text-[9px] text-gray-400 italic py-2 text-center">
+                    <p className="text-[9px] text-muted-foreground italic py-2 text-center">
                       No conditions yet — click a column in a table node or use suggestions above
                     </p>
                   ) : (
@@ -1202,23 +1202,23 @@ function JoinBuilderInner() {
                         <select
                           value={c.sourceKey}
                           onChange={(e) => updateCondition(i, "sourceKey", e.target.value)}
-                          className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:border-transparent transition focus:outline-none focus:ring-2 focus:ring-primary/50"
+                          className="flex-1 text-[10px] border border-border rounded-lg px-2 py-1.5 outline-none bg-card focus:ring-1 focus:border-transparent transition focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                           <option value="">Source…</option>
                           {srcCols.map((col) => <option key={col} value={col}>{col}</option>)}
                         </select>
-                        <span className="text-gray-300 text-xs">=</span>
+                        <span className="text-muted-foreground/60 text-xs">=</span>
                         <select
                           value={c.targetKey}
                           onChange={(e) => updateCondition(i, "targetKey", e.target.value)}
-                          className="flex-1 text-[10px] border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white focus:ring-1 focus:border-transparent transition focus:outline-none focus:ring-2 focus:ring-primary/50"
+                          className="flex-1 text-[10px] border border-border rounded-lg px-2 py-1.5 outline-none bg-card focus:ring-1 focus:border-transparent transition focus:outline-none focus:ring-2 focus:ring-primary/50"
                         >
                           <option value="">Target…</option>
                           {tgtCols.map((col) => <option key={col} value={col}>{col}</option>)}
                         </select>
                         <button
                           onClick={() => removeCondition(i)}
-                          className="p-1 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-500 transition flex-shrink-0"
+                          className="p-1 rounded-lg hover:bg-red-50 text-muted-foreground/60 hover:text-red-500 transition flex-shrink-0"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -1230,7 +1230,7 @@ function JoinBuilderInner() {
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={addCondition}
-                    className="flex-1 text-[10px] px-2.5 py-2 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 transition flex items-center justify-center gap-1"
+                    className="flex-1 text-[10px] px-2.5 py-2 border border-border rounded-xl font-semibold text-muted-foreground hover:bg-muted transition flex items-center justify-center gap-1"
                   >
                     <Plus className="w-3 h-3" /> Condition
                   </button>
@@ -1257,10 +1257,10 @@ function JoinBuilderInner() {
                 className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
                 style={{ backgroundColor: "#f1f5f9" }}
               >
-                <Settings className="w-6 h-6 text-gray-300" />
+                <Settings className="w-6 h-6 text-muted-foreground/60" />
               </div>
-              <p className="text-[11px] font-semibold text-gray-400">No join selected</p>
-              <p className="text-[10px] text-gray-300 mt-1 leading-relaxed">
+              <p className="text-[11px] font-semibold text-muted-foreground">No join selected</p>
+              <p className="text-[10px] text-muted-foreground/60 mt-1 leading-relaxed">
                 Click on a join edge in the canvas to configure it
               </p>
             </div>

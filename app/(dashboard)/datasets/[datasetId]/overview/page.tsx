@@ -24,13 +24,13 @@ const TYPE_COLORS: Record<string, string> = {
   datetime: "bg-green-100 text-green-700",
   boolean: "bg-amber-100 text-amber-700",
   text: "bg-pink-100 text-pink-700",
-  id_like: "bg-gray-100 text-gray-600",
+  id_like: "bg-muted text-muted-foreground",
   constant: "bg-red-100 text-red-600",
 };
 
 function MiniBar({ pct, color = "bg-blue-400" }: { pct: number; color?: string }) {
   return (
-    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
       <div className={`h-full ${color} rounded-full`} style={{ width: `${Math.min(pct, 100)}%` }} />
     </div>
   );
@@ -43,28 +43,28 @@ function ColumnCard({ col, datasetId, onClick }: { col: ColumnProfile; datasetId
   return (
     <div
       onClick={onClick}
-      className="bg-white border border-gray-200 rounded-xl p-4 hover:border-brand/30 hover:shadow-md cursor-pointer transition group"
+      className="bg-card border border-border rounded-xl p-4 hover:border-brand/30 hover:shadow-md cursor-pointer transition group"
     >
       <div className="flex items-start justify-between mb-2">
-        <h4 className="text-xs font-semibold text-gray-900 truncate mr-2 flex-1">{col.name}</h4>
-        <span className={`text-xs px-1.5 py-0.5 rounded-md font-medium flex-shrink-0 ${TYPE_COLORS[col.semantic_type] ?? "bg-gray-100 text-gray-600"}`}>
+        <h4 className="text-xs font-semibold text-foreground truncate mr-2 flex-1">{col.name}</h4>
+        <span className={`text-xs px-1.5 py-0.5 rounded-md font-medium flex-shrink-0 ${TYPE_COLORS[col.semantic_type] ?? "bg-muted text-muted-foreground"}`}>
           {col.semantic_type}
         </span>
       </div>
 
-      <p className="text-xs text-gray-400 mb-2 font-mono">{col.dtype}</p>
+      <p className="text-xs text-muted-foreground mb-2 font-mono">{col.dtype}</p>
 
       {/* Missing bar */}
       <div className="mb-2">
         <div className="flex justify-between text-xs mb-0.5">
-          <span className="text-gray-400">Missing</span>
+          <span className="text-muted-foreground">Missing</span>
           <span className={`font-medium ${missingColor}`}>{col.missing_pct.toFixed(1)}%</span>
         </div>
         <MiniBar pct={col.missing_pct} color={missingBarColor} />
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 gap-1 text-xs text-gray-500 mt-2">
+      <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground mt-2">
         <span>{col.unique_count.toLocaleString()} unique</span>
         {col.mean != null && <span>Î¼={col.mean.toFixed(2)}</span>}
         {col.skewness != null && Math.abs(col.skewness) > 1 && (
@@ -74,10 +74,10 @@ function ColumnCard({ col, datasetId, onClick }: { col: ColumnProfile; datasetId
 
       {/* Top value */}
       {col.top_values?.[0] && (
-        <div className="mt-2 pt-2 border-t border-gray-50">
-          <p className="text-xs text-gray-400 truncate">
-            Top: <span className="text-gray-600 font-medium">{col.top_values[0].value}</span>
-            <span className="ml-1 text-gray-300">({col.top_values[0].pct?.toFixed(1)}%)</span>
+        <div className="mt-2 pt-2 border-t border-border">
+          <p className="text-xs text-muted-foreground truncate">
+            Top: <span className="text-muted-foreground font-medium">{col.top_values[0].value}</span>
+            <span className="ml-1 text-muted-foreground/60">({col.top_values[0].pct?.toFixed(1)}%)</span>
           </p>
         </div>
       )}
@@ -163,19 +163,19 @@ export default function DatasetOverviewPage() {
 
         <div className="flex items-start justify-between mt-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{dataset.name}</h1>
-            {dataset.description && <p className="text-gray-500 mt-0.5 text-sm">{dataset.description}</p>}
+            <h1 className="text-2xl font-bold text-foreground">{dataset.name}</h1>
+            {dataset.description && <p className="text-muted-foreground mt-0.5 text-sm">{dataset.description}</p>}
           </div>
           <div className="flex gap-2">
             <button
               onClick={handleReport}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 transition"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted text-foreground transition"
             >
               <Download className="w-4 h-4" /> Export Report
             </button>
             <button
               onClick={() => router.push(`/datasets/${datasetId}/history`)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 transition"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm border border-border rounded-lg hover:bg-muted text-foreground transition"
             >
               <RefreshCw className="w-4 h-4" /> History
             </button>
@@ -197,14 +197,14 @@ export default function DatasetOverviewPage() {
         {/* Quality + Issues */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {quality && (
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">Data Quality Score</h2>
+            <div className="bg-card rounded-xl border border-border p-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3">Data Quality Score</h2>
               <QualityGauge data={quality} />
             </div>
           )}
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
               <AlertTriangle className="w-4 h-4 text-amber-500" /> Issues
             </h2>
             {quality?.issues?.length ? (
@@ -226,8 +226,8 @@ export default function DatasetOverviewPage() {
             )}
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h2 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+          <div className="bg-card rounded-xl border border-border p-5">
+            <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
               <Zap className="w-4 h-4 text-brand" /> Recommendations
             </h2>
             {quality?.suggestions?.length ? (
@@ -237,16 +237,16 @@ export default function DatasetOverviewPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-400">No recommendations</p>
+              <p className="text-xs text-muted-foreground">No recommendations</p>
             )}
           </div>
         </div>
 
         {/* Column Summary Cards */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-card rounded-xl border border-border p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-gray-700">
-              Column Summary <span className="text-gray-400 font-normal">({columns.length} columns)</span>
+            <h2 className="text-sm font-semibold text-foreground">
+              Column Summary <span className="text-muted-foreground font-normal">({columns.length} columns)</span>
             </h2>
             <div className="flex items-center gap-2">
               <input
@@ -254,12 +254,12 @@ export default function DatasetOverviewPage() {
                 placeholder="Search columns..."
                 value={searchCol}
                 onChange={(e) => setSearchCol(e.target.value)}
-                className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-40 outline-none focus:ring-1 focus:ring-brand"
+                className="text-xs border border-border rounded-lg px-3 py-1.5 w-40 outline-none focus:ring-1 focus:ring-brand"
               />
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 outline-none bg-white"
+                className="text-xs border border-border rounded-lg px-2 py-1.5 outline-none bg-card"
               >
                 <option value="all">All types</option>
                 {semanticTypes.map((t) => (
@@ -270,7 +270,7 @@ export default function DatasetOverviewPage() {
           </div>
 
           {filteredCols.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">No columns match the filter.</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No columns match the filter.</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {filteredCols.map((col) => (

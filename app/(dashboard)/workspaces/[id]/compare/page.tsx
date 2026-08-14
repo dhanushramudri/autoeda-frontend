@@ -79,8 +79,8 @@ export default function CompareDatasets() {
       />
 
       <div className="mt-4 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Compare Datasets</h1>
-        <p className="text-sm text-gray-500 mt-0.5">
+        <h1 className="text-2xl font-bold text-foreground">Compare Datasets</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
           Side-by-side comparison of quality, missing data, and column profiles
         </p>
       </div>
@@ -93,13 +93,13 @@ export default function CompareDatasets() {
           const other = side === "left" ? rightId : leftId;
           return (
             <div key={side}>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
                 {side === "left" ? "Dataset A" : "Dataset B"}
               </label>
               <select
                 value={current}
                 onChange={(e) => setter(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand"
+                className="w-full px-3 py-2 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand"
               >
                 <option value="">Select a dataset</option>
                 {(datasets ?? [])
@@ -127,16 +127,16 @@ export default function CompareDatasets() {
               { label: leftDs?.name, ds: leftDs },
               { label: rightDs?.name, ds: rightDs },
             ].map(({ label, ds }, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 p-4">
-                <h3 className="font-semibold text-gray-800 mb-3">{label}</h3>
+              <div key={i} className="bg-card rounded-xl border border-border p-4">
+                <h3 className="font-semibold text-foreground mb-3">{label}</h3>
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <p className="text-gray-400">Rows</p>
-                    <p className="font-semibold text-gray-800">{ds?.row_count?.toLocaleString() ?? "—"}</p>
+                  <div className="bg-muted rounded-lg p-2">
+                    <p className="text-muted-foreground">Rows</p>
+                    <p className="font-semibold text-foreground">{ds?.row_count?.toLocaleString() ?? "—"}</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <p className="text-gray-400">Columns</p>
-                    <p className="font-semibold text-gray-800">{ds?.column_count ?? "—"}</p>
+                  <div className="bg-muted rounded-lg p-2">
+                    <p className="text-muted-foreground">Columns</p>
+                    <p className="font-semibold text-foreground">{ds?.column_count ?? "—"}</p>
                   </div>
                 </div>
               </div>
@@ -146,16 +146,16 @@ export default function CompareDatasets() {
           {/* Quality comparison */}
           {(leftQuality || rightQuality) && (
             <div>
-              <h2 className="text-base font-semibold text-gray-800 mb-4">Data Quality</h2>
+              <h2 className="text-base font-semibold text-foreground mb-4">Data Quality</h2>
               <div className="grid grid-cols-2 gap-6">
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="bg-card rounded-xl border border-border p-5">
                   {leftQuality ? (
                     <QualityGauge data={leftQuality} />
                   ) : (
                     <PageSpinner />
                   )}
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="bg-card rounded-xl border border-border p-5">
                   {rightQuality ? (
                     <QualityGauge data={rightQuality} />
                   ) : (
@@ -169,12 +169,12 @@ export default function CompareDatasets() {
           {/* Missing comparison */}
           {(leftMissing || rightMissing) && (
             <div>
-              <h2 className="text-base font-semibold text-gray-800 mb-4">Missing Values</h2>
+              <h2 className="text-base font-semibold text-foreground mb-4">Missing Values</h2>
               <div className="grid grid-cols-2 gap-6">
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="bg-card rounded-xl border border-border p-5">
                   {leftMissing ? <MissingHeatmap data={leftMissing} /> : <PageSpinner />}
                 </div>
-                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                <div className="bg-card rounded-xl border border-border p-5">
                   {rightMissing ? <MissingHeatmap data={rightMissing} /> : <PageSpinner />}
                 </div>
               </div>
@@ -184,7 +184,7 @@ export default function CompareDatasets() {
           {/* Column profile comparison */}
           {leftProfile && rightProfile && (
             <div>
-              <h2 className="text-base font-semibold text-gray-800 mb-4">Column Types</h2>
+              <h2 className="text-base font-semibold text-foreground mb-4">Column Types</h2>
               <div className="grid grid-cols-2 gap-6">
                 {[leftProfile, rightProfile].map((prof, i) => {
                   const typeCounts: Record<string, number> = {};
@@ -192,7 +192,7 @@ export default function CompareDatasets() {
                     typeCounts[c.semantic_type] = (typeCounts[c.semantic_type] ?? 0) + 1;
                   });
                   return (
-                    <div key={i} className="bg-white rounded-xl border border-gray-200 p-5">
+                    <div key={i} className="bg-card rounded-xl border border-border p-5">
                       <div className="flex flex-wrap gap-2">
                         {Object.entries(typeCounts).map(([type, count]) => (
                           <span

@@ -85,8 +85,8 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
   const needsValue = draft.operator !== "is_null" && draft.operator !== "is_not_null";
 
   return (
-    <div className="bg-white border-b border-gray-100 px-4 py-2 flex flex-wrap items-center gap-2 min-h-[44px]">
-      <div className="flex items-center gap-1 text-xs text-gray-400 font-medium">
+    <div className="bg-card border-b border-border px-4 py-2 flex flex-wrap items-center gap-2 min-h-[44px]">
+      <div className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
         <Filter className="w-3.5 h-3.5" />
         Filters
       </div>
@@ -108,9 +108,9 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
 
       {/* Add filter inline form */}
       {adding && (
-        <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-2 py-1">
+        <div className="flex items-center gap-1 bg-muted border border-border rounded-lg px-2 py-1">
           <select
-            className="text-xs border-0 bg-transparent outline-none text-gray-700 max-w-[120px]"
+            className="text-xs border-0 bg-transparent outline-none text-foreground max-w-[120px]"
             value={draft.column ?? ""}
             onChange={(e) => setDraft((d) => ({ ...d, column: e.target.value }))}
           >
@@ -118,7 +118,7 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
             {columns.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
           <select
-            className="text-xs border-0 bg-transparent outline-none text-gray-700"
+            className="text-xs border-0 bg-transparent outline-none text-foreground"
             value={draft.operator ?? "equals"}
             onChange={(e) => setDraft((d) => ({ ...d, operator: e.target.value as FilterOperator }))}
           >
@@ -126,7 +126,7 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
           </select>
           {needsValue && (
             <input
-              className="text-xs border-0 bg-transparent outline-none text-gray-700 w-24 placeholder-gray-300"
+              className="text-xs border-0 bg-transparent outline-none text-foreground w-24 placeholder-muted-foreground"
               placeholder="value"
               value={draft.value ?? ""}
               onChange={(e) => setDraft((d) => ({ ...d, value: e.target.value }))}
@@ -136,7 +136,7 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
           )}
           <button onClick={addFilter} className="text-xs bg-brand text-white px-2 py-0.5 rounded-md">Add</button>
           <button onClick={() => { setAdding(false); setDraft({ operator: "equals" }); }}>
-            <X className="w-3 h-3 text-gray-400" />
+            <X className="w-3 h-3 text-muted-foreground" />
           </button>
         </div>
       )}
@@ -144,7 +144,7 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
       {!adding && (
         <button
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1 text-xs text-gray-500 hover:text-brand border border-dashed border-gray-300 hover:border-brand/60 rounded-full px-2.5 py-1 transition"
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-brand border border-dashed border-border hover:border-brand/60 rounded-full px-2.5 py-1 transition"
         >
           <Plus className="w-3 h-3" /> Add Filter
         </button>
@@ -154,14 +154,14 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
       <div className="relative">
         <button
           onClick={() => setShowSegments((v) => !v)}
-          className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground px-2 py-1"
         >
           Segments <ChevronDown className="w-3 h-3" />
         </button>
         {showSegments && (
-          <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[180px] py-1">
+          <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-30 min-w-[180px] py-1">
             {(!segmentsData || segmentsData.length === 0) ? (
-              <p className="px-3 py-2 text-xs text-gray-400">No saved segments</p>
+              <p className="px-3 py-2 text-xs text-muted-foreground">No saved segments</p>
             ) : (
               segmentsData.map((seg) => (
                 <button
@@ -171,13 +171,13 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
                     setShowSegments(false);
                     previewMutation.mutate(seg.filters as FilterConfig[]);
                   }}
-                  className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+                  className="w-full text-left px-3 py-1.5 text-xs text-foreground hover:bg-muted"
                 >
                   {seg.name}
                 </button>
               ))
             )}
-            <div className="border-t border-gray-100 mt-1 pt-1">
+            <div className="border-t border-border mt-1 pt-1">
               <button
                 onClick={() => { setShowSegmentInput(true); setShowSegments(false); }}
                 disabled={filters.length === 0}
@@ -194,7 +194,7 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
       {showSegmentInput && (
         <div className="flex items-center gap-1">
           <input
-            className="text-xs border border-gray-300 rounded-md px-2 py-1 w-36 outline-none focus:ring-1 focus:ring-brand"
+            className="text-xs border border-border rounded-md px-2 py-1 w-36 outline-none focus:ring-1 focus:ring-brand"
             placeholder="Segment name"
             value={segmentName}
             onChange={(e) => setSegmentName(e.target.value)}
@@ -209,7 +209,7 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
             <Save className="w-3 h-3" /> Save
           </button>
           <button onClick={() => setShowSegmentInput(false)}>
-            <X className="w-3 h-3 text-gray-400" />
+            <X className="w-3 h-3 text-muted-foreground" />
           </button>
         </div>
       )}

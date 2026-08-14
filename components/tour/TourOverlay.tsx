@@ -85,22 +85,22 @@ export const TourOverlay: React.FC = () => {
 
       {/* Tooltip card */}
       <div
-        className="fixed z-[10000] bg-white rounded-xl shadow-2xl p-5 w-80 pointer-events-auto border border-gray-100 transition-all duration-500 ease-in-out"
+        className="fixed z-[10000] bg-card rounded-xl shadow-2xl p-5 w-80 pointer-events-auto border border-border transition-all duration-500 ease-in-out"
         style={getTooltipStyle(targetRect, currentStep.position, isCenter)}
       >
         <div className="flex items-start justify-between mb-2">
-          <h3 className="text-base font-semibold text-gray-900 pr-6 leading-tight">
+          <h3 className="text-base font-semibold text-foreground pr-6 leading-tight">
             {currentStep.title}
           </h3>
           <button
             onClick={endTour}
-            className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 -mt-0.5"
+            className="text-muted-foreground hover:text-muted-foreground transition-colors flex-shrink-0 -mt-0.5"
           >
             <X size={18} />
           </button>
         </div>
 
-        <p className="text-sm text-gray-600 leading-relaxed mb-4">
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
           {currentStep.description}
         </p>
 
@@ -114,12 +114,12 @@ export const TourOverlay: React.FC = () => {
                   "rounded-full transition-all duration-300",
                   idx === currentStepIndex
                     ? "bg-primary w-5 h-1.5"
-                    : "bg-gray-300 w-1.5 h-1.5"
+                    : "bg-muted w-1.5 h-1.5"
                 )}
               />
             ))}
           </div>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-muted-foreground">
             {currentStepIndex + 1} / {steps.length}
           </span>
         </div>
@@ -128,14 +128,14 @@ export const TourOverlay: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={endTour}
-            className="text-xs text-gray-400 hover:text-gray-600 transition-colors mr-auto"
+            className="text-xs text-muted-foreground hover:text-muted-foreground transition-colors mr-auto"
           >
             Skip
           </button>
           {currentStepIndex > 0 && (
             <button
               onClick={prevStep}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-foreground bg-muted rounded-lg hover:bg-muted transition-colors"
             >
               <ChevronLeft size={14} />
               Back

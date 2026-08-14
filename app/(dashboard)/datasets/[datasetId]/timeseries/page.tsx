@@ -149,13 +149,13 @@ function TSMethodLoadingIndicator({ methods }: { methods: TSMethodLoadingState[]
   const totalComplete = methods.filter(m => m.status === "done").length;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5">
+    <div className="bg-card border border-border rounded-xl p-4 mb-5">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-semibold text-gray-600">
+        <p className="text-xs font-semibold text-muted-foreground">
           Loading additional analyses ({totalComplete}/{methods.length})
         </p>
         {!allDone && (
-          <span className="flex items-center gap-1 text-[10px] text-gray-400">
+          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
             <RefreshCw className="w-3 h-3 animate-spin" /> Computing…
           </span>
         )}
@@ -171,7 +171,7 @@ function TSMethodLoadingIndicator({ methods }: { methods: TSMethodLoadingState[]
                 ? "bg-red-50 text-red-700 border-red-200"
                 : m.status === "loading"
                 ? "bg-blue-50 text-blue-700 border-blue-200"
-                : "bg-gray-50 text-gray-400 border-gray-200"
+                : "bg-muted text-muted-foreground border-border"
             }`}
           >
             {m.status === "loading" && <RefreshCw className="w-2.5 h-2.5 animate-spin" />}
@@ -238,19 +238,19 @@ function Section({ title, icon, defaultOpen = true, children, badge }: {
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-4">
+    <div className="bg-card rounded-xl border border-border overflow-hidden mb-4">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center justify-between px-5 py-3.5 hover:bg-muted transition-colors"
       >
         <div className="flex items-center gap-2.5">
           <span className="text-brand">{icon}</span>
-          <span className="font-semibold text-gray-900 text-sm">{title}</span>
+          <span className="font-semibold text-foreground text-sm">{title}</span>
           {badge}
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
       </button>
-      {open && <div className="px-5 pb-5 pt-1 border-t border-gray-100">{children}</div>}
+      {open && <div className="px-5 pb-5 pt-1 border-t border-border">{children}</div>}
     </div>
   );
 }
@@ -260,7 +260,7 @@ function Badge({ color, children }: { color: "green" | "red" | "yellow" | "gray"
     green: "bg-green-50 text-green-700 border-green-200",
     red: "bg-red-50 text-red-700 border-red-200",
     yellow: "bg-amber-50 text-amber-700 border-amber-200",
-    gray: "bg-gray-100 text-gray-600 border-gray-200",
+    gray: "bg-muted text-muted-foreground border-border",
     blue: "bg-blue-50 text-blue-700 border-blue-200",
   }[color];
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}>{children}</span>;
@@ -268,9 +268,9 @@ function Badge({ color, children }: { color: "green" | "red" | "yellow" | "gray"
 
 function KVRow({ label, value, mono = false }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
-    <div className="flex items-start justify-between py-1.5 border-b border-gray-50 last:border-0">
-      <span className="text-xs text-gray-500 shrink-0 mr-4">{label}</span>
-      <span className={`text-xs text-gray-900 text-right ${mono ? "font-mono" : ""}`}>{value}</span>
+    <div className="flex items-start justify-between py-1.5 border-b border-border last:border-0">
+      <span className="text-xs text-muted-foreground shrink-0 mr-4">{label}</span>
+      <span className={`text-xs text-foreground text-right ${mono ? "font-mono" : ""}`}>{value}</span>
     </div>
   );
 }
@@ -278,8 +278,8 @@ function KVRow({ label, value, mono = false }: { label: string; value: React.Rea
 const ChartTooltip = ({ active, payload, label }: any) => {
   if (!active || !Array.isArray(payload) || payload.length === 0) return null;
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-xs">
-      <p className="text-gray-400 mb-1">{fmtDate(label)}</p>
+    <div className="bg-card border border-border rounded-lg shadow-lg px-3 py-2 text-xs">
+      <p className="text-muted-foreground mb-1">{fmtDate(label)}</p>
       {payload.map((p: any, i: number) => (
         <p key={i} style={{ color: p?.color }} className="font-mono font-medium">
           {p?.name ?? "Value"}: {p?.value != null && isFinite(p.value) ? Number(p.value).toFixed(4) : "—"}
@@ -320,7 +320,7 @@ function MainSeriesChart({ data, anomalyIndices, changePointDates }: {
   }, [data, anomalyIndices]);
 
   if (chartData.length === 0) {
-    return <p className="text-xs text-gray-400">No data available for chart</p>;
+    return <p className="text-xs text-muted-foreground">No data available for chart</p>;
   }
 
   const validChangePoints = changePointDates.filter(d => typeof d === "string" && d.length > 0);
@@ -328,15 +328,15 @@ function MainSeriesChart({ data, anomalyIndices, changePointDates }: {
   return (
     <div>
       <div className="flex items-center gap-3 mb-3">
-        <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
           <input type="checkbox" checked={showRolling} onChange={e => setShowRolling(e.target.checked)} className="rounded" />
           Rolling mean
         </label>
-        <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer">
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
           <input type="checkbox" checked={showBands} onChange={e => setShowBands(e.target.checked)} className="rounded" />
           ±2σ bands
         </label>
-        <span className="text-xs text-gray-400 ml-2">
+        <span className="text-xs text-muted-foreground ml-2">
           {data.n_points?.toLocaleString?.() ?? "?"} points · {fmtDate(data.start_date)} – {fmtDate(data.end_date)}
         </span>
       </div>
@@ -371,7 +371,7 @@ function MainSeriesChart({ data, anomalyIndices, changePointDates }: {
 
 function DecompositionChart({ decomp }: { decomp: NonNullable<TSData["decomposition"]> }) {
   if (!decomp?.dates || !Array.isArray(decomp.dates) || decomp.dates.length === 0) {
-    return <p className="text-xs text-gray-400">No decomposition data available</p>;
+    return <p className="text-xs text-muted-foreground">No decomposition data available</p>;
   }
 
   const series = (key: "trend" | "seasonal" | "residual") => {
@@ -388,21 +388,21 @@ function DecompositionChart({ decomp }: { decomp: NonNullable<TSData["decomposit
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
-        <span>Method: <strong className="text-gray-700">{decomp.method ?? "Unknown"}</strong></span>
-        <span>Period: <strong className="text-gray-700">{decomp.period ?? "—"}</strong></span>
+      <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+        <span>Method: <strong className="text-foreground">{decomp.method ?? "Unknown"}</strong></span>
+        <span>Period: <strong className="text-foreground">{decomp.period ?? "—"}</strong></span>
         {decomp.trend_strength_pct != null && (
-          <span>Trend strength: <strong className="text-gray-700">{decomp.trend_strength_pct}%</strong></span>
+          <span>Trend strength: <strong className="text-foreground">{decomp.trend_strength_pct}%</strong></span>
         )}
         {decomp.seasonal_strength_pct != null && (
-          <span>Seasonal strength: <strong className="text-gray-700">{decomp.seasonal_strength_pct}%</strong></span>
+          <span>Seasonal strength: <strong className="text-foreground">{decomp.seasonal_strength_pct}%</strong></span>
         )}
       </div>
       {panels.map(p => (
         <div key={p.label}>
-          <p className="text-xs font-medium text-gray-500 mb-1">{p.label}</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1">{p.label}</p>
           {p.data.length === 0 ? (
-            <p className="text-xs text-gray-400">No data</p>
+            <p className="text-xs text-muted-foreground">No data</p>
           ) : (
             <ResponsiveContainer width="100%" height={90}>
               <LineChart data={p.data} margin={{ top: 2, right: 12, left: 0, bottom: 2 }}>
@@ -428,7 +428,7 @@ function CorrelogramChart({ values, ciUpper, ciLower, confThreshold, title, sign
   confThreshold?: number; title: string; significantLags?: number[];
 }) {
   if (!Array.isArray(values) || values.length === 0) {
-    return <p className="text-xs text-gray-400">No {title} data available</p>;
+    return <p className="text-xs text-muted-foreground">No {title} data available</p>;
   }
 
   const data = values.map((v, i) => ({
@@ -443,7 +443,7 @@ function CorrelogramChart({ values, ciUpper, ciLower, confThreshold, title, sign
 
   return (
     <div>
-      <p className="text-xs font-medium text-gray-500 mb-1">{title}</p>
+      <p className="text-xs font-medium text-muted-foreground mb-1">{title}</p>
       <ResponsiveContainer width="100%" height={160}>
         <ComposedChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
           <CartesianGrid strokeDasharray="2 2" stroke="#f3f4f6" />
@@ -463,7 +463,7 @@ function CorrelogramChart({ values, ciUpper, ciLower, confThreshold, title, sign
 function VolatilityChart({ rolling }: { rolling?: NonNullable<TSData["rolling_full"]> }) {
   const volData = rolling?.volatility;
   if (!volData?.dates || !Array.isArray(volData.dates) || volData.dates.length === 0) {
-    return <p className="text-xs text-gray-400">Volatility data not available</p>;
+    return <p className="text-xs text-muted-foreground">Volatility data not available</p>;
   }
 
   const chartData = volData.dates.map((d, i) => ({ 
@@ -472,7 +472,7 @@ function VolatilityChart({ rolling }: { rolling?: NonNullable<TSData["rolling_fu
   })).filter(d => d.volatility != null);
 
   if (chartData.length === 0) {
-    return <p className="text-xs text-gray-400">No valid volatility data</p>;
+    return <p className="text-xs text-muted-foreground">No valid volatility data</p>;
   }
 
   return (
@@ -493,7 +493,7 @@ function VolatilityChart({ rolling }: { rolling?: NonNullable<TSData["rolling_fu
 
 function LagCorrelationChart({ lagAnalysis }: { lagAnalysis?: NonNullable<TSData["lag_analysis"]> }) {
   if (!lagAnalysis?.lags || !Array.isArray(lagAnalysis.lags) || lagAnalysis.lags.length === 0) {
-    return <p className="text-xs text-gray-400">No lag analysis data available</p>;
+    return <p className="text-xs text-muted-foreground">No lag analysis data available</p>;
   }
 
   const data = lagAnalysis.lags.map((lag, i) => ({
@@ -521,7 +521,7 @@ function LagCorrelationChart({ lagAnalysis }: { lagAnalysis?: NonNullable<TSData
 function SpectralChart({ spectral }: { spectral?: NonNullable<TSData["spectral"]> }) {
   const freqs = spectral?.dominant_frequencies;
   if (!Array.isArray(freqs) || freqs.length === 0) {
-    return <p className="text-xs text-gray-400">No dominant frequencies detected</p>;
+    return <p className="text-xs text-muted-foreground">No dominant frequencies detected</p>;
   }
 
   const data = freqs.map(f => ({
@@ -531,7 +531,7 @@ function SpectralChart({ spectral }: { spectral?: NonNullable<TSData["spectral"]
   })).filter(d => d.amplitude != null && isFinite(d.amplitude));
 
   if (data.length === 0) {
-    return <p className="text-xs text-gray-400">No valid frequency data</p>;
+    return <p className="text-xs text-muted-foreground">No valid frequency data</p>;
   }
 
   return (
@@ -548,14 +548,14 @@ function SpectralChart({ spectral }: { spectral?: NonNullable<TSData["spectral"]
           <Bar dataKey="amplitude" fill="#7c3aed" opacity={0.75} name="Amplitude" />
         </BarChart>
       </ResponsiveContainer>
-      <p className="text-xs text-gray-400 mt-1">Dominant periodicities via FFT. Strongest cycle on left.</p>
+      <p className="text-xs text-muted-foreground mt-1">Dominant periodicities via FFT. Strongest cycle on left.</p>
     </div>
   );
 }
 
 
 function DataQualityPanel({ q }: { q?: NonNullable<TSData["data_quality"]> }) {
-  if (!q) return <p className="text-xs text-gray-400">No data quality information available</p>;
+  if (!q) return <p className="text-xs text-muted-foreground">No data quality information available</p>;
 
   const score = Math.max(0, 100 - (q.missing_pct ?? 0) - ((q.irregular_pct ?? 0) / 2) - (q.n_duplicates ?? 0));
   const scoreColor = score >= 80 ? "green" : score >= 60 ? "yellow" : "red";
@@ -564,7 +564,7 @@ function DataQualityPanel({ q }: { q?: NonNullable<TSData["data_quality"]> }) {
     <div className="grid grid-cols-2 gap-4">
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-sm font-medium text-gray-700">Quality Score</span>
+          <span className="text-sm font-medium text-foreground">Quality Score</span>
           <Badge color={scoreColor}>{score.toFixed(0)} / 100</Badge>
         </div>
         <KVRow label="Total points" value={q.n_total?.toLocaleString?.() ?? "—"} />
@@ -574,15 +574,15 @@ function DataQualityPanel({ q }: { q?: NonNullable<TSData["data_quality"]> }) {
         <KVRow label="Constant runs (≥5)" value={q.n_const_runs ?? "—"} />
       </div>
       <div>
-        <p className="text-sm font-medium text-gray-700 mb-3">Temporal Regularity</p>
+        <p className="text-sm font-medium text-foreground mb-3">Temporal Regularity</p>
         <KVRow label="Inferred frequency" value={<Badge color="blue">{q.inferred_freq ?? "unknown"}</Badge>} />
         <KVRow label="Irregular intervals" value={<span className={(q.irregular_pct ?? 0) > 10 ? "text-amber-600 font-medium" : ""}>{q.irregular_pct != null ? `${q.irregular_pct.toFixed(1)}%` : "—"}</span>} />
         {Array.isArray(q.gaps) && q.gaps.length > 0 && (
           <div className="mt-2">
-            <p className="text-xs text-gray-500 font-medium mb-1">Detected gaps ({q.gaps.length})</p>
+            <p className="text-xs text-muted-foreground font-medium mb-1">Detected gaps ({q.gaps.length})</p>
             <div className="space-y-1 max-h-28 overflow-y-auto">
               {q.gaps.slice(0, 10).map((g, i) => (
-                <div key={i} className="text-xs text-gray-500 bg-amber-50 rounded px-2 py-1">
+                <div key={i} className="text-xs text-muted-foreground bg-amber-50 rounded px-2 py-1">
                   {fmtDate(g?.start)} → {fmtDate(g?.end)}
                 </div>
               ))}
@@ -595,19 +595,19 @@ function DataQualityPanel({ q }: { q?: NonNullable<TSData["data_quality"]> }) {
 }
 
 function DescriptiveStatsPanel({ stats }: { stats?: NonNullable<TSData["descriptive_stats"]> }) {
-  if (!stats) return <p className="text-xs text-gray-400">No descriptive statistics available</p>;
+  if (!stats) return <p className="text-xs text-muted-foreground">No descriptive statistics available</p>;
 
   return (
     <div className="grid grid-cols-3 gap-4">
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Central tendency</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Central tendency</p>
         <KVRow label="Mean" value={fmt(stats.mean)} mono />
         <KVRow label="Median" value={fmt(stats.median)} mono />
         <KVRow label="Std dev" value={fmt(stats.std)} mono />
         <KVRow label="CV %" value={stats.cv != null ? `${stats.cv.toFixed(2)}%` : "—"} mono />
       </div>
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Distribution</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Distribution</p>
         <KVRow label="Min" value={fmt(stats.min)} mono />
         <KVRow label="Q1" value={fmt(stats.q1)} mono />
         <KVRow label="Q3" value={fmt(stats.q3)} mono />
@@ -615,7 +615,7 @@ function DescriptiveStatsPanel({ stats }: { stats?: NonNullable<TSData["descript
         <KVRow label="IQR" value={fmt(stats.iqr)} mono />
       </div>
       <div>
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Shape</p>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Shape</p>
         <KVRow label="Skewness" value={
           <span className={Math.abs(stats.skewness ?? 0) > 1 ? "text-amber-600 font-medium" : ""}>{fmt(stats.skewness)}</span>
         } mono />
@@ -631,7 +631,7 @@ function StationarityPanel({ stationarity, diffSuggestions }: {
   stationarity?: NonNullable<TSData["stationarity"]>;
   diffSuggestions?: TSData["differencing_suggestions"];
 }) {
-  if (!stationarity) return <p className="text-xs text-gray-400">No stationarity test results available</p>;
+  if (!stationarity) return <p className="text-xs text-muted-foreground">No stationarity test results available</p>;
 
   const verdictColor = {
     stationary: "green" as const,
@@ -655,7 +655,7 @@ function StationarityPanel({ stationarity, diffSuggestions }: {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-sm font-medium text-gray-700">Overall verdict:</span>
+        <span className="text-sm font-medium text-foreground">Overall verdict:</span>
         <Badge color={verdictColor}>{verdictLabel}</Badge>
         {stationarity.verdict === "non_stationary" && diffSuggestions?.regular_diff_order != null && (
           <Badge color="blue">Suggest d={diffSuggestions.regular_diff_order} differencing</Badge>
@@ -663,34 +663,34 @@ function StationarityPanel({ stationarity, diffSuggestions }: {
       </div>
       <div className="grid grid-cols-2 gap-4">
         {tests.map(t => t.data && (
-          <div key={t.name} className="border border-gray-100 rounded-lg p-3">
+          <div key={t.name} className="border border-border rounded-lg p-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-gray-700">{t.name}</span>
+              <span className="text-xs font-semibold text-foreground">{t.name}</span>
               <Badge color={t.data.is_stationary ? "green" : "red"}>
                 {t.data.is_stationary ? "Stationary" : "Non-stationary"}
               </Badge>
             </div>
-            <p className="text-xs text-gray-400 mb-2">{t.nullHypothesis}</p>
+            <p className="text-xs text-muted-foreground mb-2">{t.nullHypothesis}</p>
             <KVRow label="Statistic" value={fmt(t.data.statistic)} mono />
             <KVRow label="p-value" value={
               <span className={(t.data.pvalue ?? 1) < 0.05 ? "text-green-600 font-medium" : "text-red-600"}>
                 {fmt(t.data.pvalue, 6)}
               </span>
             } mono />
-            <p className="text-xs text-gray-500 mt-1.5 italic">{t.data.interpretation ?? "—"}</p>
+            <p className="text-xs text-muted-foreground mt-1.5 italic">{t.data.interpretation ?? "—"}</p>
           </div>
         ))}
       </div>
       {stationarity.zivot_andrews && (
         <div className="border border-amber-100 bg-amber-50 rounded-lg p-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-semibold text-gray-700">Zivot-Andrews Structural Break Test</span>
+            <span className="text-xs font-semibold text-foreground">Zivot-Andrews Structural Break Test</span>
             <Badge color={stationarity.zivot_andrews.pvalue != null && stationarity.zivot_andrews.pvalue < 0.05 ? "yellow" : "green"}>
               {stationarity.zivot_andrews.pvalue != null && stationarity.zivot_andrews.pvalue < 0.05 ? "Break detected" : "No break"}
             </Badge>
           </div>
-          <p className="text-xs text-gray-500">{stationarity.zivot_andrews.interpretation ?? "—"}</p>
-          <p className="text-xs text-gray-400 mt-1">Break at index: {stationarity.zivot_andrews.break_index ?? "—"}</p>
+          <p className="text-xs text-muted-foreground">{stationarity.zivot_andrews.interpretation ?? "—"}</p>
+          <p className="text-xs text-muted-foreground mt-1">Break at index: {stationarity.zivot_andrews.break_index ?? "—"}</p>
         </div>
       )}
     </div>
@@ -699,15 +699,15 @@ function StationarityPanel({ stationarity, diffSuggestions }: {
 
 function NormalityPanel({ normality }: { normality?: NonNullable<TSData["normality_tests"]> }) {
   if (!normality || Object.keys(normality).length === 0) {
-    return <p className="text-xs text-gray-400">No normality test results available</p>;
+    return <p className="text-xs text-muted-foreground">No normality test results available</p>;
   }
 
   return (
     <div className="grid grid-cols-3 gap-3">
       {Object.entries(normality).map(([name, test]) => (
-        <div key={name} className="border border-gray-100 rounded-lg p-3">
+        <div key={name} className="border border-border rounded-lg p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-gray-700 capitalize">{name.replace(/_/g, " ")}</span>
+            <span className="text-xs font-semibold text-foreground capitalize">{name.replace(/_/g, " ")}</span>
             <Badge color={test?.is_normal ? "green" : "red"}>
               {test?.is_normal ? "Normal" : "Non-normal"}
             </Badge>
@@ -721,35 +721,35 @@ function NormalityPanel({ normality }: { normality?: NonNullable<TSData["normali
 }
 
 function TrendPanel({ trend }: { trend?: NonNullable<TSData["trend_tests"]> }) {
-  if (!trend) return <p className="text-xs text-gray-400">No trend test results available</p>;
+  if (!trend) return <p className="text-xs text-muted-foreground">No trend test results available</p>;
 
   const mk = trend.mann_kendall;
   const lt = trend.linear_trend;
 
   if (!mk && !lt) {
-    return <p className="text-xs text-gray-400">No trend test results available</p>;
+    return <p className="text-xs text-muted-foreground">No trend test results available</p>;
   }
 
   return (
     <div className="grid grid-cols-2 gap-4">
       {mk && (
-        <div className="border border-gray-100 rounded-lg p-3">
+        <div className="border border-border rounded-lg p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-gray-700">Mann-Kendall Test</span>
+            <span className="text-xs font-semibold text-foreground">Mann-Kendall Test</span>
             <Badge color={mk.trend === "no trend" ? "gray" : mk.trend === "increasing" ? "green" : "red"}>
               {mk.trend ?? "unknown"}
             </Badge>
           </div>
-          <KVRow label="p-value" value={<span className={(mk.p_value ?? 1) < 0.05 ? "text-green-600 font-medium" : "text-gray-500"}>{fmt(mk.p_value, 6)}</span>} mono />
+          <KVRow label="p-value" value={<span className={(mk.p_value ?? 1) < 0.05 ? "text-green-600 font-medium" : "text-muted-foreground"}>{fmt(mk.p_value, 6)}</span>} mono />
           <KVRow label="Tau (τ)" value={fmt(mk.tau)} mono />
           <KVRow label="Sen's slope" value={fmt(mk.sen_slope)} mono />
-          <p className="text-xs text-gray-500 mt-1.5 italic">{mk.interpretation ?? "—"}</p>
+          <p className="text-xs text-muted-foreground mt-1.5 italic">{mk.interpretation ?? "—"}</p>
         </div>
       )}
       {lt && (
-        <div className="border border-gray-100 rounded-lg p-3">
+        <div className="border border-border rounded-lg p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-gray-700">Linear Trend (OLS)</span>
+            <span className="text-xs font-semibold text-foreground">Linear Trend (OLS)</span>
             <Badge color={(lt.pvalue ?? 1) < 0.05 ? "blue" : "gray"}>
               {(lt.pvalue ?? 1) < 0.05 ? "Significant" : "Not significant"}
             </Badge>
@@ -757,7 +757,7 @@ function TrendPanel({ trend }: { trend?: NonNullable<TSData["trend_tests"]> }) {
           <KVRow label="Slope" value={fmt(lt.slope)} mono />
           <KVRow label="R²" value={lt.r_squared != null ? (lt.r_squared * 100).toFixed(2) + "%" : "—"} mono />
           <KVRow label="p-value" value={fmt(lt.pvalue, 6)} mono />
-          <p className="text-xs text-gray-500 mt-1.5 italic">{lt.interpretation ?? "—"}</p>
+          <p className="text-xs text-muted-foreground mt-1.5 italic">{lt.interpretation ?? "—"}</p>
         </div>
       )}
     </div>
@@ -769,7 +769,7 @@ function SeasonalityPanel({ seasonality, spectral, decomp }: {
   spectral?: TSData["spectral"];
   decomp?: TSData["decomposition"];
 }) {
-  if (!seasonality) return <p className="text-xs text-gray-400">No seasonality test results available</p>;
+  if (!seasonality) return <p className="text-xs text-muted-foreground">No seasonality test results available</p>;
 
   return (
     <div className="space-y-4">
@@ -797,7 +797,7 @@ function AnomalyPanel({ anomaliesFull, data }: {
   const [tab, setTab] = useState<"zscore" | "iqr">("zscore");
 
   if (!anomaliesFull) {
-    return <p className="text-xs text-gray-400">No anomaly detection results available</p>;
+    return <p className="text-xs text-muted-foreground">No anomaly detection results available</p>;
   }
 
   const list = tab === "zscore" ? (anomaliesFull.rolling_zscore ?? []) : (anomaliesFull.iqr_fence ?? []);
@@ -808,37 +808,37 @@ function AnomalyPanel({ anomaliesFull, data }: {
         <Badge color={((anomaliesFull.total_anomalies ?? 0) === 0) ? "green" : "red"}>
           {anomaliesFull.total_anomalies ?? 0} anomalies detected
         </Badge>
-        <span className="text-xs text-gray-400">(union of methods)</span>
+        <span className="text-xs text-muted-foreground">(union of methods)</span>
       </div>
-      <div className="flex border border-gray-200 rounded-lg overflow-hidden w-fit">
+      <div className="flex border border-border rounded-lg overflow-hidden w-fit">
         {(["zscore", "iqr"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-3 py-1.5 text-xs font-medium ${tab === t ? "bg-brand text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
+            className={`px-3 py-1.5 text-xs font-medium ${tab === t ? "bg-brand text-white" : "bg-card text-muted-foreground hover:bg-muted"}`}>
             {t === "zscore" ? "Rolling Z-Score" : "IQR Fence"}
           </button>
         ))}
       </div>
       {list.length === 0 ? (
-        <p className="text-xs text-gray-400">No anomalies detected by this method</p>
+        <p className="text-xs text-muted-foreground">No anomalies detected by this method</p>
       ) : (
-        <div className="overflow-auto max-h-48 rounded-lg border border-gray-100">
+        <div className="overflow-auto max-h-48 rounded-lg border border-border">
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 sticky top-0">
+            <thead className="bg-muted sticky top-0">
               <tr>
-                <th className="px-3 py-2 text-left text-gray-500 font-medium">Date</th>
-                <th className="px-3 py-2 text-right text-gray-500 font-medium">Value</th>
-                {tab === "zscore" && <th className="px-3 py-2 text-right text-gray-500 font-medium">|Z-score|</th>}
-                {tab === "iqr" && <th className="px-3 py-2 text-right text-gray-500 font-medium">Fence</th>}
+                <th className="px-3 py-2 text-left text-muted-foreground font-medium">Date</th>
+                <th className="px-3 py-2 text-right text-muted-foreground font-medium">Value</th>
+                {tab === "zscore" && <th className="px-3 py-2 text-right text-muted-foreground font-medium">|Z-score|</th>}
+                {tab === "iqr" && <th className="px-3 py-2 text-right text-muted-foreground font-medium">Fence</th>}
               </tr>
             </thead>
             <tbody>
               {list.slice(0, 50).map((a: any, i: number) => (
-                <tr key={i} className="border-t border-gray-50 hover:bg-red-50">
-                  <td className="px-3 py-1.5 text-gray-700">{fmtDate(a?.date)}</td>
-                  <td className="px-3 py-1.5 text-right font-mono text-gray-700">{fmt(a?.value)}</td>
+                <tr key={i} className="border-t border-border hover:bg-red-50">
+                  <td className="px-3 py-1.5 text-foreground">{fmtDate(a?.date)}</td>
+                  <td className="px-3 py-1.5 text-right font-mono text-foreground">{fmt(a?.value)}</td>
                   {tab === "zscore" && <td className="px-3 py-1.5 text-right font-mono text-red-600">{fmt(Math.abs(a?.z_score ?? 0))}</td>}
                   {tab === "iqr" && (
-                    <td className="px-3 py-1.5 text-right font-mono text-gray-500">
+                    <td className="px-3 py-1.5 text-right font-mono text-muted-foreground">
                       [{fmt(a?.fence_lower)}, {fmt(a?.fence_upper)}]
                     </td>
                   )}
@@ -847,7 +847,7 @@ function AnomalyPanel({ anomaliesFull, data }: {
             </tbody>
           </table>
           {list.length > 50 && (
-            <div className="px-3 py-2 text-xs text-gray-400 bg-gray-50 border-t">
+            <div className="px-3 py-2 text-xs text-muted-foreground bg-muted border-t">
               Showing 50 of {list.length} anomalies
             </div>
           )}
@@ -858,7 +858,7 @@ function AnomalyPanel({ anomaliesFull, data }: {
 }
 
 function ChangePointPanel({ changePoints }: { changePoints?: NonNullable<TSData["change_points"]> }) {
-  if (!changePoints) return <p className="text-xs text-gray-400">No change point detection results available</p>;
+  if (!changePoints) return <p className="text-xs text-muted-foreground">No change point detection results available</p>;
 
   const points = changePoints.change_points ?? [];
 
@@ -871,29 +871,29 @@ function ChangePointPanel({ changePoints }: { changePoints?: NonNullable<TSData[
         {changePoints.method && <Badge color="gray">{changePoints.method}</Badge>}
       </div>
       {points.length === 0 ? (
-        <p className="text-xs text-gray-400">No significant change points detected</p>
+        <p className="text-xs text-muted-foreground">No significant change points detected</p>
       ) : (
-        <div className="overflow-auto max-h-40 rounded-lg border border-gray-100">
+        <div className="overflow-auto max-h-40 rounded-lg border border-border">
           <table className="w-full text-xs">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-3 py-2 text-left text-gray-500 font-medium">Index</th>
-                <th className="px-3 py-2 text-left text-gray-500 font-medium">Date</th>
-                <th className="px-3 py-2 text-right text-gray-500 font-medium">Value</th>
+                <th className="px-3 py-2 text-left text-muted-foreground font-medium">Index</th>
+                <th className="px-3 py-2 text-left text-muted-foreground font-medium">Date</th>
+                <th className="px-3 py-2 text-right text-muted-foreground font-medium">Value</th>
               </tr>
             </thead>
             <tbody>
               {points.slice(0, 20).map((cp, i) => (
-                <tr key={i} className="border-t border-gray-50 hover:bg-amber-50">
-                  <td className="px-3 py-1.5 font-mono text-gray-500">{cp?.index ?? "—"}</td>
-                  <td className="px-3 py-1.5 text-gray-700">{fmtDate(cp?.date)}</td>
-                  <td className="px-3 py-1.5 text-right font-mono text-gray-700">{fmt(cp?.value)}</td>
+                <tr key={i} className="border-t border-border hover:bg-amber-50">
+                  <td className="px-3 py-1.5 font-mono text-muted-foreground">{cp?.index ?? "—"}</td>
+                  <td className="px-3 py-1.5 text-foreground">{fmtDate(cp?.date)}</td>
+                  <td className="px-3 py-1.5 text-right font-mono text-foreground">{fmt(cp?.value)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           {points.length > 20 && (
-            <div className="px-3 py-2 text-xs text-gray-400 bg-gray-50 border-t">
+            <div className="px-3 py-2 text-xs text-muted-foreground bg-muted border-t">
               Showing 20 of {points.length} change points
             </div>
           )}
@@ -905,41 +905,41 @@ function ChangePointPanel({ changePoints }: { changePoints?: NonNullable<TSData[
 
 function GrangerPanel({ granger }: { granger?: NonNullable<TSData["granger_causality"]> }) {
   if (!granger || Object.keys(granger).length === 0) {
-    return <p className="text-xs text-gray-400">No other numeric columns available for Granger causality testing</p>;
+    return <p className="text-xs text-muted-foreground">No other numeric columns available for Granger causality testing</p>;
   }
 
   const entries = Object.entries(granger);
 
   return (
     <div>
-      <p className="text-xs text-gray-500 mb-3">Tests whether lagged values of other columns help predict the target column.</p>
-      <div className="overflow-auto rounded-lg border border-gray-100">
+      <p className="text-xs text-muted-foreground mb-3">Tests whether lagged values of other columns help predict the target column.</p>
+      <div className="overflow-auto rounded-lg border border-border">
         <table className="w-full text-xs">
-          <thead className="bg-gray-50">
+          <thead className="bg-muted">
             <tr>
-              <th className="px-3 py-2 text-left text-gray-500 font-medium">Column</th>
-              <th className="px-3 py-2 text-center text-gray-500 font-medium">Granger-causes target?</th>
-              <th className="px-3 py-2 text-right text-gray-500 font-medium">Min p-value</th>
-              <th className="px-3 py-2 text-right text-gray-500 font-medium">Best lag</th>
+              <th className="px-3 py-2 text-left text-muted-foreground font-medium">Column</th>
+              <th className="px-3 py-2 text-center text-muted-foreground font-medium">Granger-causes target?</th>
+              <th className="px-3 py-2 text-right text-muted-foreground font-medium">Min p-value</th>
+              <th className="px-3 py-2 text-right text-muted-foreground font-medium">Best lag</th>
             </tr>
           </thead>
           <tbody>
             {entries.slice(0, 20).map(([col, res]) => (
-              <tr key={col} className="border-t border-gray-50 hover:bg-gray-50">
-                <td className="px-3 py-1.5 font-mono text-gray-700 max-w-[160px] truncate">{col}</td>
+              <tr key={col} className="border-t border-border hover:bg-muted">
+                <td className="px-3 py-1.5 font-mono text-foreground max-w-[160px] truncate">{col}</td>
                 <td className="px-3 py-1.5 text-center">
                   <Badge color={res?.granger_causes_target ? "green" : "gray"}>
                     {res?.granger_causes_target ? "Yes" : "No"}
                   </Badge>
                 </td>
-                <td className="px-3 py-1.5 text-right font-mono text-gray-700">{fmt(res?.min_pvalue, 6)}</td>
-                <td className="px-3 py-1.5 text-right font-mono text-gray-700">{res?.best_lag ?? "—"}</td>
+                <td className="px-3 py-1.5 text-right font-mono text-foreground">{fmt(res?.min_pvalue, 6)}</td>
+                <td className="px-3 py-1.5 text-right font-mono text-foreground">{res?.best_lag ?? "—"}</td>
               </tr>
             ))}
           </tbody>
         </table>
         {entries.length > 20 && (
-          <div className="px-3 py-2 text-xs text-gray-400 bg-gray-50 border-t">
+          <div className="px-3 py-2 text-xs text-muted-foreground bg-muted border-t">
             Showing 20 of {entries.length} columns
           </div>
         )}
@@ -949,7 +949,7 @@ function GrangerPanel({ granger }: { granger?: NonNullable<TSData["granger_causa
 }
 
 function ForecastingReadinessPanel({ readiness }: { readiness?: NonNullable<TSData["forecasting_readiness"]> }) {
-  if (!readiness) return <p className="text-xs text-gray-400">No forecasting readiness assessment available</p>;
+  if (!readiness) return <p className="text-xs text-muted-foreground">No forecasting readiness assessment available</p>;
 
   return (
     <div className="space-y-4">
@@ -993,20 +993,20 @@ function ForecastingReadinessPanel({ readiness }: { readiness?: NonNullable<TSDa
 
       {/* Model recommendations */}
       <div className="space-y-2">
-        <p className="text-xs font-semibold text-gray-700">Model Recommendations</p>
+        <p className="text-xs font-semibold text-foreground">Model Recommendations</p>
         {Array.isArray(readiness.recommendations) && readiness.recommendations.length > 0 ? (
           readiness.recommendations.map((r, i) => (
-            <div key={i} className={`border rounded-lg p-3 ${i === 0 ? "border-brand bg-blue-50" : "border-gray-100"}`}>
+            <div key={i} className={`border rounded-lg p-3 ${i === 0 ? "border-brand bg-blue-50" : "border-border"}`}>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-semibold text-gray-800">{r?.model ?? "Unknown"}</span>
+                <span className="text-xs font-semibold text-foreground">{r?.model ?? "Unknown"}</span>
                 {i === 0 && <Badge color="blue">Recommended</Badge>}
               </div>
-              <code className="text-xs text-gray-600 bg-gray-100 rounded px-1.5 py-0.5 block mb-1.5 break-words">{r?.params ?? "—"}</code>
-              <p className="text-xs text-gray-500">{r?.rationale ?? "—"}</p>
+              <code className="text-xs text-muted-foreground bg-muted rounded px-1.5 py-0.5 block mb-1.5 break-words">{r?.params ?? "—"}</code>
+              <p className="text-xs text-muted-foreground">{r?.rationale ?? "—"}</p>
             </div>
           ))
         ) : (
-          <p className="text-xs text-gray-400">No recommendations available</p>
+          <p className="text-xs text-muted-foreground">No recommendations available</p>
         )}
       </div>
     </div>
@@ -1019,7 +1019,7 @@ function ForecastingReadinessPanel({ readiness }: { readiness?: NonNullable<TSDa
 function SummaryCards({ data }: { data: TSData }) {
   const trendValue = data.trend_tests?.mann_kendall?.trend ?? (data.has_trend ? "trend" : "no trend");
   const TrendIcon = trendValue?.includes("increas") ? TrendingUp : trendValue?.includes("decreas") ? TrendingDown : Minus;
-  const trendColor = trendValue?.includes("increas") ? "text-green-600" : trendValue?.includes("decreas") ? "text-red-600" : "text-gray-400";
+  const trendColor = trendValue?.includes("increas") ? "text-green-600" : trendValue?.includes("decreas") ? "text-red-600" : "text-muted-foreground";
 
   const cards = [
     {
@@ -1059,7 +1059,7 @@ function SummaryCards({ data }: { data: TSData }) {
       label: "Anomalies",
       value: (data.anomalies_full?.total_anomalies ?? data.anomalies?.length ?? 0).toString(),
       sub: "multi-method",
-      icon: <AlertTriangle className={`w-4 h-4 ${((data.anomalies_full?.total_anomalies ?? 0) > 0) ? "text-amber-500" : "text-gray-300"}`} />,
+      icon: <AlertTriangle className={`w-4 h-4 ${((data.anomalies_full?.total_anomalies ?? 0) > 0) ? "text-amber-500" : "text-muted-foreground/60"}`} />,
     },
     {
       label: "Change points",
@@ -1072,13 +1072,13 @@ function SummaryCards({ data }: { data: TSData }) {
   return (
     <div className="grid grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
       {cards.map(c => (
-        <div key={c.label} className="bg-white rounded-xl border border-gray-200 px-4 py-3">
+        <div key={c.label} className="bg-card rounded-xl border border-border px-4 py-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-400">{c.label}</span>
+            <span className="text-xs text-muted-foreground">{c.label}</span>
             {c.icon}
           </div>
-          <p className="text-sm font-semibold text-gray-900 leading-tight">{c.value}</p>
-          {c.sub && <p className="text-xs text-gray-400 mt-0.5 truncate">{c.sub}</p>}
+          <p className="text-sm font-semibold text-foreground leading-tight">{c.value}</p>
+          {c.sub && <p className="text-xs text-muted-foreground mt-0.5 truncate">{c.sub}</p>}
         </div>
       ))}
     </div>
@@ -1227,13 +1227,13 @@ export default function TimeSeriesPage() {
 
         <div className="mt-4 mb-5 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Time Series Analysis</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <h1 className="text-2xl font-bold text-foreground">Time Series Analysis</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
               Stationarity · Decomposition · ACF/PACF · Anomalies · Change Points · Forecasting Readiness
             </p>
           </div>
           {data && (
-            <button onClick={() => refetch()} className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+            <button onClick={() => refetch()} className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted">
               <RefreshCw className="w-3.5 h-3.5" /> Refresh
             </button>
           )}
@@ -1250,11 +1250,11 @@ export default function TimeSeriesPage() {
             {/* Column selectors */}
             <div className="flex flex-wrap gap-4 mb-5">
               <div>
-                <label className="text-xs font-medium text-gray-600 block mb-1">Time column</label>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">Time column</label>
                 <select
                   value={timeCol}
                   onChange={e => setParams("time_col", e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white"
+                  className="px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-card"
                 >
                   <option value="">Select a time column</option>
                   {datetimeCols.map((c: string) => (
@@ -1263,11 +1263,11 @@ export default function TimeSeriesPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-gray-600 block mb-1">Value column</label>
+                <label className="text-xs font-medium text-muted-foreground block mb-1">Value column</label>
                 <select
                   value={valueCol}
                   onChange={e => setParams("value_col", e.target.value)}
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-white"
+                  className="px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand bg-card"
                 >
                   <option value="">Select a value column</option>
                   {numericCols.map((c: string) => (
@@ -1412,14 +1412,14 @@ export default function TimeSeriesPage() {
 
                 {data.rolling_full && (
                   <Section title="Rolling Statistics & Volatility" icon={<Zap className="w-4 h-4" />}>
-                    <p className="text-xs font-medium text-gray-500 mb-2">Annualised Rolling Volatility</p>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Annualised Rolling Volatility</p>
                     <VolatilityChart rolling={data.rolling_full} />
                   </Section>
                 )}
 
                 {data.lag_analysis && safeLength(data.lag_analysis.lags) > 0 && (
                   <Section title="Lag Feature Correlation" icon={<Clock className="w-4 h-4" />}>
-                    <p className="text-xs text-gray-500 mb-3">Pearson r and Spearman ρ between the series and its lagged versions — guides lag feature selection for ML models.</p>
+                    <p className="text-xs text-muted-foreground mb-3">Pearson r and Spearman ρ between the series and its lagged versions — guides lag feature selection for ML models.</p>
                     <LagCorrelationChart lagAnalysis={data.lag_analysis} />
                   </Section>
                 )}

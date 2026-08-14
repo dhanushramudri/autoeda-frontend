@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
 import type { ApiError } from "@/types";
+import { useRowLimitStore } from "@/store/rowLimitStore";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 export const UPLOADS_BASE = API_BASE.replace(/\/api\/v1$/, "");
@@ -15,6 +16,23 @@ api.interceptors.request.use((config) => {
     const token = sessionStorage.getItem("access_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
+// Auto-inject the user's chosen row limit into every heavy analysis call —
+// keeps the ~15 call sites (Distributions, Correlations, Outliers, Feature
+// Importance, Time Series, Text, Analysis, Transform, ...) from each needing
+// their own row-limit plumbing. See store/rowLimitStore.ts + the selector in
+// components/layout/SubNav.tsx.
+const ROW_LIMIT_ENDPOINT_RE = /\/datasets\/[^/]+\/(distributions|correlations|outliers|feature-importance|timeseries|text|quality-score|analysis(\/|$)|bivariate|pca|scatter3d|smart-clean|transform\/(preview|apply))/;
+
+api.interceptors.request.use((config) => {
+  if (config.url && ROW_LIMIT_ENDPOINT_RE.test(config.url)) {
+    config.params = config.params || {};
+    if (config.params.row_limit == null) {
+      config.params.row_limit = useRowLimitStore.getState().rowLimit;
     }
   }
   return config;
@@ -122,6 +140,10 @@ export const datasetsApi = {
     api.get(`/datasets/${datasetId}/profile`),
   getMissing: (datasetId: string) =>
     api.get(`/datasets/${datasetId}/missing`),
+  getSmartClean: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/smart-clean`),
+  startQuickModel: (datasetId: string, target: string) =>
+    api.post(`/datasets/${datasetId}/quick-model`, { target }),
   getDistributions: (datasetId: string, column: string) =>
     api.get(`/datasets/${datasetId}/distributions`, { params: { column } }),
   getCorrelations: (datasetId: string, method: string = "pearson", methods?: string) =>
@@ -270,6 +292,14 @@ export const datasetsApi = {
   transform: (datasetId: string, ops: unknown[]) =>
     api.post(`/datasets/${datasetId}/transform`, { operations: ops }),
   export: (datasetId: string) => api.get(`/datasets/${datasetId}/export`, { responseType: "blob" }),
+  exportToDatabricks: (
+    workspaceId: number, datasetId: string,
+    body: { source_id: number; catalog: string; schema: string; table: string; mode: string }
+  ) => api.post(`/workspaces/${workspaceId}/datasets/${datasetId}/export-to-databricks`, body),
+  setRefreshSchedule: (workspaceId: number, datasetId: string, intervalMinutes: number | null) =>
+    api.patch(`/workspaces/${workspaceId}/datasets/${datasetId}/schedule`, { interval_minutes: intervalMinutes }),
+  setLiveSync: (workspaceId: number, datasetId: string, enabled: boolean) =>
+    api.patch(`/workspaces/${workspaceId}/datasets/${datasetId}/live-sync`, { enabled }),
   // Filter Preview
   filterPreview: (datasetId: string, filters: unknown[], limit = 100) =>
     api.post(`/datasets/${datasetId}/filter-preview`, { filters, limit }),
@@ -392,6 +422,40 @@ export const sourcesApi = {
     table?: string | null;
     limit?: number;
   }) => api.post(`/workspaces/${workspaceId}/sources/${sourceId}/import`, data),
+
+  // Databricks Unity Catalog browser
+  databricksCatalogs: (workspaceId: string, sourceId: number) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/catalogs`),
+  databricksSchemas: (workspaceId: string, sourceId: number, catalog: string) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/schemas`, { params: { catalog } }),
+  databricksTables: (workspaceId: string, sourceId: number, catalog: string, schema: string) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/tables`, { params: { catalog, schema } }),
+  databricksStats: (workspaceId: string, sourceId: number, catalog: string, schema: string, table: string) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/stats`, { params: { catalog, schema, table } }),
+  databricksHistory: (workspaceId: string, sourceId: number, catalog: string, schema: string, table: string, limit = 25) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/history`, { params: { catalog, schema, table, limit } }),
+  databricksCompareVersions: (
+    workspaceId: string, sourceId: number, catalog: string, schema: string, table: string,
+    versionA: number, versionB: number
+  ) => api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/compare-versions`, {
+    params: { catalog, schema, table, version_a: versionA, version_b: versionB },
+  }),
+  databricksQuery: (workspaceId: string, sourceId: number, sql: string, limit = 5000) =>
+    api.post(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/query`, { sql, limit }),
+  databricksQueryImport: (workspaceId: string, sourceId: number, sql: string, dataset_name: string, limit = 100000) =>
+    api.post(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/query-import`, { sql, dataset_name, limit }),
+  databricksJobs: (workspaceId: string, sourceId: number) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/jobs`),
+  databricksJobRuns: (workspaceId: string, sourceId: number, jobId: number) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/jobs/${jobId}/runs`),
+  databricksRunJob: (workspaceId: string, sourceId: number, jobId: number, notebookParams?: Record<string, string>) =>
+    api.post(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/jobs/${jobId}/run`, { notebook_params: notebookParams ?? null }),
+  databricksRunStatus: (workspaceId: string, sourceId: number, runId: number) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/runs/${runId}`),
+  databricksCancelRun: (workspaceId: string, sourceId: number, runId: number) =>
+    api.post(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/runs/${runId}/cancel`),
+  databricksActiveRuns: (workspaceId: string, sourceId: number) =>
+    api.get(`/workspaces/${workspaceId}/sources/${sourceId}/databricks/jobs-active-runs`),
 };
 
 // Jobs

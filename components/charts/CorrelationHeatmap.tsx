@@ -139,23 +139,23 @@ function Legend({ mode }: { mode: HeatmapMode }) {
   if (mode === "numeric") {
     return (
       <div className="flex items-center gap-2 mt-2">
-        <span className="text-[10px] text-gray-400">−1</span>
+        <span className="text-[10px] text-muted-foreground">−1</span>
         <div
           className="h-2 rounded-full flex-1 max-w-[200px]"
           style={{ background: "linear-gradient(to right, rgb(239,68,68), rgb(255,255,255), rgb(59,130,246))" }}
         />
-        <span className="text-[10px] text-gray-400">+1</span>
+        <span className="text-[10px] text-muted-foreground">+1</span>
       </div>
     );
   }
   return (
     <div className="flex items-center gap-2 mt-2">
-      <span className="text-[10px] text-gray-400">0</span>
+      <span className="text-[10px] text-muted-foreground">0</span>
       <div
         className="h-2 rounded-full flex-1 max-w-[200px]"
         style={{ background: "linear-gradient(to right, rgb(255,255,255), rgb(76,29,149))" }}
       />
-      <span className="text-[10px] text-gray-400">1</span>
+      <span className="text-[10px] text-muted-foreground">1</span>
     </div>
   );
 }
@@ -166,9 +166,9 @@ function Tooltip({ info, mode, x, y }: { info: TooltipInfo; mode: HeatmapMode; x
     <div className="fixed z-[9999] pointer-events-none bg-gray-900 text-white text-xs rounded-xl px-3 py-2 shadow-2xl whitespace-nowrap"
       style={{ top: y - 70, left: x, transform: "translateX(-50%)" }}
     >
-      <div className="font-mono mb-1 text-gray-300">
+      <div className="font-mono mb-1 text-muted-foreground/60">
         <span className="text-white">{info.row}</span>
-        <span className="text-gray-500 mx-1.5">×</span>
+        <span className="text-muted-foreground mx-1.5">×</span>
         <span className="text-white">{info.col}</span>
       </div>
       <div className="flex items-center gap-3">
@@ -177,8 +177,8 @@ function Tooltip({ info, mode, x, y }: { info: TooltipInfo; mode: HeatmapMode; x
         </span>
         {info.secondary?.map((s) =>
           s.value != null ? (
-            <span key={s.label} className="text-gray-400">
-              {s.label}: <span className="text-gray-200">{s.value.toFixed(3)}</span>
+            <span key={s.label} className="text-muted-foreground">
+              {s.label}: <span className="text-muted-foreground/60">{s.value.toFixed(3)}</span>
             </span>
           ) : null,
         )}
@@ -220,7 +220,7 @@ function HeatmapGrid({ rowLabels, colLabels, values, extras, mode, isDiag = true
               className="flex items-end justify-center overflow-visible"
             >
               <span
-                className="block text-gray-500 truncate origin-bottom-left"
+                className="block text-muted-foreground truncate origin-bottom-left"
                 style={{
                   fontSize: Math.max(8, Math.min(10, cellSize * 0.21)),
                   transform: "rotate(-50deg) translateX(-2px)",
@@ -240,7 +240,7 @@ function HeatmapGrid({ rowLabels, colLabels, values, extras, mode, isDiag = true
           <div key={rowCol} className="flex items-center">
             {/* Row label */}
             <div
-              className="text-gray-500 text-right pr-2 truncate flex-shrink-0"
+              className="text-muted-foreground text-right pr-2 truncate flex-shrink-0"
               style={{ width: 108, fontSize: Math.max(8, Math.min(11, cellSize * 0.21)) }}
               title={rowCol}
             >
@@ -305,7 +305,7 @@ function pBadge(p: number | null | undefined) {
       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
       : p < 0.05
       ? "bg-blue-50 text-blue-700 border-blue-200"
-      : "bg-gray-50 text-gray-500 border-gray-200";
+      : "bg-muted text-muted-foreground border-border";
   return (
     <span className={cn("inline-block text-[9px] border rounded px-1 py-0.5 font-mono ml-1", cls)}>
       {label}
@@ -368,7 +368,7 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
         <HeatmapHeader label={`${catCols.length} categorical columns · bias-corrected`} />
         <HeatmapGrid rowLabels={catCols} colLabels={catCols} values={cramersMatrix} mode="cramers_v" isDiag />
         <Legend mode="cramers_v" />
-        <p className="text-[10px] text-gray-400 mt-1">
+        <p className="text-[10px] text-muted-foreground mt-1">
           Cramér's V ∈ [0, 1] — higher values indicate stronger categorical association.
           Diagonal is always 1 (self-association).
         </p>
@@ -389,7 +389,7 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
         <HeatmapHeader label={`${catCols.length} categorical columns · asymmetric (row → column)`} />
         <HeatmapGrid rowLabels={catCols} colLabels={catCols} values={theilsMatrix} mode="theils_u" isDiag />
         <Legend mode="theils_u" />
-        <p className="text-[10px] text-gray-400 mt-1">
+        <p className="text-[10px] text-muted-foreground mt-1">
           Theil's U is asymmetric: cell [row, col] = how much knowing <em>row</em> reduces uncertainty about <em>col</em>.
           Values near 1 = row almost perfectly predicts col.
         </p>
@@ -407,7 +407,7 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
     return (
       <div className="space-y-3">
         <HeatmapHeader label={`${mixedData.rowLabels.length} numeric × ${mixedData.colLabels.length} categorical`} />
-        <p className="text-[10px] text-gray-400">
+        <p className="text-[10px] text-muted-foreground">
           η² = proportion of variance in the numeric variable explained by the categorical variable (one-way ANOVA).
           Hover cells for point-biserial r and rank-biserial r where applicable.
         </p>
@@ -431,7 +431,7 @@ export function CorrelationHeatmap({ data, cols, mode = "numeric" }: Props) {
 function HeatmapHeader({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-xs text-gray-400">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   );
 }
@@ -445,7 +445,7 @@ function EmptyState({ message, warn, loading }: { message: string; warn?: boolea
           ? "text-amber-600 bg-amber-50"
           : loading
           ? "text-blue-500 bg-blue-50/50"
-          : "text-gray-400",
+          : "text-muted-foreground",
       )}
     >
       {loading && <span className="w-3 h-3 border-2 border-blue-300 border-t-blue-500 rounded-full animate-spin" />}

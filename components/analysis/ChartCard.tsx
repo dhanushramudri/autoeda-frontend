@@ -39,12 +39,12 @@ export function ChartCard({
       {/* Modal */}
       {expanded && (
         <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-6">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-              <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+          <div className="bg-card rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+              <h3 className="text-sm font-semibold text-foreground">{title}</h3>
               <button
                 onClick={() => setExpanded(false)}
-                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition"
+                className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -56,21 +56,21 @@ export function ChartCard({
 
       <div
         className={cn(
-          "bg-white rounded-xl border border-gray-200 flex flex-col overflow-hidden shadow-sm",
+          "bg-card rounded-xl border border-border flex flex-col overflow-hidden shadow-sm",
           isWide && "col-span-2",
           className
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-2 min-w-0">
-            <h3 className="text-xs font-semibold text-gray-800 truncate">{title}</h3>
+            <h3 className="text-xs font-semibold text-foreground truncate">{title}</h3>
             {description && (
               <div className="relative">
                 <button
                   onMouseEnter={() => setShowInfo(true)}
                   onMouseLeave={() => setShowInfo(false)}
-                  className="text-gray-300 hover:text-gray-500 transition"
+                  className="text-muted-foreground/60 hover:text-muted-foreground transition"
                 >
                   <Info className="w-3 h-3" />
                 </button>
@@ -84,7 +84,7 @@ export function ChartCard({
           </div>
           <button
             onClick={() => setExpanded(true)}
-            className="p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition flex-shrink-0"
+            className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-muted-foreground transition flex-shrink-0"
           >
             <Maximize2 className="w-3.5 h-3.5" />
           </button>
@@ -94,8 +94,8 @@ export function ChartCard({
         <div className="flex-1 p-3 min-h-[260px] flex items-center justify-center">
           {isLoading ? (
             <div className="w-full h-full flex flex-col gap-2 animate-pulse">
-              <div className="h-4 bg-gray-100 rounded w-1/3" />
-              <div className="flex-1 bg-gray-100 rounded" />
+              <div className="h-4 bg-muted rounded w-1/3" />
+              <div className="flex-1 bg-muted rounded" />
             </div>
           ) : (
             <div className="w-full h-full">{children}</div>
@@ -116,13 +116,13 @@ export function ChartCard({
 export function SectionHeader({ label, count }: { label: string; count?: number }) {
   return (
     <div className="flex items-center gap-3 col-span-2 pt-2">
-      <span className="text-sm font-bold text-gray-700">{label}</span>
+      <span className="text-sm font-bold text-foreground">{label}</span>
       {count !== undefined && (
-        <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-medium">
+        <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full font-medium">
           {count} chart{count !== 1 ? "s" : ""}
         </span>
       )}
-      <div className="flex-1 h-px bg-gray-100" />
+      <div className="flex-1 h-px bg-muted" />
     </div>
   );
 }

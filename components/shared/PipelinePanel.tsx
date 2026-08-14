@@ -117,15 +117,15 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
   const currentOp = OPERATIONS.find((o) => o.value === draft.operation);
 
   return (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200 w-72">
+    <div className="flex flex-col h-full bg-card border-r border-border w-72">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-900">Pipeline Steps</h3>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <h3 className="text-sm font-semibold text-foreground">Pipeline Steps</h3>
         <div className="flex items-center gap-1">
           {steps.length > 0 && (
             <button
               onClick={() => clearMutation.mutate()}
-              className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition"
+              className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-500 transition"
               title="Clear all steps"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -138,8 +138,8 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
       <div className="flex-1 overflow-y-auto py-2">
         {steps.length === 0 && (
           <div className="flex flex-col items-center justify-center h-32 text-center px-4">
-            <p className="text-xs text-gray-400">No steps yet.</p>
-            <p className="text-xs text-gray-300 mt-1">Add operations to build your pipeline.</p>
+            <p className="text-xs text-muted-foreground">No steps yet.</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Add operations to build your pipeline.</p>
           </div>
         )}
         {steps.map((step, idx) => {
@@ -153,23 +153,23 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
               onDrop={() => onDrop(idx)}
               onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
               className={`flex items-center gap-2 px-3 py-2.5 mx-2 mb-1 rounded-lg border cursor-grab transition ${
-                dragOverIdx === idx ? "border-blue-400 bg-blue-50" : "border-gray-100 hover:border-gray-200 bg-gray-50"
+                dragOverIdx === idx ? "border-blue-400 bg-blue-50" : "border-border hover:border-border bg-muted"
               }`}
             >
-              <GripVertical className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+              <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded px-1.5 py-0.5 text-center w-5 flex-shrink-0">
+                  <span className="text-xs font-semibold text-foreground bg-card border border-border rounded px-1.5 py-0.5 text-center w-5 flex-shrink-0">
                     {idx + 1}
                   </span>
                   <span className="text-xs">{opInfo?.icon}</span>
-                  <span className="text-xs font-medium text-gray-700 truncate">{opInfo?.label ?? step.operation}</span>
+                  <span className="text-xs font-medium text-foreground truncate">{opInfo?.label ?? step.operation}</span>
                 </div>
                 {step.column && (
-                  <p className="text-xs text-gray-400 mt-0.5 ml-8 truncate">{step.column}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 ml-8 truncate">{step.column}</p>
                 )}
               </div>
-              <button onClick={() => removeStep(idx)} className="p-1 hover:bg-red-50 rounded text-gray-300 hover:text-red-400 flex-shrink-0">
+              <button onClick={() => removeStep(idx)} className="p-1 hover:bg-red-50 rounded text-muted-foreground/60 hover:text-red-400 flex-shrink-0">
                 <Trash2 className="w-3 h-3" />
               </button>
             </div>
@@ -179,9 +179,9 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
 
       {/* Add step form */}
       {addingStep && (
-        <div className="border-t border-gray-100 p-3 space-y-2 bg-gray-50">
+        <div className="border-t border-border p-3 space-y-2 bg-muted">
           <select
-            className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none"
+            className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-card outline-none"
             value={draft.operation ?? ""}
             onChange={(e) => setDraft({ operation: e.target.value })}
           >
@@ -193,7 +193,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
 
           {currentOp?.needsColumn && (
             <select
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none"
+              className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-card outline-none"
               value={draft.column ?? ""}
               onChange={(e) => setDraft((d) => ({ ...d, column: e.target.value }))}
             >
@@ -205,7 +205,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
           {draft.operation === "fill_missing" && (
             <>
               <select
-                className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none"
+                className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-card outline-none"
                 value={draft.fillMethod ?? "mean"}
                 onChange={(e) => setDraft((d) => ({ ...d, fillMethod: e.target.value }))}
               >
@@ -213,7 +213,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
               </select>
               {draft.fillMethod === "custom" && (
                 <input
-                  className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none"
+                  className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-card outline-none"
                   placeholder="Fill value"
                   value={draft.fillValue ?? ""}
                   onChange={(e) => setDraft((d) => ({ ...d, fillValue: e.target.value }))}
@@ -223,7 +223,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
           )}
           {draft.operation === "cast_type" && (
             <select
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none"
+              className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-card outline-none"
               value={draft.dtype ?? "float64"}
               onChange={(e) => setDraft((d) => ({ ...d, dtype: e.target.value }))}
             >
@@ -232,7 +232,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
           )}
           {draft.operation === "rename" && (
             <input
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none"
+              className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-card outline-none"
               placeholder="New name"
               value={draft.newName ?? ""}
               onChange={(e) => setDraft((d) => ({ ...d, newName: e.target.value }))}
@@ -241,7 +241,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
           {draft.operation === "drop_high_missing" && (
             <input
               type="number"
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white outline-none"
+              className="w-full text-xs border border-border rounded-lg px-2 py-1.5 bg-card outline-none"
               placeholder="Threshold % (default 50)"
               value={draft.threshold ?? ""}
               onChange={(e) => setDraft((d) => ({ ...d, threshold: e.target.value }))}
@@ -258,7 +258,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
             </button>
             <button
               onClick={() => { setAddingStep(false); setDraft({}); }}
-              className="text-xs border border-gray-200 rounded-lg py-1.5 px-2.5 hover:bg-gray-100 transition"
+              className="text-xs border border-border rounded-lg py-1.5 px-2.5 hover:bg-muted transition"
             >
               <X className="w-3 h-3" />
             </button>
@@ -267,14 +267,14 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
       )}
 
       {/* Footer */}
-      <div className="border-t border-gray-100 p-3 space-y-2 flex-shrink-0">
+      <div className="border-t border-border p-3 space-y-2 flex-shrink-0">
         {resultMsg && (
           <p className="text-xs text-emerald-600 font-medium text-center">{resultMsg}</p>
         )}
         {!addingStep && (
           <button
             onClick={() => setAddingStep(true)}
-            className="w-full flex items-center justify-center gap-1.5 text-xs border border-dashed border-gray-300 rounded-lg py-2 text-gray-500 hover:border-brand/60 hover:text-brand transition"
+            className="w-full flex items-center justify-center gap-1.5 text-xs border border-dashed border-border rounded-lg py-2 text-muted-foreground hover:border-brand/60 hover:text-brand transition"
           >
             <Plus className="w-3 h-3" /> Add Step
           </button>

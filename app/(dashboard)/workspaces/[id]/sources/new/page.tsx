@@ -28,9 +28,10 @@ const STEPS: { key: Step; label: string; desc: string }[] = [
 
 const STEP_IDX: Record<Step, number> = { pick_type: 0, configure: 1, test: 2, save: 3 };
 
-const GROUP_ORDER = ["Databases", "Cloud Storage", "Files", "APIs"];
+const GROUP_ORDER = ["Data Platforms", "Databases", "Cloud Storage", "Files", "APIs"];
 
 const GROUP_META: Record<string, { icon: React.ComponentType<{className?:string}>; color: string; bg: string }> = {
+  "Data Platforms":{ icon: Zap,      color: "text-orange-600", bg: "bg-orange-50" },
   Databases:      { icon: Database,  color: "text-violet-600", bg: "bg-violet-50" },
   "Cloud Storage":{ icon: Cloud,     color: "text-sky-600",    bg: "bg-sky-50" },
   APIs:           { icon: Globe,     color: "text-emerald-600",bg: "bg-emerald-50" },
@@ -173,20 +174,20 @@ function StepNav({ current }: { current: Step }) {
                 "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all",
                 done    && "bg-brand text-white",
                 active  && "bg-brand text-white ring-4 ring-brand/20",
-                pending && "bg-gray-100 text-gray-400 border border-gray-200",
+                pending && "bg-muted text-muted-foreground border border-border",
               )}>
                 {done ? <Check className="w-4 h-4" /> : i + 1}
               </div>
               {i < STEPS.length - 1 && (
-                <div className={cn("w-0.5 h-8 mt-1 rounded-full transition-all", done ? "bg-brand" : "bg-gray-200")} />
+                <div className={cn("w-0.5 h-8 mt-1 rounded-full transition-all", done ? "bg-brand" : "bg-muted")} />
               )}
             </div>
             {/* labels */}
             <div className="pb-8">
-              <p className={cn("text-sm font-semibold leading-none", active ? "text-gray-900" : done ? "text-brand" : "text-gray-400")}>
+              <p className={cn("text-sm font-semibold leading-none", active ? "text-foreground" : done ? "text-brand" : "text-muted-foreground")}>
                 {s.label}
               </p>
-              <p className={cn("text-[11px] mt-0.5", active ? "text-gray-500" : "text-gray-300")}>
+              <p className={cn("text-[11px] mt-0.5", active ? "text-muted-foreground" : "text-muted-foreground/60")}>
                 {s.desc}
               </p>
             </div>
@@ -204,13 +205,13 @@ function Field({ fd, value, onChange }: {
   value: string;
   onChange: (v: string) => void;
 }) {
-  const base = "w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition placeholder:text-gray-300";
-  const cls  = cn(base, fd.isCredential ? "border-amber-200 bg-amber-50/30" : "border-gray-200 bg-white");
+  const base = "w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition placeholder:text-muted-foreground/60";
+  const cls  = cn(base, fd.isCredential ? "border-amber-200 bg-amber-50/30" : "border-border bg-card");
 
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-1.5">
-        <label className="text-xs font-medium text-gray-700">
+        <label className="text-xs font-medium text-foreground">
           {fd.label}
           {fd.required && <span className="text-red-500 ml-0.5">*</span>}
         </label>
@@ -319,20 +320,20 @@ export default function NewSourcePage() {
   // -- Render ------------------------------------------------------------------
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-64px)] bg-gray-50/60">
+    <div className="flex flex-col min-h-[calc(100vh-64px)] bg-muted/60">
 
       {/* -- Top bar -- */}
-      <div className="flex items-center gap-4 px-6 py-3.5 bg-white border-b border-gray-200 flex-shrink-0">
+      <div className="flex items-center gap-4 px-6 py-3.5 bg-card border-b border-border flex-shrink-0">
         <Link
           href={`/workspaces/${workspaceId}/sources`}
-          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition"
+          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition"
         >
           <ArrowLeft className="w-4 h-4" />
         </Link>
-        <div className="h-5 w-px bg-gray-200" />
+        <div className="h-5 w-px bg-muted" />
         <div>
-          <h1 className="text-sm font-bold text-gray-900">Add Data Source</h1>
-          <p className="text-[11px] text-gray-400 leading-none mt-0.5">
+          <h1 className="text-sm font-bold text-foreground">Add Data Source</h1>
+          <p className="text-[11px] text-muted-foreground leading-none mt-0.5">
             Connect to a database, cloud storage, file, or API
           </p>
         </div>
@@ -347,7 +348,7 @@ export default function NewSourcePage() {
       <div className="flex-1 flex gap-0">
 
         {/* -- Left: step nav -- */}
-        <div className="w-64 flex-shrink-0 border-r border-gray-200 bg-white px-6 py-8 hidden lg:flex">
+        <div className="w-64 flex-shrink-0 border-r border-border bg-card px-6 py-8 hidden lg:flex">
           <StepNav current={step} />
         </div>
 
@@ -357,18 +358,18 @@ export default function NewSourcePage() {
           {/* ══ Step 1: Pick type ══════════════════════════════════════════ */}
           {step === "pick_type" && (
             <div className="max-w-3xl">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Choose a connector</h2>
-              <p className="text-sm text-gray-500 mb-6">Select the type of data source you want to connect.</p>
+              <h2 className="text-lg font-bold text-foreground mb-1">Choose a connector</h2>
+              <p className="text-sm text-muted-foreground mb-6">Select the type of data source you want to connect.</p>
 
               {/* Search */}
               <div className="relative mb-6">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search connectors..."
-                  className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition"
+                  className="w-full pl-9 pr-4 py-2.5 border border-border rounded-xl bg-card text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition"
                 />
               </div>
 
@@ -380,12 +381,12 @@ export default function NewSourcePage() {
                       onClick={() => { setSelectedType(entry.id); setStep("configure"); }} />
                   ))}
                   {filtered.length === 0 && (
-                    <p className="col-span-4 text-sm text-gray-400 py-8 text-center">No connectors match "{search}"</p>
+                    <p className="col-span-4 text-sm text-muted-foreground py-8 text-center">No connectors match "{search}"</p>
                   )}
                 </div>
               ) : (
                 groups.map((group) => {
-                  const meta    = GROUP_META[group] ?? { icon: Plug, color: "text-gray-500", bg: "bg-gray-50" };
+                  const meta    = GROUP_META[group] ?? { icon: Plug, color: "text-muted-foreground", bg: "bg-muted" };
                   const Icon    = meta.icon;
                   const entries = catalog.filter((c) => c.group === group);
                   return (
@@ -410,18 +411,18 @@ export default function NewSourcePage() {
           {/* ══ Step 2: Configure ══════════════════════════════════════════ */}
           {step === "configure" && selectedType && (
             <div className="max-w-2xl">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Configure connection</h2>
-              <p className="text-sm text-gray-500 mb-6">
-                Enter the details for your <span className="font-semibold text-gray-700">{selectedEntry?.label}</span> connection.
+              <h2 className="text-lg font-bold text-foreground mb-1">Configure connection</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Enter the details for your <span className="font-semibold text-foreground">{selectedEntry?.label}</span> connection.
               </p>
 
-              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="bg-card border border-border rounded-2xl overflow-hidden">
                 {/* General info */}
-                <div className="px-6 py-5 border-b border-gray-100">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">General</p>
+                <div className="px-6 py-5 border-b border-border">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">General</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
-                      <label className="text-xs font-medium text-gray-700 mb-1.5 block">
+                      <label className="text-xs font-medium text-foreground mb-1.5 block">
                         Source Name <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -429,17 +430,17 @@ export default function NewSourcePage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Production PostgreSQL"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition placeholder:text-gray-300"
+                        className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition placeholder:text-muted-foreground/60"
                       />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="text-xs font-medium text-gray-700 mb-1.5 block">Description</label>
+                      <label className="text-xs font-medium text-foreground mb-1.5 block">Description</label>
                       <input
                         type="text"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Optional  --  describe what this source contains"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition placeholder:text-gray-300"
+                        className="w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition placeholder:text-muted-foreground/60"
                       />
                     </div>
                   </div>
@@ -448,7 +449,7 @@ export default function NewSourcePage() {
                 {/* Connection fields */}
                 <div className="px-6 py-5">
                   <div className="flex items-center justify-between mb-4">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Connection Details</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Connection Details</p>
                     {fieldDefs.some((f) => f.isCredential) && (
                       <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded-full font-medium">
                         <Shield className="w-3 h-3" /> Credentials are stored encrypted
@@ -470,10 +471,10 @@ export default function NewSourcePage() {
                 </div>
 
                 {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <div className="px-6 py-4 bg-muted border-t border-border flex items-center justify-between">
                   <button
                     onClick={() => setStep("pick_type")}
-                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition font-medium"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition font-medium"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" /> Back
                   </button>
@@ -492,12 +493,12 @@ export default function NewSourcePage() {
           {/* ══ Step 3: Test ═══════════════════════════════════════════════ */}
           {step === "test" && (
             <div className="max-w-lg">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Test connection</h2>
-              <p className="text-sm text-gray-500 mb-6">
-                Verify AutoEDA can reach <span className="font-semibold text-gray-700">{name}</span> before saving.
+              <h2 className="text-lg font-bold text-foreground mb-1">Test connection</h2>
+              <p className="text-sm text-muted-foreground mb-6">
+                Verify AutoEDA can reach <span className="font-semibold text-foreground">{name}</span> before saving.
               </p>
 
-              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="bg-card border border-border rounded-2xl overflow-hidden">
                 <div className="p-8">
                   {/* Idle */}
                   {!testResult && !testMut.isPending && (
@@ -506,8 +507,8 @@ export default function NewSourcePage() {
                         <Plug className="w-9 h-9 text-brand/60" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-gray-800 mb-1">Ready to test</p>
-                        <p className="text-xs text-gray-400">We'll attempt to connect using the credentials you provided.</p>
+                        <p className="text-sm font-semibold text-foreground mb-1">Ready to test</p>
+                        <p className="text-xs text-muted-foreground">We'll attempt to connect using the credentials you provided.</p>
                       </div>
                       <button
                         onClick={() => testMut.mutate()}
@@ -526,8 +527,8 @@ export default function NewSourcePage() {
                         <div className="absolute inset-0 rounded-full border-4 border-brand border-t-transparent animate-spin" />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-gray-800">Connecting...</p>
-                        <p className="text-xs text-gray-400 mt-1">This may take a few seconds</p>
+                        <p className="text-sm font-semibold text-foreground">Connecting...</p>
+                        <p className="text-xs text-muted-foreground mt-1">This may take a few seconds</p>
                       </div>
                     </div>
                   )}
@@ -556,7 +557,7 @@ export default function NewSourcePage() {
                       </div>
                       <button
                         onClick={() => { setTestResult(null); testMut.reset(); }}
-                        className="text-xs text-gray-500 underline underline-offset-2 hover:text-gray-800 transition"
+                        className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition"
                       >
                         Test again
                       </button>
@@ -564,10 +565,10 @@ export default function NewSourcePage() {
                   )}
                 </div>
 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <div className="px-6 py-4 bg-muted border-t border-border flex items-center justify-between">
                   <button
                     onClick={() => setStep("configure")}
-                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition font-medium"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition font-medium"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" /> Back
                   </button>
@@ -585,17 +586,17 @@ export default function NewSourcePage() {
           {/* ══ Step 4: Save ═══════════════════════════════════════════════ */}
           {step === "save" && (
             <div className="max-w-lg">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Review & save</h2>
-              <p className="text-sm text-gray-500 mb-6">Confirm the details below and save your data source.</p>
+              <h2 className="text-lg font-bold text-foreground mb-1">Review & save</h2>
+              <p className="text-sm text-muted-foreground mb-6">Confirm the details below and save your data source.</p>
 
-              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden mb-4">
+              <div className="bg-card border border-border rounded-2xl overflow-hidden mb-4">
                 {/* Source header */}
-                <div className={cn("flex items-center gap-4 px-6 py-5 border-b border-gray-100 bg-gray-50")}>
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm border border-gray-100 flex-shrink-0">
+                <div className={cn("flex items-center gap-4 px-6 py-5 border-b border-border bg-muted")}>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-card shadow-sm border border-border flex-shrink-0">
                     <ConnectorLogo id={selectedType ?? ""} className="w-8 h-8" />
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">{name}</p>
+                    <p className="font-bold text-foreground">{name}</p>
                     <p className={cn("text-xs font-medium", selectedMeta?.color)}>{selectedEntry?.label}</p>
                   </div>
                   {testResult?.ok && (
@@ -624,10 +625,10 @@ export default function NewSourcePage() {
                   </div>
                 )}
 
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <div className="px-6 py-4 bg-muted border-t border-border flex items-center justify-between">
                   <button
                     onClick={() => setStep("test")}
-                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition font-medium"
+                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition font-medium"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" /> Back
                   </button>
@@ -659,12 +660,12 @@ function ConnectorCard({ entry, onClick }: {
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col items-center gap-3 p-4 bg-white border border-gray-200 rounded-2xl hover:border-brand/40 hover:shadow-md transition-all text-center"
+      className="group flex flex-col items-center gap-3 p-4 bg-card border border-border rounded-2xl hover:border-brand/40 hover:shadow-md transition-all text-center"
     >
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 bg-white border border-gray-100 shadow-sm">
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center transition-all group-hover:scale-110 bg-card border border-border shadow-sm">
         <ConnectorLogo id={entry.id} className="w-8 h-8" />
       </div>
-      <span className="text-xs font-semibold text-gray-700 leading-snug group-hover:text-brand transition-colors">
+      <span className="text-xs font-semibold text-foreground leading-snug group-hover:text-brand transition-colors">
         {entry.label}
       </span>
     </button>
@@ -678,12 +679,12 @@ function ReviewRow({ label, value, highlight, icon }: {
 }) {
   return (
     <div className="flex items-center justify-between text-sm py-1">
-      <span className="text-gray-400 text-xs">{label}</span>
+      <span className="text-muted-foreground text-xs">{label}</span>
       <span className={cn(
         "font-medium text-xs flex items-center gap-1",
         highlight === "green" ? "text-emerald-600"
           : highlight === "red" ? "text-red-500"
-          : "text-gray-800"
+          : "text-foreground"
       )}>
         {icon}
         {value}

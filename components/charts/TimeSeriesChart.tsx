@@ -35,7 +35,7 @@ export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">
+        <h4 className="text-sm font-semibold text-foreground mb-3">
           {valueCol} over {timeCol}
         </h4>
         <ResponsiveContainer width="100%" height={260}>
@@ -81,7 +81,7 @@ export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
       {/* Rolling mean */}
       {rollingMean.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">
+          <h4 className="text-sm font-semibold text-foreground mb-3">
             Rolling Mean (window={data.rolling?.window ?? 7})
           </h4>
           <ResponsiveContainer width="100%" height={180}>
@@ -101,12 +101,12 @@ export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
 
       {/* ADF stationarity test */}
       {data.adf_statistic != null && (
-        <div className="bg-gray-50 rounded-lg p-3 text-xs flex items-center gap-6">
-          <span className="text-gray-500">ADF Stationarity:</span>
-          <span className="font-mono text-gray-700">
+        <div className="bg-muted rounded-lg p-3 text-xs flex items-center gap-6">
+          <span className="text-muted-foreground">ADF Stationarity:</span>
+          <span className="font-mono text-foreground">
             stat = {data.adf_statistic?.toFixed(4) ?? " -- "}
           </span>
-          <span className="font-mono text-gray-700">
+          <span className="font-mono text-foreground">
             p = {data.adf_pvalue?.toFixed(4) ?? " -- "}
           </span>
           <span

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Lightbulb } from "lucide-react";
+import { RowLimitSelector } from "@/components/shared/RowLimitSelector";
 
 interface SubNavProps {
   datasetId: string;
@@ -32,7 +33,7 @@ export function SubNav({ datasetId }: SubNavProps) {
   };
 
   return (
-    <nav className="sticky top-0 z-30 bg-white border-b border-gray-100 shadow-[0_1px_2px_rgba(15,23,42,0.04)]" data-tour="subnav-bar">
+    <nav className="sticky top-0 z-30 bg-card border-b border-border shadow-[0_1px_2px_rgba(15,23,42,0.04)]" data-tour="subnav-bar">
       <div className="flex items-center px-6 py-2.5 gap-3">
         {/* Scrollable tab list */}
         <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-hide min-w-0">
@@ -66,7 +67,7 @@ export function SubNav({ datasetId }: SubNavProps) {
                   "flex-shrink-0 px-3.5 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-colors",
                   active
                     ? "bg-brand/10 text-brand"
-                    : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 {item.label}
@@ -74,6 +75,9 @@ export function SubNav({ datasetId }: SubNavProps) {
             );
           })}
         </div>
+
+        <div className="w-px h-6 bg-muted flex-shrink-0 mx-1" />
+        <RowLimitSelector datasetId={datasetId} />
       </div>
     </nav>
   );

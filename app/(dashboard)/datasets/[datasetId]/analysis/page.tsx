@@ -71,7 +71,7 @@ const PLOT_STYLE = { width: "100%", height: "280px" };
 // ─── Shared primitives ────────────────────────────────────────────────────────
 function Empty({ msg = "Insufficient data" }: { msg?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center h-40 gap-2 text-slate-300">
+    <div className="flex flex-col items-center justify-center h-40 gap-2 text-muted-foreground/60">
       <Info className="w-6 h-6" />
       <span className="text-xs">{msg}</span>
     </div>
@@ -80,8 +80,8 @@ function Empty({ msg = "Insufficient data" }: { msg?: string }) {
 
 function Pill({ label, value, color = C.primary }: { label: string; value: string | number; color?: string }) {
   return (
-    <div className="flex flex-col items-center bg-slate-50 rounded-lg px-3 py-2 border border-slate-100 min-w-[72px]">
-      <span className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">{label}</span>
+    <div className="flex flex-col items-center bg-muted rounded-lg px-3 py-2 border border-border min-w-[72px]">
+      <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</span>
       <span className="text-sm font-bold mt-0.5" style={{ color }}>{value}</span>
     </div>
   );
@@ -320,7 +320,7 @@ function SeasonalityGrid({ data }: { data: DatetimeCharts["seasonality"] }) {
     <div className="grid grid-cols-3 gap-4 w-full">
       {charts.map(({ title, items }) => (
         <div key={title}>
-          <p className="text-[10px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">{title}</p>
+          <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">{title}</p>
           <ResponsiveContainer width="100%" height={150}>
             <BarChart data={items.labels.map((l, i) => ({ l, v: items.values[i] }))}
               margin={{ bottom: 22 }}>
@@ -419,10 +419,10 @@ function PairPlot({ pairs }: { pairs: FullAnalysisResult["multi_column"]["scatte
   return (
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
       {pairs.map((pair) => (
-        <div key={`${pair.col1}-${pair.col2}`} className="border border-slate-100 rounded-lg overflow-hidden">
-          <div className="px-2 py-1 bg-slate-50 text-[10px] font-semibold text-slate-500 flex items-center justify-between">
+        <div key={`${pair.col1}-${pair.col2}`} className="border border-border rounded-lg overflow-hidden">
+          <div className="px-2 py-1 bg-muted text-[10px] font-semibold text-muted-foreground flex items-center justify-between">
             <span className="truncate">{pair.col1} × {pair.col2}</span>
-            <span className="text-slate-400 ml-1 flex-shrink-0">r={pair.pearson_r?.toFixed(2)}</span>
+            <span className="text-muted-foreground ml-1 flex-shrink-0">r={pair.pearson_r?.toFixed(2)}</span>
           </div>
           <Plot
             data={[
@@ -506,7 +506,7 @@ function PCAPlot({ data }: { data: any }) {
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <p className="text-[10px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Score Plot (PC1 vs PC2)</p>
+          <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Score Plot (PC1 vs PC2)</p>
           <Plot
             data={[{ x: data.scores_pc1, y: data.scores_pc2, mode: "markers", type: "scatter",
               marker: { color: C.primary, size: 4, opacity: 0.45 }, showlegend: false } as Data]}
@@ -516,7 +516,7 @@ function PCAPlot({ data }: { data: any }) {
             config={PLOT_CFG} style={{ width: "100%", height: "280px" }} useResizeHandler />
         </div>
         <div>
-          <p className="text-[10px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wide">Variable Loadings</p>
+          <p className="text-[10px] font-semibold text-muted-foreground mb-1.5 uppercase tracking-wide">Variable Loadings</p>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={loadingRows} layout="vertical" margin={{ left: 90, right: 20 }}>
               <XAxis type="number" tick={{ fontSize: 10 }} domain={[-1, 1]} />
@@ -564,7 +564,7 @@ function NormalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["norm
         <thead>
           <tr>
             {["Column", "n", "Test", "p-value", "Normal?", "Skewness", "Kurtosis"].map((h) => (
-              <th key={h} className="text-left px-3 py-2 text-slate-400 font-semibold text-[10px] uppercase tracking-wide border-b border-slate-100 bg-slate-50">
+              <th key={h} className="text-left px-3 py-2 text-muted-foreground font-semibold text-[10px] uppercase tracking-wide border-b border-border bg-muted">
                 {h}
               </th>
             ))}
@@ -572,11 +572,11 @@ function NormalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["norm
         </thead>
         <tbody>
           {rows.map((r, idx) => (
-            <tr key={r.column} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
-              <td className="px-3 py-2 font-mono font-semibold text-slate-800">{r.column}</td>
-              <td className="px-3 py-2 text-slate-500">{r.n.toLocaleString()}</td>
-              <td className="px-3 py-2 text-slate-400 uppercase text-[10px]">{r.test}</td>
-              <td className="px-3 py-2 text-slate-600">{r.p_value?.toFixed(4) ?? "--"}</td>
+            <tr key={r.column} className={idx % 2 === 0 ? "bg-card" : "bg-muted/50"}>
+              <td className="px-3 py-2 font-mono font-semibold text-foreground">{r.column}</td>
+              <td className="px-3 py-2 text-muted-foreground">{r.n.toLocaleString()}</td>
+              <td className="px-3 py-2 text-muted-foreground uppercase text-[10px]">{r.test}</td>
+              <td className="px-3 py-2 text-muted-foreground">{r.p_value?.toFixed(4) ?? "--"}</td>
               <td className="px-3 py-2">
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                   r.is_normal ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
@@ -588,7 +588,7 @@ function NormalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["norm
                 Math.abs(r.skewness ?? 0) > 1 ? "text-red-600" :
                 Math.abs(r.skewness ?? 0) > 0.5 ? "text-amber-600" : "text-emerald-600"
               }`}>{r.skewness?.toFixed(3) ?? "--"}</td>
-              <td className="px-3 py-2 text-slate-500">{r.kurtosis?.toFixed(3) ?? "--"}</td>
+              <td className="px-3 py-2 text-muted-foreground">{r.kurtosis?.toFixed(3) ?? "--"}</td>
             </tr>
           ))}
         </tbody>
@@ -605,31 +605,31 @@ function OutlierTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["outlie
         <thead>
           <tr>
             {["Column", "Outliers (n)", "Outlier %", "Lower Fence", "Upper Fence"].map((h) => (
-              <th key={h} className="text-left px-3 py-2 text-slate-400 font-semibold text-[10px] uppercase tracking-wide border-b border-slate-100 bg-slate-50">{h}</th>
+              <th key={h} className="text-left px-3 py-2 text-muted-foreground font-semibold text-[10px] uppercase tracking-wide border-b border-border bg-muted">{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((r, idx) => (
-            <tr key={r.column} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
-              <td className="px-3 py-2 font-mono font-semibold text-slate-800">{r.column}</td>
-              <td className="px-3 py-2 text-slate-600">{r.outlier_count.toLocaleString()}</td>
+            <tr key={r.column} className={idx % 2 === 0 ? "bg-card" : "bg-muted/50"}>
+              <td className="px-3 py-2 font-mono font-semibold text-foreground">{r.column}</td>
+              <td className="px-3 py-2 text-muted-foreground">{r.outlier_count.toLocaleString()}</td>
               <td className="px-3 py-2">
                 <div className="flex items-center gap-2">
-                  <div className="w-16 bg-slate-100 rounded-full h-1.5">
+                  <div className="w-16 bg-muted rounded-full h-1.5">
                     <div className="h-1.5 rounded-full"
                       style={{
                         width: `${Math.min(r.outlier_pct ?? 0, 100)}%`,
                         background: (r.outlier_pct ?? 0) > 10 ? C.danger : (r.outlier_pct ?? 0) > 5 ? C.warning : C.success,
                       }} />
                   </div>
-                  <span className={`font-semibold ${(r.outlier_pct ?? 0) > 10 ? "text-red-600" : (r.outlier_pct ?? 0) > 5 ? "text-amber-600" : "text-slate-600"}`}>
+                  <span className={`font-semibold ${(r.outlier_pct ?? 0) > 10 ? "text-red-600" : (r.outlier_pct ?? 0) > 5 ? "text-amber-600" : "text-muted-foreground"}`}>
                     {r.outlier_pct?.toFixed(2) ?? "--"}%
                   </span>
                 </div>
               </td>
-              <td className="px-3 py-2 text-slate-400 font-mono">{r.lower_bound?.toFixed(3) ?? "--"}</td>
-              <td className="px-3 py-2 text-slate-400 font-mono">{r.upper_bound?.toFixed(3) ?? "--"}</td>
+              <td className="px-3 py-2 text-muted-foreground font-mono">{r.lower_bound?.toFixed(3) ?? "--"}</td>
+              <td className="px-3 py-2 text-muted-foreground font-mono">{r.upper_bound?.toFixed(3) ?? "--"}</td>
             </tr>
           ))}
         </tbody>
@@ -641,10 +641,10 @@ function OutlierTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["outlie
 function CardinalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["cardinality"] }) {
   const FLAG: Record<string, { cls: string; label: string }> = {
     id_like:         { cls: "bg-purple-100 text-purple-700",   label: "ID-like" },
-    constant:        { cls: "bg-slate-100 text-slate-500",     label: "Constant" },
+    constant:        { cls: "bg-muted text-muted-foreground",     label: "Constant" },
     binary:          { cls: "bg-sky-100 text-sky-700",         label: "Binary" },
     low_cardinality: { cls: "bg-emerald-100 text-emerald-700", label: "Low-card" },
-    normal:          { cls: "bg-white text-slate-500 border border-slate-200", label: "Normal" },
+    normal:          { cls: "bg-card text-muted-foreground border border-border", label: "Normal" },
   };
   return (
     <div className="overflow-auto">
@@ -652,7 +652,7 @@ function CardinalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["ca
         <thead>
           <tr>
             {["Column", "Dtype", "Unique (n)", "Unique %", "Flag"].map((h) => (
-              <th key={h} className="text-left px-3 py-2 text-slate-400 font-semibold text-[10px] uppercase tracking-wide border-b border-slate-100 bg-slate-50">{h}</th>
+              <th key={h} className="text-left px-3 py-2 text-muted-foreground font-semibold text-[10px] uppercase tracking-wide border-b border-border bg-muted">{h}</th>
             ))}
           </tr>
         </thead>
@@ -660,11 +660,11 @@ function CardinalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["ca
           {rows.map((r, idx) => {
             const f = FLAG[r.flag] ?? FLAG.normal;
             return (
-              <tr key={r.column} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
-                <td className="px-3 py-2 font-mono font-semibold text-slate-800">{r.column}</td>
-                <td className="px-3 py-2 text-slate-400 font-mono">{r.dtype}</td>
-                <td className="px-3 py-2 text-slate-600">{r.unique_count.toLocaleString()}</td>
-                <td className="px-3 py-2 text-slate-600">{r.unique_pct?.toFixed(1) ?? "--"}%</td>
+              <tr key={r.column} className={idx % 2 === 0 ? "bg-card" : "bg-muted/50"}>
+                <td className="px-3 py-2 font-mono font-semibold text-foreground">{r.column}</td>
+                <td className="px-3 py-2 text-muted-foreground font-mono">{r.dtype}</td>
+                <td className="px-3 py-2 text-muted-foreground">{r.unique_count.toLocaleString()}</td>
+                <td className="px-3 py-2 text-muted-foreground">{r.unique_pct?.toFixed(1) ?? "--"}%</td>
                 <td className="px-3 py-2">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${f.cls}`}>{f.label}</span>
                 </td>
@@ -690,17 +690,17 @@ function MissingTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["missin
         <thead>
           <tr>
             {["Column", "Missing (n)", "Visual", "%"].map((h) => (
-              <th key={h} className="text-left px-3 py-2 text-slate-400 font-semibold text-[10px] uppercase tracking-wide border-b border-slate-100 bg-slate-50">{h}</th>
+              <th key={h} className="text-left px-3 py-2 text-muted-foreground font-semibold text-[10px] uppercase tracking-wide border-b border-border bg-muted">{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {rows.map((r, idx) => (
-            <tr key={r.column} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50/50"}>
-              <td className="px-3 py-2 font-mono font-semibold text-slate-800">{r.column}</td>
-              <td className="px-3 py-2 text-slate-500">{r.missing_count.toLocaleString()}</td>
+            <tr key={r.column} className={idx % 2 === 0 ? "bg-card" : "bg-muted/50"}>
+              <td className="px-3 py-2 font-mono font-semibold text-foreground">{r.column}</td>
+              <td className="px-3 py-2 text-muted-foreground">{r.missing_count.toLocaleString()}</td>
               <td className="px-3 py-2 w-48">
-                <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div className="h-2 rounded-full transition-all"
                     style={{
                       width: `${Math.min(r.missing_pct ?? 0, 100)}%`,
@@ -790,10 +790,10 @@ function Sidebar({
   /* ── Collapsed: icon rail ── */
   if (collapsed) {
     return (
-      <aside className="w-12 flex-shrink-0 border-r border-slate-200 bg-white flex flex-col items-center py-2 gap-1 h-full">
+      <aside className="w-12 flex-shrink-0 border-r border-border bg-card flex flex-col items-center py-2 gap-1 h-full">
         <button
           onClick={() => setCollapsed(false)}
-          className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 mb-1"
+          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground mb-1"
           title="Expand sidebar">
           <PanelLeftOpen className="w-4 h-4" />
         </button>
@@ -803,7 +803,7 @@ function Sidebar({
             className={`p-2 rounded-md transition ${
               activeTab === t.key
                 ? "bg-blue-50 text-blue-600"
-                : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                : "text-muted-foreground hover:bg-muted hover:text-muted-foreground"
             }`}>
             {t.icon}
           </button>
@@ -814,14 +814,14 @@ function Sidebar({
 
   /* ── Expanded sidebar ── */
   return (
-    <aside className="w-60 flex-shrink-0 border-r border-slate-200 bg-white flex flex-col h-full overflow-hidden">
+    <aside className="w-60 flex-shrink-0 border-r border-border bg-card flex flex-col h-full overflow-hidden">
 
       {/* Tab switcher + collapse button */}
-      <div className="border-b border-slate-100 flex-shrink-0">
+      <div className="border-b border-border flex-shrink-0">
         <div className="flex items-center justify-end px-2 pt-1.5">
           <button
             onClick={() => setCollapsed(true)}
-            className="p-1 rounded-md hover:bg-slate-100 text-slate-400"
+            className="p-1 rounded-md hover:bg-muted text-muted-foreground"
             title="Collapse sidebar">
             <PanelLeftClose className="w-3.5 h-3.5" />
           </button>
@@ -831,12 +831,12 @@ function Sidebar({
             className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all ${
               activeTab === t.key
                 ? "bg-blue-50 border-r-2 border-blue-600 text-blue-700"
-                : "text-slate-600 hover:bg-slate-50"
+                : "text-muted-foreground hover:bg-muted"
             }`}>
-            <span className={activeTab === t.key ? "text-blue-600" : "text-slate-400"}>{t.icon}</span>
+            <span className={activeTab === t.key ? "text-blue-600" : "text-muted-foreground"}>{t.icon}</span>
             <div>
               <p className="text-xs font-semibold">{t.label}</p>
-              <p className="text-[9px] text-slate-400">{t.desc}</p>
+              <p className="text-[9px] text-muted-foreground">{t.desc}</p>
             </div>
           </button>
         ))}
@@ -844,14 +844,14 @@ function Sidebar({
 
       {/* Chart type toggles — ABOVE columns so always visible */}
       {activeTab === "univariate" && chartsForColType.length > 0 && (
-        <div className="px-3 py-2 border-b border-slate-100 flex-shrink-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">Chart Types</p>
+        <div className="px-3 py-2 border-b border-border flex-shrink-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1.5">Chart Types</p>
           <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
             {chartsForColType.map((k) => (
-              <label key={k} className="flex items-center gap-1.5 px-1 py-0.5 rounded hover:bg-slate-50 cursor-pointer">
+              <label key={k} className="flex items-center gap-1.5 px-1 py-0.5 rounded hover:bg-muted cursor-pointer">
                 <input type="checkbox" checked={visibleCharts.has(k)}
                   onChange={() => toggleChart(k)} className="accent-blue-600 w-3 h-3 flex-shrink-0" />
-                <span className="text-[10px] text-slate-600 truncate">{CHART_LABELS[k]}</span>
+                <span className="text-[10px] text-muted-foreground truncate">{CHART_LABELS[k]}</span>
               </label>
             ))}
           </div>
@@ -861,19 +861,19 @@ function Sidebar({
       {/* Column selector — scrollable, takes remaining space */}
       {activeTab === "univariate" && (
         <div className="flex-1 min-h-0 overflow-y-auto px-3 py-2">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Columns</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Columns</p>
           {sections.map(({ label, cols, type }) => (
             <div key={type} className="mb-3">
-              <p className="text-[9px] font-semibold text-slate-300 uppercase tracking-wider px-1 mb-1">
+              <p className="text-[9px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-1 mb-1">
                 {label} ({cols.length})
               </p>
               {cols.map((col) => (
                 <button key={col} onClick={() => setSelectedCol(col)}
                   className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-all ${
-                    selectedCol === col ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-50"
+                    selectedCol === col ? "bg-blue-50 text-blue-700" : "text-muted-foreground hover:bg-muted"
                   }`}>
                   <span className="flex-shrink-0">
-                    {TYPE_ICON[type] ?? <Sigma className="w-2.5 h-2.5 text-slate-400" />}
+                    {TYPE_ICON[type] ?? <Sigma className="w-2.5 h-2.5 text-muted-foreground" />}
                   </span>
                   <span className="text-[11px] truncate font-medium">{col}</span>
                   {selectedCol === col && (
@@ -902,15 +902,15 @@ function Card({
 }) {
   const [expanded, setExpanded] = useState(true);
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden ${wide ? "col-span-2" : ""}`}>
-      <div className="flex items-start justify-between px-4 pt-3 pb-2 border-b border-slate-50">
+    <div className={`bg-card rounded-xl border border-border shadow-sm overflow-hidden ${wide ? "col-span-2" : ""}`}>
+      <div className="flex items-start justify-between px-4 pt-3 pb-2 border-b border-border">
         <div className="flex-1">
-          <p className="text-xs font-bold text-slate-800">{title}</p>
-          {desc && <p className="text-[10px] text-slate-400 mt-0.5">{desc}</p>}
+          <p className="text-xs font-bold text-foreground">{title}</p>
+          {desc && <p className="text-[10px] text-muted-foreground mt-0.5">{desc}</p>}
           {insight && <Insight text={insight} level={insightLevel ?? "warning"} />}
         </div>
         <button onClick={() => setExpanded((v) => !v)}
-          className="p-1 rounded hover:bg-slate-100 text-slate-400 ml-2 flex-shrink-0">
+          className="p-1 rounded hover:bg-muted text-muted-foreground ml-2 flex-shrink-0">
           {expanded ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
         </button>
       </div>
@@ -922,11 +922,11 @@ function Card({
 function TabHeader({ label, count }: { label: string; count?: number }) {
   return (
     <div className="col-span-2 flex items-center gap-3 mt-2 mb-1">
-      <div className="h-px flex-1 bg-slate-100" />
-      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 px-2">
-        {label}{count !== undefined && <span className="ml-1 text-slate-300">({count})</span>}
+      <div className="h-px flex-1 bg-muted" />
+      <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2">
+        {label}{count !== undefined && <span className="ml-1 text-muted-foreground/60">({count})</span>}
       </span>
-      <div className="h-px flex-1 bg-slate-100" />
+      <div className="h-px flex-1 bg-muted" />
     </div>
   );
 }
@@ -1031,23 +1031,23 @@ export default function AnalysisPage() {
 
   // ── Loading / error states ────────────────────────────────────────────────────
   if (isLoading) return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-muted">
       <SubNav datasetId={datasetId} />
       <div className="flex-1 flex flex-col items-center justify-center gap-3">
         <PageSpinner />
-        <p className="text-sm text-slate-400 animate-pulse">Computing analysis…</p>
+        <p className="text-sm text-muted-foreground animate-pulse">Computing analysis…</p>
       </div>
     </div>
   );
 
   if (error) return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-muted">
       <SubNav datasetId={datasetId} />
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-3">
           <AlertTriangle className="w-8 h-8 text-red-400 mx-auto" />
           <p className="text-red-500 font-semibold text-sm">Analysis failed</p>
-          <p className="text-slate-400 text-xs">{(error as Error).message}</p>
+          <p className="text-muted-foreground text-xs">{(error as Error).message}</p>
           <button onClick={() => refetch()}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700">
             <RefreshCw className="w-3 h-3" /> Retry
@@ -1060,7 +1060,7 @@ export default function AnalysisPage() {
   const colType = selectedCol && data ? data.column_types[selectedCol] : null;
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50">
+    <div className="flex flex-col h-screen bg-muted">
       <SubNav datasetId={datasetId} />
 
       {data && (
@@ -1079,7 +1079,7 @@ export default function AnalysisPage() {
             {activeTab === "univariate" && (
               <div className="grid grid-cols-2 gap-4">
                 {selectedCol && colChartsLoading && (
-                  <div className="col-span-2 flex items-center justify-center h-40 gap-2 text-slate-400 animate-pulse">
+                  <div className="col-span-2 flex items-center justify-center h-40 gap-2 text-muted-foreground animate-pulse">
                     <PageSpinner />
                     <span className="text-xs">Loading charts for {selectedCol}…</span>
                   </div>
@@ -1258,9 +1258,9 @@ export default function AnalysisPage() {
                 })()}
 
                 {!selectedCol && (
-                  <div className="col-span-2 bg-white rounded-xl border border-dashed border-slate-200 p-12 text-center">
-                    <BarChart2 className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                    <p className="text-sm text-slate-400">Select a column from the sidebar to view charts</p>
+                  <div className="col-span-2 bg-card rounded-xl border border-dashed border-border p-12 text-center">
+                    <BarChart2 className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Select a column from the sidebar to view charts</p>
                   </div>
                 )}
               </div>
@@ -1269,14 +1269,14 @@ export default function AnalysisPage() {
             {/* ══════════ BIVARIATE TAB ══════════ */}
             {activeTab === "bivariate" && (
               <div className="max-w-3xl space-y-5">
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div className="bg-card rounded-xl border border-border shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-0.5">
                     <GitMerge className="w-4 h-4 text-blue-600" />
-                    <h2 className="text-sm font-bold text-slate-800">Bivariate Analysis</h2>
+                    <h2 className="text-sm font-bold text-foreground">Bivariate Analysis</h2>
                   </div>
-                  <p className="text-xs text-slate-500 mb-4">Analyzing relationships between pairs of variables</p>
+                  <p className="text-xs text-muted-foreground mb-4">Analyzing relationships between pairs of variables</p>
 
-                  <p className="text-xs font-semibold text-slate-600 mb-2">Select Analysis Type</p>
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Select Analysis Type</p>
                   <div className="flex gap-2 flex-wrap mb-5">
                     {([
                       { key: "num_num" as const, label: "Numerical × Numerical" },
@@ -1288,7 +1288,7 @@ export default function AnalysisPage() {
                         className={`px-4 py-2 rounded-lg text-xs font-semibold border transition ${
                           bivType === t.key
                             ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                            : "bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:bg-blue-50"
+                            : "bg-card text-muted-foreground border-border hover:border-blue-300 hover:bg-blue-50"
                         }`}>
                         {t.label}
                       </button>
@@ -1297,11 +1297,11 @@ export default function AnalysisPage() {
 
                   <div className="flex gap-4">
                     <div className="flex-1">
-                      <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
                         {bivType === "num_cat" ? "Numeric Column" : "Column 1"}
                       </label>
                       <select value={bivCol1} onChange={(e) => setBivCol1(e.target.value)}
-                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-card focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select column…</option>
                         {(bivType === "cat_cat" ? data.categorical_cols : data.numeric_cols).map((c) => (
                           <option key={c} value={c}>{c}</option>
@@ -1309,11 +1309,11 @@ export default function AnalysisPage() {
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
                         {bivType === "num_cat" ? "Categorical Column" : "Column 2"}
                       </label>
                       <select value={bivCol2} onChange={(e) => setBivCol2(e.target.value)}
-                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-card focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select column…</option>
                         {(bivType === "num_num" ? data.numeric_cols :
                           bivType === "cat_cat" ? data.categorical_cols :
@@ -1327,22 +1327,22 @@ export default function AnalysisPage() {
                 </div>
 
                 {(!bivCol1 || !bivCol2) && (
-                  <div className="bg-white rounded-xl border border-dashed border-slate-200 p-10 text-center">
-                    <GitMerge className="w-6 h-6 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-400">Select two columns above to visualise their relationship</p>
+                  <div className="bg-card rounded-xl border border-dashed border-border p-10 text-center">
+                    <GitMerge className="w-6 h-6 text-muted-foreground/60 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Select two columns above to visualise their relationship</p>
                   </div>
                 )}
                 {bivCol1 && bivCol2 && bivLoading && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-10 text-center text-slate-400 text-sm animate-pulse">
+                  <div className="bg-card rounded-xl border border-border p-10 text-center text-muted-foreground text-sm animate-pulse">
                     Computing…
                   </div>
                 )}
                 {bivCol1 && bivCol2 && !bivLoading && bivData && (
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="px-4 pt-3 pb-2 border-b border-slate-100 flex items-center justify-between">
-                      <p className="text-xs font-bold text-slate-800">{bivCol1} × {bivCol2}</p>
+                  <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+                    <div className="px-4 pt-3 pb-2 border-b border-border flex items-center justify-between">
+                      <p className="text-xs font-bold text-foreground">{bivCol1} × {bivCol2}</p>
                       {"n" in (bivData as object) && (
-                        <span className="text-[10px] text-slate-400">{(bivData as any).n?.toLocaleString()} rows</span>
+                        <span className="text-[10px] text-muted-foreground">{(bivData as any).n?.toLocaleString()} rows</span>
                       )}
                     </div>
                     <div className="p-4">
@@ -1354,12 +1354,12 @@ export default function AnalysisPage() {
                 )}
 
                 {/* ── Custom Chart Builder ── */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div className="bg-card rounded-xl border border-border shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-0.5">
                     <BarChart2 className="w-4 h-4 text-violet-600" />
-                    <h2 className="text-sm font-bold text-slate-800">Custom Chart Builder</h2>
+                    <h2 className="text-sm font-bold text-foreground">Custom Chart Builder</h2>
                   </div>
-                  <p className="text-xs text-slate-500 mb-4">Free-form X/Y chart from preview data (up to 500 rows)</p>
+                  <p className="text-xs text-muted-foreground mb-4">Free-form X/Y chart from preview data (up to 500 rows)</p>
 
                   {/* Chart type selector */}
                   <div className="flex gap-2 flex-wrap mb-4">
@@ -1370,7 +1370,7 @@ export default function AnalysisPage() {
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border capitalize transition ${
                           customType === t
                             ? "bg-violet-600 text-white border-violet-600 shadow-sm"
-                            : "bg-white text-slate-600 border-slate-200 hover:border-violet-300 hover:bg-violet-50"
+                            : "bg-card text-muted-foreground border-border hover:border-violet-300 hover:bg-violet-50"
                         }`}
                       >
                         {t}
@@ -1381,13 +1381,13 @@ export default function AnalysisPage() {
                   {/* Column pickers */}
                   <div className="flex gap-4 mb-5">
                     <div className="flex-1">
-                      <label className="text-xs font-semibold text-slate-600 block mb-1.5">
+                      <label className="text-xs font-semibold text-muted-foreground block mb-1.5">
                         X Axis {customType === "scatter" ? "(numeric)" : "(any)"}
                       </label>
                       <select
                         value={customX}
                         onChange={(e) => setCustomX(e.target.value)}
-                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-card focus:outline-none focus:ring-2 focus:ring-violet-500"
                       >
                         <option value="">Select column…</option>
                         {(customType === "scatter"
@@ -1397,11 +1397,11 @@ export default function AnalysisPage() {
                       </select>
                     </div>
                     <div className="flex-1">
-                      <label className="text-xs font-semibold text-slate-600 block mb-1.5">Y Axis (numeric)</label>
+                      <label className="text-xs font-semibold text-muted-foreground block mb-1.5">Y Axis (numeric)</label>
                       <select
                         value={customY}
                         onChange={(e) => setCustomY(e.target.value)}
-                        className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-violet-500"
+                        className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-card focus:outline-none focus:ring-2 focus:ring-violet-500"
                       >
                         <option value="">Select column…</option>
                         {data.numeric_cols.filter((c) => c !== customX).map((c) => (
@@ -1413,22 +1413,22 @@ export default function AnalysisPage() {
 
                   {/* Chart output */}
                   {(!customX || !customY) && (
-                    <div className="border border-dashed border-slate-200 rounded-lg p-8 text-center text-slate-400 text-sm">
+                    <div className="border border-dashed border-border rounded-lg p-8 text-center text-muted-foreground text-sm">
                       Select X and Y columns to render the chart
                     </div>
                   )}
                   {customX && customY && previewLoading && (
-                    <div className="border border-slate-100 rounded-lg p-8 text-center text-slate-400 text-sm animate-pulse">
+                    <div className="border border-border rounded-lg p-8 text-center text-muted-foreground text-sm animate-pulse">
                       Loading preview data…
                     </div>
                   )}
                   {customX && customY && !previewLoading && customRows.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[10px] text-slate-400 font-mono">
+                        <span className="text-[10px] text-muted-foreground font-mono">
                           {customX} → {customY}
                         </span>
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] text-muted-foreground">
                           {customRows.length} rows · preview data
                         </span>
                       </div>
@@ -1506,11 +1506,11 @@ export default function AnalysisPage() {
 
                 {/* Correlation Heatmap */}
                 <section>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Correlation Heatmap</h3>
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="px-4 pt-3 pb-2 border-b border-slate-100">
-                      <p className="text-xs font-bold text-slate-800">Pearson Correlation Matrix</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Pairwise linear correlation −1 (red) to +1 (blue)</p>
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Correlation Heatmap</h3>
+                  <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+                    <div className="px-4 pt-3 pb-2 border-b border-border">
+                      <p className="text-xs font-bold text-foreground">Pearson Correlation Matrix</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Pairwise linear correlation −1 (red) to +1 (blue)</p>
                     </div>
                     <div className="p-4"><CorrelationHeatmap data={data.multi_column.correlation} /></div>
                   </div>
@@ -1518,11 +1518,11 @@ export default function AnalysisPage() {
 
                 {/* Pair Plot */}
                 <section>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Pair Plot</h3>
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="px-4 pt-3 pb-2 border-b border-slate-100">
-                      <p className="text-xs font-bold text-slate-800">Top Correlated Pairs</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Scatter + trend line for highest-correlation numeric pairs</p>
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Pair Plot</h3>
+                  <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+                    <div className="px-4 pt-3 pb-2 border-b border-border">
+                      <p className="text-xs font-bold text-foreground">Top Correlated Pairs</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Scatter + trend line for highest-correlation numeric pairs</p>
                     </div>
                     <div className="p-4"><PairPlot pairs={data.multi_column.scatter_pairs} /></div>
                   </div>
@@ -1530,8 +1530,8 @@ export default function AnalysisPage() {
 
                 {/* 3D Scatter + Bubble — shared column pickers */}
                 <section>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">3D Scatter & Bubble Chart</h3>
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">3D Scatter & Bubble Chart</h3>
+                  <div className="bg-card rounded-xl border border-border shadow-sm p-4">
                     <div className="flex gap-3 mb-4 flex-wrap">
                       {([
                         { label: "X Axis", val: s3x, set: setS3x },
@@ -1539,9 +1539,9 @@ export default function AnalysisPage() {
                         { label: "Z / Size", val: s3z, set: setS3z },
                       ] as { label: string; val: string; set: (v: string) => void }[]).map(({ label, val, set }) => (
                         <div key={label} className="flex-1 min-w-[140px]">
-                          <label className="text-xs font-semibold text-slate-600 block mb-1">{label}</label>
+                          <label className="text-xs font-semibold text-muted-foreground block mb-1">{label}</label>
                           <select value={val} onChange={(e) => set(e.target.value)}
-                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            className="w-full text-sm border border-border rounded-lg px-3 py-2 bg-card focus:outline-none focus:ring-2 focus:ring-blue-500">
                             <option value="">Select…</option>
                             {data.numeric_cols.map((c) => <option key={c} value={c}>{c}</option>)}
                           </select>
@@ -1550,21 +1550,21 @@ export default function AnalysisPage() {
                     </div>
 
                     {!s3Enabled && (
-                      <div className="border border-dashed border-slate-200 rounded-lg p-8 text-center text-slate-400 text-sm">
+                      <div className="border border-dashed border-border rounded-lg p-8 text-center text-muted-foreground text-sm">
                         Select three different numeric columns to render charts
                       </div>
                     )}
                     {s3Enabled && s3Loading && (
-                      <div className="p-8 text-center text-slate-400 text-sm animate-pulse">Computing…</div>
+                      <div className="p-8 text-center text-muted-foreground text-sm animate-pulse">Computing…</div>
                     )}
                     {s3Enabled && !s3Loading && s3Data && (
                       <div className="space-y-6">
                         <div>
-                          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">3D Scatter Plot</p>
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">3D Scatter Plot</p>
                           <Scatter3DPlot data={s3Data} />
                         </div>
                         <div>
-                          <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                             Bubble Chart — size encodes <span className="font-mono">{s3z}</span>
                           </p>
                           <BubbleChart data={s3Data} xCol={s3x} yCol={s3y} sizeCol={s3z} />
@@ -1576,14 +1576,14 @@ export default function AnalysisPage() {
 
                 {/* PCA */}
                 <section>
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">PCA Analysis</h3>
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div className="px-4 pt-3 pb-2 border-b border-slate-100">
-                      <p className="text-xs font-bold text-slate-800">Principal Component Analysis</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Score plot (PC1 vs PC2) and variable loadings across all numeric columns</p>
+                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">PCA Analysis</h3>
+                  <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+                    <div className="px-4 pt-3 pb-2 border-b border-border">
+                      <p className="text-xs font-bold text-foreground">Principal Component Analysis</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Score plot (PC1 vs PC2) and variable loadings across all numeric columns</p>
                     </div>
                     <div className="p-4">
-                      {pcaLoading && <div className="text-center text-slate-400 text-sm py-8 animate-pulse">Computing PCA…</div>}
+                      {pcaLoading && <div className="text-center text-muted-foreground text-sm py-8 animate-pulse">Computing PCA…</div>}
                       {pcaData && <PCAPlot data={pcaData} />}
                     </div>
                   </div>
@@ -1645,8 +1645,8 @@ export default function AnalysisPage() {
                       { label: "Duplicates",  value: data.stat_cards.duplicates.duplicate_count.toLocaleString(), color: (data.stat_cards.duplicates.duplicate_pct ?? 0) > 5 ? C.danger : C.muted },
                       { label: "Dup %",       value: `${data.stat_cards.duplicates.duplicate_pct?.toFixed(2) ?? "0"}%`, color: (data.stat_cards.duplicates.duplicate_pct ?? 0) > 5 ? C.danger : C.success },
                     ].map(({ label, value, color }) => (
-                      <div key={label} className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">{label}</p>
+                      <div key={label} className="bg-muted rounded-xl p-4 text-center border border-border">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{label}</p>
                         <p className="text-2xl font-bold mt-1" style={{ color }}>{value}</p>
                       </div>
                     ))}

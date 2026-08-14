@@ -53,13 +53,13 @@ function CorrMethodLoadingIndicator({ methods }: { methods: CorrMethodLoadingSta
   const totalComplete = methods.filter((m) => m.status === "done").length;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-3 mb-4">
+    <div className="bg-card border border-border rounded-xl p-3 mb-4">
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-gray-600">
+        <p className="text-xs font-semibold text-muted-foreground">
           Loading additional associations ({totalComplete}/{methods.length})
         </p>
         {!allDone && (
-          <span className="flex items-center gap-1 text-[10px] text-gray-400">
+          <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
             <RefreshCw className="w-3 h-3 animate-spin" /> Computing…
           </span>
         )}
@@ -76,7 +76,7 @@ function CorrMethodLoadingIndicator({ methods }: { methods: CorrMethodLoadingSta
                 ? "bg-red-50 text-red-700 border-red-200"
                 : m.status === "loading"
                 ? "bg-blue-50 text-blue-700 border-blue-200"
-                : "bg-gray-50 text-gray-400 border-gray-200",
+                : "bg-muted text-muted-foreground border-border",
             )}
           >
             {m.status === "loading" && <RefreshCw className="w-2.5 h-2.5 animate-spin" />}
@@ -158,11 +158,11 @@ function corrColor(r: number): string {
     ? "text-red-600"
     : r < -0.4
     ? "text-red-500"
-    : "text-gray-600";
+    : "text-muted-foreground";
 }
 
 function effectColor(v: number): string {
-  return v >= 0.14 ? "text-purple-700" : v >= 0.06 ? "text-purple-500" : "text-gray-500";
+  return v >= 0.14 ? "text-purple-700" : v >= 0.06 ? "text-purple-500" : "text-muted-foreground";
 }
 
 
@@ -172,7 +172,7 @@ function MarkdownText({ text }: { text: string }) {
     <>
       {parts.map((part, i) =>
         part.startsWith("**") && part.endsWith("**") ? (
-          <strong key={i} className="font-semibold text-gray-800">
+          <strong key={i} className="font-semibold text-foreground">
             {part.slice(2, -2)}
           </strong>
         ) : (
@@ -203,10 +203,10 @@ const INSIGHT_CONFIG: Record<
     text:   "text-blue-900",
   },
   muted: {
-    icon:   <Info className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />,
-    bg:     "bg-gray-50",
-    border: "border-gray-100",
-    text:   "text-gray-500",
+    icon:   <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />,
+    bg:     "bg-muted",
+    border: "border-border",
+    text:   "text-muted-foreground",
   },
 };
 
@@ -223,24 +223,24 @@ function CollapsibleInsights({ insights }: { insights?: Insight[] | null }) {
   if (!insights || insights.length === 0) return null;
 
   return (
-    <div className="mb-5 border border-gray-200 rounded-xl overflow-hidden">
+    <div className="mb-5 border border-border rounded-xl overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-2 px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
+        className="w-full flex items-center gap-2 px-4 py-3 bg-muted hover:bg-muted transition-colors text-left"
       >
         <Lightbulb className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-        <span className="text-xs font-semibold text-gray-700 flex-1">
+        <span className="text-xs font-semibold text-foreground flex-1">
           Insights
-          <span className="ml-1.5 font-normal text-gray-400">({insights.length})</span>
+          <span className="ml-1.5 font-normal text-muted-foreground">({insights.length})</span>
         </span>
         {open
-          ? <ChevronDown  className="w-3.5 h-3.5 text-gray-400" />
-          : <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+          ? <ChevronDown  className="w-3.5 h-3.5 text-muted-foreground" />
+          : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
         }
       </button>
 
       {open && (
-        <div className="px-4 py-3 bg-white flex flex-col gap-2">
+        <div className="px-4 py-3 bg-card flex flex-col gap-2">
           {insights.map((insight, i) => {
             const cfg = INSIGHT_CONFIG[insight.type] ?? INSIGHT_CONFIG.muted;
             return (
@@ -306,13 +306,13 @@ function ColumnSidebar({
         onClick={() => onChange(col)}
         className={cn(
           "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-xs text-left transition",
-          checked ? "text-gray-700 hover:bg-gray-50" : "text-gray-400 hover:bg-gray-50",
+          checked ? "text-foreground hover:bg-muted" : "text-muted-foreground hover:bg-muted",
         )}
         title={highCard ? `${col} — high cardinality (${cardinality} unique values)` : col}
       >
         {checked
           ? <CheckSquare className="w-3.5 h-3.5 text-brand flex-shrink-0" />
-          : <Square      className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+          : <Square      className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
         }
         <span className="font-mono truncate flex-1">{col}</span>
         {highCard && (
@@ -335,26 +335,26 @@ function ColumnSidebar({
   }
 
   return (
-    <aside className="w-56 flex-shrink-0 bg-white rounded-xl border border-gray-200 flex flex-col max-h-[80vh] sticky top-20">
-      <div className="px-3 pt-3 pb-2 border-b border-gray-100 flex-shrink-0">
+    <aside className="w-56 flex-shrink-0 bg-card rounded-xl border border-border flex flex-col max-h-[80vh] sticky top-20">
+      <div className="px-3 pt-3 pb-2 border-b border-border flex-shrink-0">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-gray-700">Columns</span>
-          <span className="text-[10px] text-gray-400 tabular-nums">
+          <span className="text-xs font-semibold text-foreground">Columns</span>
+          <span className="text-[10px] text-muted-foreground tabular-nums">
             {selectedCount}/{allActive.length}
           </span>
         </div>
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Filter…"
-            className="w-full pl-7 pr-6 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand transition"
+            className="w-full pl-7 pr-6 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand transition"
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground"
             >
               <X className="w-3 h-3" />
             </button>
@@ -363,13 +363,13 @@ function ColumnSidebar({
         <div className="flex gap-1 mt-2">
           <button
             onClick={onSelectAll}
-            className="flex-1 text-[10px] py-1 border border-gray-200 rounded text-gray-500 hover:border-brand/60 hover:text-brand transition"
+            className="flex-1 text-[10px] py-1 border border-border rounded text-muted-foreground hover:border-brand/60 hover:text-brand transition"
           >
             All
           </button>
           <button
             onClick={onSelectNone}
-            className="flex-1 text-[10px] py-1 border border-gray-200 rounded text-gray-500 hover:border-red-200 hover:text-red-500 transition"
+            className="flex-1 text-[10px] py-1 border border-border rounded text-muted-foreground hover:border-red-200 hover:text-red-500 transition"
           >
             None
           </button>
@@ -379,7 +379,7 @@ function ColumnSidebar({
       <div className="overflow-y-auto flex-1 px-1 py-1 scrollbar-hide">
         {visibleNum.length > 0 && (
           <>
-            <p className="text-[9px] uppercase tracking-wider text-gray-400 px-2 pt-1 pb-0.5">
+            <p className="text-[9px] uppercase tracking-wider text-muted-foreground px-2 pt-1 pb-0.5">
               Numeric ({numCols.length})
             </p>
             {visibleNum.map((col) => <ColRow key={col} col={col} type="num" />)}
@@ -387,14 +387,14 @@ function ColumnSidebar({
         )}
         {visibleCat.length > 0 && (
           <>
-            <p className="text-[9px] uppercase tracking-wider text-gray-400 px-2 pt-2 pb-0.5">
+            <p className="text-[9px] uppercase tracking-wider text-muted-foreground px-2 pt-2 pb-0.5">
               Categorical ({catCols.length})
             </p>
             {visibleCat.map((col) => <ColRow key={col} col={col} type="cat" />)}
           </>
         )}
         {visibleNum.length === 0 && visibleCat.length === 0 && (
-          <p className="text-[10px] text-gray-400 px-2 py-3">No columns match.</p>
+          <p className="text-[10px] text-muted-foreground px-2 py-3">No columns match.</p>
         )}
       </div>
     </aside>
@@ -413,13 +413,13 @@ function VifTable({
   const filtered = vif.filter((v) => visibleCols.includes(v.column));
   if (filtered.length === 0) return null;
   return (
-    <div className="mt-6 pt-6 border-t border-gray-100">
+    <div className="mt-6 pt-6 border-t border-border">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-sm font-semibold text-gray-800">
+          <h3 className="text-sm font-semibold text-foreground">
             Variance Inflation Factor (VIF)
           </h3>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             VIF &gt; 5: moderate concern · VIF &gt; 10: high multicollinearity
           </p>
         </div>
@@ -434,10 +434,10 @@ function VifTable({
                 ? "bg-red-50 border-red-100"
                 : v.vif > 5
                 ? "bg-amber-50 border-amber-100"
-                : "bg-gray-50 border-gray-100",
+                : "bg-muted border-border",
             )}
           >
-            <span className="font-mono text-gray-700 truncate mr-2">{v.column}</span>
+            <span className="font-mono text-foreground truncate mr-2">{v.column}</span>
             <span
               className={cn(
                 "font-bold tabular-nums flex-shrink-0",
@@ -462,25 +462,25 @@ function TopNumericPairs({
 }) {
   if (pairs.length === 0) return null;
   return (
-    <div className="mt-6 pt-6 border-t border-gray-100">
+    <div className="mt-6 pt-6 border-t border-border">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-800">
+        <h3 className="text-sm font-semibold text-foreground">
           Strongest Numeric Pairs{" "}
-          <span className="text-gray-400 font-normal">(by |r|)</span>
+          <span className="text-muted-foreground font-normal">(by |r|)</span>
         </h3>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {pairs.map((pair, i) => {
           const abs = Math.abs(pair.correlation);
           return (
-            <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5">
-              <span className="text-xs font-mono text-gray-600 truncate flex-1 min-w-0">
+            <div key={i} className="flex items-center gap-3 bg-muted rounded-xl px-3 py-2.5">
+              <span className="text-xs font-mono text-muted-foreground truncate flex-1 min-w-0">
                 {pair.col1}
-                <span className="text-gray-400 mx-1.5">×</span>
+                <span className="text-muted-foreground mx-1.5">×</span>
                 {pair.col2}
               </span>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <div className="h-1.5 w-16 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                   <div
                     className={cn("h-full rounded-full", pair.correlation >= 0 ? "bg-blue-400" : "bg-red-400")}
                     style={{ width: `${abs * 100}%` }}
@@ -502,23 +502,23 @@ function TopNumericPairs({
 function TopCatPairs({ pairs }: { pairs: CatPair[] }) {
   if (!pairs || pairs.length === 0) return null;
   return (
-    <div className="mt-6 pt-6 border-t border-gray-100">
+    <div className="mt-6 pt-6 border-t border-border">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-800">
+        <h3 className="text-sm font-semibold text-foreground">
           Strongest Categorical Associations{" "}
-          <span className="text-gray-400 font-normal">(Cramér's V)</span>
+          <span className="text-muted-foreground font-normal">(Cramér's V)</span>
         </h3>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         {pairs.slice(0, 12).map((pair, i) => (
-          <div key={i} className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5">
-            <span className="text-xs font-mono text-gray-600 truncate flex-1 min-w-0">
+          <div key={i} className="flex items-center gap-3 bg-muted rounded-xl px-3 py-2.5">
+            <span className="text-xs font-mono text-muted-foreground truncate flex-1 min-w-0">
               {pair.col1}
-              <span className="text-gray-400 mx-1.5">×</span>
+              <span className="text-muted-foreground mx-1.5">×</span>
               {pair.col2}
             </span>
             <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="h-1.5 w-16 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                 <div className="h-full rounded-full bg-purple-400" style={{ width: `${pair.cramers_v * 100}%` }} />
               </div>
               <span className="text-xs font-semibold tabular-nums w-12 text-right text-purple-700">
@@ -536,14 +536,14 @@ function TopCatPairs({ pairs }: { pairs: CatPair[] }) {
 function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
   if (!pairs || pairs.length === 0) return null;
   return (
-    <div className="mt-6 pt-6 border-t border-gray-100">
+    <div className="mt-6 pt-6 border-t border-border">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-sm font-semibold text-gray-800">
+          <h3 className="text-sm font-semibold text-foreground">
             Top Numeric × Categorical Pairs{" "}
-            <span className="text-gray-400 font-normal">(η²)</span>
+            <span className="text-muted-foreground font-normal">(η²)</span>
           </h3>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5">
             η² ≥ 0.14 = large effect · ≥ 0.06 = medium · &lt; 0.06 = small
           </p>
         </div>
@@ -552,15 +552,15 @@ function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
         {pairs.slice(0, 12).map((pair, i) => {
           const eta = pair.eta_sq ?? 0;
           return (
-            <div key={i} className="bg-gray-50 rounded-xl px-3 py-2.5">
+            <div key={i} className="bg-muted rounded-xl px-3 py-2.5">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-gray-600 truncate flex-1 min-w-0">
+                <span className="text-xs font-mono text-muted-foreground truncate flex-1 min-w-0">
                   <span className="text-purple-600">{pair.cat_col}</span>
-                  <span className="text-gray-400 mx-1.5">→</span>
+                  <span className="text-muted-foreground mx-1.5">→</span>
                   {pair.num_col}
                 </span>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className="h-1.5 w-16 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full bg-indigo-400"
                       style={{ width: `${Math.min((eta / 0.3) * 100, 100)}%` }}
@@ -573,7 +573,7 @@ function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
               </div>
               <div className="flex items-center gap-3 mt-1.5">
                 {pair.point_biserial != null && (
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-[10px] text-muted-foreground">
                     pb-r:{" "}
                     <span className={cn("font-mono", pair.point_biserial > 0 ? "text-blue-500" : "text-red-500")}>
                       {pair.point_biserial.toFixed(3)}
@@ -581,9 +581,9 @@ function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
                   </span>
                 )}
                 {pair.rank_biserial != null && (
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-[10px] text-muted-foreground">
                     rb-r:{" "}
-                    <span className="font-mono text-gray-600">{pair.rank_biserial.toFixed(3)}</span>
+                    <span className="font-mono text-muted-foreground">{pair.rank_biserial.toFixed(3)}</span>
                   </span>
                 )}
                 {pair.p_value != null && (
@@ -594,7 +594,7 @@ function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : pair.p_value < 0.05
                         ? "bg-blue-50 text-blue-700 border-blue-200"
-                        : "bg-gray-50 text-gray-400 border-gray-200",
+                        : "bg-muted text-muted-foreground border-border",
                     )}
                   >
                     {pair.p_value < 0.001
@@ -606,7 +606,7 @@ function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
                       : `p=${pair.p_value.toFixed(3)}`}
                   </span>
                 )}
-                <span className="text-[10px] text-gray-300 ml-auto">{pair.n_categories} groups</span>
+                <span className="text-[10px] text-muted-foreground/60 ml-auto">{pair.n_categories} groups</span>
               </div>
             </div>
           );
@@ -656,7 +656,7 @@ function HeatmapTabs({
   if (available.length <= 1) return null;
 
   return (
-    <div className="flex flex-wrap gap-1 mb-4 bg-gray-100 rounded-xl p-1 w-fit">
+    <div className="flex flex-wrap gap-1 mb-4 bg-muted rounded-xl p-1 w-fit">
       {available.map((v) => (
         <button
           key={v.key}
@@ -664,7 +664,7 @@ function HeatmapTabs({
           title={v.description}
           className={cn(
             "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition",
-            v.key === active ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700",
+            v.key === active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
           )}
         >
           {v.icon}
@@ -832,34 +832,34 @@ export default function CorrelationsPage() {
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 mt-4 mb-6">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Correlations</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <h1 className="text-xl font-bold text-foreground">Correlations</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
               Pairwise associations — numeric, categorical, and mixed
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
-            <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+            <div className="flex gap-1 bg-muted rounded-xl p-1">
               {METHODS.map((m) => (
                 <button
                   key={m}
                   onClick={() => setMethod(m)}
                   className={cn(
                     "px-4 py-1.5 rounded-lg text-xs font-medium capitalize transition",
-                    m === method ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700",
+                    m === method ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   {m}
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-gray-400 mr-1">{METHOD_DESC[method]}</p>
+            <p className="text-[10px] text-muted-foreground mr-1">{METHOD_DESC[method]}</p>
           </div>
         </div>
 
         {isLoading ? (
           <div className="flex gap-5">
-            <div className="w-56 flex-shrink-0 h-64 bg-gray-100 rounded-xl animate-pulse" />
-            <div className="flex-1 h-64 bg-gray-100 rounded-xl animate-pulse" />
+            <div className="w-56 flex-shrink-0 h-64 bg-muted rounded-xl animate-pulse" />
+            <div className="flex-1 h-64 bg-muted rounded-xl animate-pulse" />
           </div>
         ) : data ? (
           <>
@@ -883,7 +883,7 @@ export default function CorrelationsPage() {
 
               <CollapsibleInsights insights={data.insights} />
 
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-card rounded-xl border border-border p-6">
 
                 {deselected.size > 0 && (
                   <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">

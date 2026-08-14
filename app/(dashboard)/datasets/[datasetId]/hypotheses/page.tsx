@@ -27,7 +27,7 @@ export default function HypothesesRedirect() {
   }, [dataset, datasetId, router]);
 
   return (
-    <div className="flex items-center justify-center h-64 text-gray-300">
+    <div className="flex items-center justify-center h-64 text-muted-foreground/60">
       <Loader2 className="w-5 h-5 animate-spin" />
     </div>
   );

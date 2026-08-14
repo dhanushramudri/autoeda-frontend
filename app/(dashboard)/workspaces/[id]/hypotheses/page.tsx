@@ -18,7 +18,7 @@ import { Mascot } from "@/components/shared/Mascot";
 const CONF_COLOR: Record<string, string> = {
   high: "bg-emerald-50 text-emerald-700",
   medium: "bg-amber-50 text-amber-700",
-  low: "bg-gray-100 text-gray-500",
+  low: "bg-muted text-muted-foreground",
 };
 
 const SEV_DOT: Record<string, string> = {
@@ -28,7 +28,7 @@ const SEV_DOT: Record<string, string> = {
 };
 
 const STATUS_CFG: Record<HypothesisStatus, { icon: React.ReactNode; cls: string; label: string; text: string }> = {
-  pending: { icon: <FlaskConical className="w-3.5 h-3.5 text-gray-400" />, cls: "bg-gray-50 border-gray-200", label: "Pending", text: "text-gray-500" },
+  pending: { icon: <FlaskConical className="w-3.5 h-3.5 text-muted-foreground" />, cls: "bg-muted border-border", label: "Pending", text: "text-muted-foreground" },
   validating: { icon: <Mascot className="w-4 h-4" />, cls: "bg-blue-50 border-blue-200", label: "Validating…", text: "text-blue-600" },
   supported: { icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />, cls: "bg-emerald-50 border-emerald-200", label: "Supported", text: "text-emerald-700" },
   refuted: { icon: <XCircle className="w-3.5 h-3.5 text-red-500" />, cls: "bg-red-50 border-red-200", label: "Refuted", text: "text-red-700" },
@@ -45,7 +45,7 @@ interface StreamingToolCall {
 function LiveProgress({ tools }: { tools: StreamingToolCall[] }) {
   if (tools.length === 0) {
     return (
-      <div className="flex items-center gap-2 text-xs text-gray-400">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Mascot className="w-5 h-5" />
         Investigating…
       </div>
@@ -53,7 +53,7 @@ function LiveProgress({ tools }: { tools: StreamingToolCall[] }) {
   }
   const last = tools[tools.length - 1];
   return (
-    <div className="flex items-center gap-2 text-xs text-gray-400">
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
       <Mascot className="w-5 h-5" />
       {tools.length} step{tools.length !== 1 ? "s" : ""} so far — running {last.tool}…
     </div>
@@ -81,16 +81,16 @@ function HypothesisRow({
             <span
               className={cn(
                 "text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wide",
-                h.origin === "ai" ? "bg-violet-50 text-violet-600" : "bg-gray-100 text-gray-500"
+                h.origin === "ai" ? "bg-violet-50 text-violet-600" : "bg-muted text-muted-foreground"
               )}
             >
               {h.origin === "ai" ? "AI" : "You"}
             </span>
             {h.severity && <span className={cn("w-2 h-2 rounded-full", SEV_DOT[h.severity])} />}
-            {h.title && <span className="text-xs font-medium text-gray-500 truncate">{h.title}</span>}
+            {h.title && <span className="text-xs font-medium text-muted-foreground truncate">{h.title}</span>}
           </div>
 
-          <p className="text-sm text-gray-800 leading-snug">{h.statement}</p>
+          <p className="text-sm text-foreground leading-snug">{h.statement}</p>
 
           {isValidating && streaming && (
             <div className="mt-2"><LiveProgress tools={streaming} /></div>
@@ -100,14 +100,14 @@ function HypothesisRow({
             <div className="mt-3 space-y-2">
               <Markdown content={h.verdict} className={cn("text-xs leading-relaxed", cfg.text)} />
               {h.evidence_summary && (
-                <code className="text-[11px] font-mono text-gray-500 bg-white border border-gray-100 px-1.5 py-0.5 rounded inline-block">
+                <code className="text-[11px] font-mono text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded inline-block">
                   {h.evidence_summary}
                 </code>
               )}
               {h.columns.length > 0 && (
                 <div className="flex gap-1 flex-wrap mt-1">
                   {h.columns.map((col) => (
-                    <span key={col} className="text-[11px] font-mono text-gray-400 bg-white border border-gray-100 px-1.5 py-0.5 rounded">
+                    <span key={col} className="text-[11px] font-mono text-muted-foreground bg-card border border-border px-1.5 py-0.5 rounded">
                       {col}
                     </span>
                   ))}
@@ -121,12 +121,12 @@ function HypothesisRow({
             <span className={cn("text-[11px] font-semibold", cfg.text)}>{cfg.label}</span>
             {h.confidence && (
               <>
-                <span className="text-gray-200">·</span>
+                <span className="text-muted-foreground/60">·</span>
                 <span className={cn("text-[11px] px-1.5 py-0.5 rounded-md", CONF_COLOR[h.confidence])}>{h.confidence} confidence</span>
               </>
             )}
             {h.verdict && (
-              <button onClick={() => setExpanded((v) => !v)} className="text-[11px] text-gray-400 hover:text-gray-600 flex items-center gap-0.5 ml-auto">
+              <button onClick={() => setExpanded((v) => !v)} className="text-[11px] text-muted-foreground hover:text-muted-foreground flex items-center gap-0.5 ml-auto">
                 {expanded ? <><ChevronUp className="w-3 h-3" />Hide</> : <><ChevronDown className="w-3 h-3" />Details</>}
               </button>
             )}
@@ -137,12 +137,12 @@ function HypothesisRow({
           {h.status === "pending" && (
             <button
               onClick={() => onValidate(h.id)}
-              className="text-[11px] px-2 py-1 bg-white border border-gray-200 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition"
+              className="text-[11px] px-2 py-1 bg-card border border-border rounded-lg text-muted-foreground hover:border-blue-400 hover:text-blue-600 transition"
             >
               Validate
             </button>
           )}
-          <button onClick={() => onDelete(h.id)} className="p-1 text-gray-300 hover:text-gray-500 transition rounded">
+          <button onClick={() => onDelete(h.id)} className="p-1 text-muted-foreground/60 hover:text-muted-foreground transition rounded">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -307,19 +307,19 @@ export default function HypothesesPage() {
           <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.12)" }}>
             <FlaskConical className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
           </div>
-          <h1 className="text-xl font-bold text-gray-900">Hypotheses</h1>
+          <h1 className="text-xl font-bold text-foreground">Hypotheses</h1>
         </div>
       </div>
-      <p className="text-sm text-gray-500 mb-1">
+      <p className="text-sm text-muted-foreground mb-1">
         Every verdict here is backed by a real computation Scout ran against your data — not a guess.
       </p>
       {scopedDatasetId && (
         <div className="flex items-center gap-2 mb-5 mt-2">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border">
             <Database className="w-3 h-3" />
             Scoped to {dataset?.name ?? `dataset #${scopedDatasetId}`}
           </span>
-          <button onClick={clearScope} className="text-xs text-gray-400 hover:text-gray-600">
+          <button onClick={clearScope} className="text-xs text-muted-foreground hover:text-muted-foreground">
             Clear scope
           </button>
         </div>
@@ -327,9 +327,9 @@ export default function HypothesesPage() {
       {!scopedDatasetId && <div className="mb-5" />}
 
       {/* Generate control */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5 flex items-center gap-3">
+      <div className="bg-card border border-border rounded-xl p-4 mb-5 flex items-center gap-3">
         <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
-        <p className="text-xs text-gray-500 flex-1">
+        <p className="text-xs text-muted-foreground flex-1">
           Investigate {scopedDatasetId ? "this dataset" : "the whole workspace"} and propose pre-verified hypotheses.
         </p>
         <input
@@ -338,7 +338,7 @@ export default function HypothesesPage() {
           max={10}
           value={genCount}
           onChange={(e) => setGenCount(Math.max(1, Math.min(10, Number(e.target.value) || 6)))}
-          className="w-14 text-xs border border-gray-200 rounded-lg px-2 py-1.5 text-center"
+          className="w-14 text-xs border border-border rounded-lg px-2 py-1.5 text-center"
           disabled={isGenerating}
         />
         <button
@@ -361,20 +361,20 @@ export default function HypothesesPage() {
       )}
 
       {/* Add input */}
-      <div className="bg-white border border-gray-300 rounded-xl p-4 mb-5 shadow-sm focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-50 transition-all">
+      <div className="bg-card border border-border rounded-xl p-4 mb-5 shadow-sm focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-50 transition-all">
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (draft.trim()) createMutation.mutate(); } }}
           placeholder="e.g. High-value customers tend to churn less · Wind and Solar output are negatively correlated"
           rows={2}
-          className="w-full text-sm text-gray-900 placeholder-gray-400 resize-none focus:outline-none leading-relaxed bg-transparent"
+          className="w-full text-sm text-foreground placeholder-muted-foreground resize-none focus:outline-none leading-relaxed bg-transparent"
         />
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
           <button
             onClick={() => createMutation.mutate()}
             disabled={!draft.trim() || createMutation.isPending}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-lg text-gray-700 hover:border-gray-500 hover:text-gray-900 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border rounded-lg text-foreground hover:border-border hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition"
           >
             <Plus className="w-3.5 h-3.5" /> Add
           </button>
@@ -397,10 +397,10 @@ export default function HypothesesPage() {
                   "text-xs px-2.5 py-1 rounded-full font-medium border transition",
                   active
                     ? cfg ? cn(cfg.cls, cfg.text) : "bg-gray-900 text-white border-gray-900"
-                    : "bg-white text-gray-400 border-gray-200 hover:border-gray-300 hover:text-gray-600"
+                    : "bg-card text-muted-foreground border-border hover:border-border hover:text-muted-foreground"
                 )}
               >
-                {label} <span className={active ? "opacity-60" : "text-gray-300"}>{count}</span>
+                {label} <span className={active ? "opacity-60" : "text-muted-foreground/60"}>{count}</span>
               </button>
             );
           })}
@@ -409,7 +409,7 @@ export default function HypothesesPage() {
 
       {/* List */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-gray-300"><Loader2 className="w-5 h-5 animate-spin" /></div>
+        <div className="flex items-center justify-center py-16 text-muted-foreground/60"><Loader2 className="w-5 h-5 animate-spin" /></div>
       ) : filteredHypotheses && filteredHypotheses.length > 0 ? (
         <div className="space-y-6">
           {groups.map((g) => (
@@ -417,10 +417,10 @@ export default function HypothesesPage() {
               {g.label && (
                 <div className="flex items-center gap-1.5 mb-2 px-1">
                   {g.key === "workspace"
-                    ? <Layers className="w-3 h-3 text-gray-400" />
-                    : <Database className="w-3 h-3 text-gray-400" />}
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{g.label}</span>
-                  <span className="text-[11px] text-gray-300">· {g.items.length}</span>
+                    ? <Layers className="w-3 h-3 text-muted-foreground" />
+                    : <Database className="w-3 h-3 text-muted-foreground" />}
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{g.label}</span>
+                  <span className="text-[11px] text-muted-foreground/60">· {g.items.length}</span>
                 </div>
               )}
               <div className="space-y-2">
@@ -432,9 +432,9 @@ export default function HypothesesPage() {
           ))}
         </div>
       ) : (
-        <div className="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-10 text-center">
-          <FlaskConical className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-          <p className="text-xs text-gray-400">
+        <div className="bg-muted border border-dashed border-border rounded-xl p-10 text-center">
+          <FlaskConical className="w-6 h-6 text-muted-foreground/60 mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">
             {hypotheses && hypotheses.length > 0
               ? "No hypotheses match this filter."
               : "No hypotheses yet. Add one above, or click Generate."}

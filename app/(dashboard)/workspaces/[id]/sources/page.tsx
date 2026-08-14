@@ -61,7 +61,7 @@ function StatusBadge({ status }: { status: string }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
       <Clock className="w-3 h-3" /> Untested
     </span>
   );
@@ -100,12 +100,12 @@ export default function SourcesPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-64px)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card flex-shrink-0">
         <div className="flex items-center gap-3">
           <Plug className="w-5 h-5 text-brand" />
           <div>
-            <h1 className="text-lg font-bold text-gray-900">Data Sources</h1>
-            <p className="text-xs text-gray-500">Connect external databases, APIs, and cloud storage</p>
+            <h1 className="text-lg font-bold text-foreground">Data Sources</h1>
+            <p className="text-xs text-muted-foreground">Connect external databases, APIs, and cloud storage</p>
           </div>
         </div>
         <Link
@@ -118,15 +118,15 @@ export default function SourcesPage() {
       </div>
 
       {/* Search bar */}
-      <div className="px-6 py-3 border-b border-gray-200 bg-white flex-shrink-0">
+      <div className="px-6 py-3 border-b border-border bg-card flex-shrink-0">
         <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Search sources"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-brand"
+            className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:border-brand"
           />
         </div>
       </div>
@@ -134,9 +134,9 @@ export default function SourcesPage() {
       {/* Sources grid */}
       <div className="flex-1 overflow-y-auto p-6">
         {isLoading ? (
-          <div className="flex items-center justify-center h-48 text-gray-400 text-sm">Loading...</div>
+          <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">Loading...</div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-gray-400 gap-3">
+          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground gap-3">
             <Plug className="w-12 h-12 opacity-20" />
             <p className="text-sm font-medium">No data sources yet</p>
             <p className="text-xs">Connect a database, cloud storage, or API to get started</p>
@@ -153,22 +153,22 @@ export default function SourcesPage() {
               return (
                 <div
                   key={src.id}
-                  className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-3 hover:border-brand/30 hover:shadow-sm transition group"
+                  className="bg-card border border-border rounded-xl p-4 flex flex-col gap-3 hover:border-brand/30 hover:shadow-sm transition group"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="w-9 h-9 rounded-lg bg-white border border-gray-100 shadow-sm flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-card border border-border shadow-sm flex items-center justify-center flex-shrink-0">
                       <ConnectorLogo id={src.source_type} className="w-7 h-7" />
                     </div>
                     <StatusBadge status={src.status} />
                   </div>
 
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-800 text-sm truncate">{src.name}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="font-semibold text-foreground text-sm truncate">{src.name}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
                       {TYPE_LABEL[src.source_type] ?? src.source_type}
                     </p>
                     {src.description && (
-                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{src.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{src.description}</p>
                     )}
                     {src.status === "failed" && src.last_error && (
                       <p className="mt-1 text-[10px] text-red-500 truncate" title={src.last_error}>
@@ -178,7 +178,7 @@ export default function SourcesPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-1.5 pt-1 border-t border-gray-100">
+                  <div className="flex items-center gap-1.5 pt-1 border-t border-border">
                     <Link
                       href={`/workspaces/${workspaceId}/sources/${src.id}/browse`}
                       className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-xs text-brand hover:bg-brand/10 transition font-medium"
@@ -192,7 +192,7 @@ export default function SourcesPage() {
                         testMut.mutate(src.id);
                       }}
                       disabled={testingId === src.id}
-                      className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs text-gray-500 hover:bg-gray-100 transition disabled:opacity-50"
+                      className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-muted transition disabled:opacity-50"
                     >
                       <TestTube2 className="w-3.5 h-3.5" />
                       {testingId === src.id ? "Testing..." : "Test"}
@@ -201,7 +201,7 @@ export default function SourcesPage() {
                       onClick={() => {
                         if (confirm(`Delete "${src.name}"?`)) deleteMut.mutate(src.id);
                       }}
-                      className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

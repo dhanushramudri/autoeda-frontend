@@ -81,7 +81,7 @@ function buildThreads(comments: FeedbackComment[]): ThreadData[] {
 const TYPE_STYLE: Record<string, string> = {
   bug:     "bg-red-50 text-red-600 border-red-200",
   feature: "bg-blue-50 text-blue-600 border-blue-200",
-  general: "bg-gray-100 text-gray-600 border-gray-200",
+  general: "bg-muted text-muted-foreground border-border",
   other:   "bg-purple-50 text-purple-600 border-purple-200",
 };
 const TYPE_LABEL: Record<string, string> = {
@@ -89,7 +89,7 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 const STATUS_STYLE: Record<string, string> = {
-  open:        "bg-gray-100 text-gray-600",
+  open:        "bg-muted text-muted-foreground",
   in_review:   "bg-blue-100 text-blue-700",
   in_progress: "bg-violet-100 text-violet-700",
   planned:     "bg-amber-100 text-amber-700",
@@ -123,7 +123,7 @@ function VoteButton({
         "flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-lg border transition-all text-xs font-semibold min-w-[44px]",
         voted
           ? "bg-brand text-white border-brand"
-          : "bg-white text-gray-500 border-gray-200 hover:border-brand hover:text-brand",
+          : "bg-card text-muted-foreground border-border hover:border-brand hover:text-brand",
       )}
     >
       <ChevronUp className="w-4 h-4" />
@@ -182,19 +182,19 @@ function CommentItem({
       {/* Body */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap mb-1">
-          <span className="text-xs font-bold text-gray-900">{comment.user_name}</span>
-          <span className="text-[10px] text-gray-400">
+          <span className="text-xs font-bold text-foreground">{comment.user_name}</span>
+          <span className="text-[10px] text-muted-foreground">
             {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
           </span>
         </div>
 
         {/<[^>]*>/.test(comment.content) ? (
           <div
-            className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+            className="text-sm text-foreground leading-relaxed prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{ __html: comment.content }}
           />
         ) : (
-          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
+          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{comment.content}</p>
         )}
 
         {/* Actions row */}
@@ -205,7 +205,7 @@ function CommentItem({
               "flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition",
               comment.user_vote === "like"
                 ? "bg-emerald-50 text-emerald-600"
-                : "text-gray-400 hover:text-gray-700 hover:bg-gray-100",
+                : "text-muted-foreground hover:text-foreground hover:bg-muted",
             )}
           >
             <ThumbsUp className="w-3.5 h-3.5" />
@@ -218,7 +218,7 @@ function CommentItem({
               "flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition",
               comment.user_vote === "dislike"
                 ? "bg-red-50 text-red-500"
-                : "text-gray-400 hover:text-gray-700 hover:bg-gray-100",
+                : "text-muted-foreground hover:text-foreground hover:bg-muted",
             )}
           >
             <ThumbsDown className="w-3.5 h-3.5" />
@@ -227,7 +227,7 @@ function CommentItem({
 
           <button
             onClick={onReply}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition"
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition"
           >
             <Reply className="w-3.5 h-3.5" />
             Reply
@@ -237,14 +237,14 @@ function CommentItem({
             <div className="relative ml-auto">
               <button
                 onClick={() => setMenuOpen((v) => !v)}
-                className="p-1.5 rounded-lg text-gray-300 hover:text-gray-600 hover:bg-gray-100 transition opacity-0 group-hover:opacity-100"
+                className="p-1.5 rounded-lg text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted transition opacity-0 group-hover:opacity-100"
               >
                 <MoreHorizontal className="w-3.5 h-3.5" />
               </button>
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-1 w-36 bg-card border border-border rounded-xl shadow-lg z-20 py-1 overflow-hidden">
                     <button
                       onClick={() => { onDelete(comment.id); setMenuOpen(false); }}
                       className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition"
@@ -282,7 +282,7 @@ function CommentThread({
   const isOpen = replyingToRootId === thread.root.id;
 
   return (
-    <div className="py-4 border-b border-gray-100 last:border-0">
+    <div className="py-4 border-b border-border last:border-0">
       {/* Root comment */}
       <CommentItem
         comment={thread.root}
@@ -295,7 +295,7 @@ function CommentThread({
 
       {/* Replies — indented with a vertical connector line */}
       {(thread.replies.length > 0 || isOpen) && (
-        <div className="mt-3 ml-11 pl-4 border-l-2 border-gray-100 space-y-4">
+        <div className="mt-3 ml-11 pl-4 border-l-2 border-border space-y-4">
           {thread.replies.map((reply) => (
             <CommentItem
               key={reply.id}
@@ -339,7 +339,7 @@ function InlineReplyEditor({ replyToName, onSubmit, onCancel, isPending }: {
     ],
     editorProps: {
       attributes: {
-        class: "inline-reply-editor prose prose-sm max-w-none focus:outline-none min-h-[56px] px-3 pt-2.5 pb-1 text-sm text-gray-800",
+        class: "inline-reply-editor prose prose-sm max-w-none focus:outline-none min-h-[56px] px-3 pt-2.5 pb-1 text-sm text-foreground",
       },
     },
     autofocus: true,
@@ -362,9 +362,9 @@ function InlineReplyEditor({ replyToName, onSubmit, onCancel, isPending }: {
         }
       `}</style>
       <div className="flex gap-2.5 items-start">
-        <div className="flex-1 border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-brand focus-within:border-brand transition bg-white">
+        <div className="flex-1 border border-border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-brand focus-within:border-brand transition bg-card">
           <EditorContent editor={editor} />
-          <div className="flex items-center gap-1.5 px-3 py-2 border-t border-gray-100 bg-gray-50/60">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-t border-border bg-muted/60">
             <button
               type="button"
               onMouseDown={(e) => { e.preventDefault(); handleSubmit(); }}
@@ -377,7 +377,7 @@ function InlineReplyEditor({ replyToName, onSubmit, onCancel, isPending }: {
             <button
               type="button"
               onClick={onCancel}
-              className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
+              className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition"
             >
               Cancel
             </button>
@@ -400,7 +400,7 @@ function Btn({ title, active, onClick, children }: {
       onMouseDown={(e) => { e.preventDefault(); onClick(); }}
       className={cn(
         "p-1.5 rounded transition",
-        active ? "bg-gray-200 text-gray-900" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100",
+        active ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted",
       )}
     >
       {children}
@@ -420,7 +420,7 @@ function CommentEditor({ onSubmit, isPending }: {
     ],
     editorProps: {
       attributes: {
-        class: "comment-editor prose prose-sm max-w-none focus:outline-none min-h-[72px] px-4 pt-3 pb-1 text-sm text-gray-800",
+        class: "comment-editor prose prose-sm max-w-none focus:outline-none min-h-[72px] px-4 pt-3 pb-1 text-sm text-foreground",
       },
     },
   });
@@ -444,9 +444,9 @@ function CommentEditor({ onSubmit, isPending }: {
           content: attr(data-placeholder); color: #9ca3af; pointer-events: none; float: left; height: 0;
         }
       `}</style>
-      <div className="border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-brand focus-within:border-brand transition">
+      <div className="border border-border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-brand focus-within:border-brand transition">
         <EditorContent editor={editor} />
-        <div className="flex items-center gap-0.5 px-3 py-2 border-t border-gray-100 bg-gray-50/50">
+        <div className="flex items-center gap-0.5 px-3 py-2 border-t border-border bg-muted/50">
           <Btn title="Bold" active={editor?.isActive("bold")} onClick={() => editor?.chain().focus().toggleBold().run()}>
             <Bold className="w-3.5 h-3.5" />
           </Btn>
@@ -509,7 +509,7 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
     content: row.message,
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 pt-3 pb-1 text-sm text-gray-800",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 pt-3 pb-1 text-sm text-foreground",
       },
     },
   });
@@ -577,11 +577,11 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onClose}>
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
         <div
-          className="relative z-10 w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-gray-200 max-h-[92vh] flex flex-col"
+          className="relative z-10 w-full max-w-4xl bg-card rounded-2xl shadow-2xl border border-border max-h-[92vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-start gap-4 px-6 pt-5 pb-4 border-b border-gray-100 flex-shrink-0">
+          <div className="flex items-start gap-4 px-6 pt-5 pb-4 border-b border-border flex-shrink-0">
             <VoteButton
               feedbackId={row.id}
               count={row.upvote_count}
@@ -602,10 +602,10 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
                   value={editSubject}
                   onChange={(e) => setEditSubject(e.target.value)}
                   placeholder="Subject (optional)"
-                  className="w-full text-base font-bold text-gray-900 leading-snug border-b border-gray-200 focus:border-brand outline-none pb-0.5"
+                  className="w-full text-base font-bold text-foreground leading-snug border-b border-border focus:border-brand outline-none pb-0.5"
                 />
               ) : (
-                <h2 className="text-base font-bold text-gray-900 leading-snug">
+                <h2 className="text-base font-bold text-foreground leading-snug">
                   {row.subject || row.message.replace(/<[^>]*>/g, "").slice(0, 80)}
                 </h2>
               )}
@@ -613,12 +613,12 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
             {canEdit && !isEditing && (
               <button
                 onClick={startEditing}
-                className="px-2.5 py-1.5 text-xs font-medium text-gray-500 hover:text-brand hover:bg-brand/5 rounded-lg transition"
+                className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-brand hover:bg-brand/5 rounded-lg transition"
               >
                 Edit
               </button>
             )}
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition">
+            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-muted-foreground transition">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -626,14 +626,14 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
           {/* Body */}
           <div className="flex flex-1 min-h-0">
             {/* Left: main content */}
-            <div className="flex-1 flex flex-col min-w-0 border-r border-gray-100">
+            <div className="flex-1 flex flex-col min-w-0 border-r border-border">
               {/* Message */}
               <div className="p-5 overflow-y-auto flex-shrink-0 max-h-80">
                 {isEditing ? (
                   <div>
-                    <div className="border border-gray-200 rounded-xl focus-within:border-brand transition">
+                    <div className="border border-border rounded-xl focus-within:border-brand transition">
                       <EditorContent editor={editEditor} />
-                      <div className="flex items-center gap-1 px-3 py-2 border-t border-gray-100">
+                      <div className="flex items-center gap-1 px-3 py-2 border-t border-border">
                         <Btn title="Bold" active={editEditor?.isActive("bold")} onClick={() => editEditor?.chain().focus().toggleBold().run()}>
                           <Bold className="w-3.5 h-3.5" />
                         </Btn>
@@ -654,7 +654,7 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
                     <div className="flex justify-end gap-2 mt-3">
                       <button
                         onClick={() => setIsEditing(false)}
-                        className="px-3 py-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 transition"
+                        className="px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition"
                       >
                         Cancel
                       </button>
@@ -668,7 +668,7 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
                   </div>
                 ) : (
                   <div
-                    className="text-sm text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                    className="text-sm text-foreground leading-relaxed prose prose-sm max-w-none"
                     dangerouslySetInnerHTML={{ __html: row.message }}
                   />
                 )}
@@ -681,9 +681,9 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
                       const video = isVideoPath(a.path);
                       return (
                         <button key={i} onClick={() => setViewMedia({ url, name: a.name, isVideo: video })}
-                          className="group aspect-square rounded-lg overflow-hidden border border-gray-200 hover:border-brand bg-gray-50 transition">
+                          className="group aspect-square rounded-lg overflow-hidden border border-border hover:border-brand bg-muted transition">
                           {video
-                            ? <div className="w-full h-full flex items-center justify-center"><Video className="w-5 h-5 text-gray-400 group-hover:text-brand" /></div>
+                            ? <div className="w-full h-full flex items-center justify-center"><Video className="w-5 h-5 text-muted-foreground group-hover:text-brand" /></div>
                             : <img src={url} alt={a.name} className="w-full h-full object-cover" />
                           }
                         </button>
@@ -694,7 +694,7 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
               </div>
 
               {/* Tabs */}
-              <div className="flex items-center border-t border-gray-100 px-5 flex-shrink-0">
+              <div className="flex items-center border-t border-border px-5 flex-shrink-0">
                 <div className="flex gap-4">
                   {(["comments", "activity"] as const).map((t) => {
                     const count = t === "comments" ? userComments.length : activityItems.length;
@@ -704,13 +704,13 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
                         onClick={() => setTab(t)}
                         className={cn(
                           "flex items-center gap-1.5 py-2.5 text-xs font-semibold border-b-2 transition capitalize",
-                          tab === t ? "border-brand text-brand" : "border-transparent text-gray-400 hover:text-gray-600",
+                          tab === t ? "border-brand text-brand" : "border-transparent text-muted-foreground hover:text-muted-foreground",
                         )}
                       >
                         {t === "comments" ? <MessageSquare className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
                         {t === "comments" ? "Comments" : "Activity"}
                         {count > 0 && (
-                          <span className={cn("px-1.5 py-0.5 rounded-full text-[10px]", tab === t ? "bg-brand/10 text-brand" : "bg-gray-100 text-gray-500")}>
+                          <span className={cn("px-1.5 py-0.5 rounded-full text-[10px]", tab === t ? "bg-brand/10 text-brand" : "bg-muted text-muted-foreground")}>
                             {count}
                           </span>
                         )}
@@ -721,7 +721,7 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
                 {tab === "comments" && userComments.length > 1 && (
                   <button
                     onClick={() => setCommentSort((s) => s === "oldest" ? "newest" : "oldest")}
-                    className="ml-auto flex items-center gap-1 text-[10px] font-medium text-gray-400 hover:text-gray-600 transition"
+                    className="ml-auto flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-muted-foreground transition"
                   >
                     {commentSort === "newest"
                       ? <><ArrowDown className="w-3 h-3" />Newest</>
@@ -735,7 +735,7 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
               <div className="flex-1 overflow-y-auto px-5 min-h-0">
                 {tab === "comments" ? (
                   threads.length === 0 ? (
-                    <p className="py-6 text-center text-xs text-gray-400">No comments yet — be the first!</p>
+                    <p className="py-6 text-center text-xs text-muted-foreground">No comments yet — be the first!</p>
                   ) : (
                     threads.map((thread) => (
                       <CommentThread
@@ -754,17 +754,17 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
                   )
                 ) : (
                   activityItems.length === 0 ? (
-                    <p className="py-6 text-center text-xs text-gray-400">No activity yet</p>
+                    <p className="py-6 text-center text-xs text-muted-foreground">No activity yet</p>
                   ) : (
                     activityItems.map((c) => (
-                      <div key={c.id} className="flex items-center gap-2 py-2.5 text-[11px] text-gray-400 border-b border-gray-50 last:border-0">
-                        <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                          <ArrowUp className="w-2.5 h-2.5 text-gray-400" />
+                      <div key={c.id} className="flex items-center gap-2 py-2.5 text-[11px] text-muted-foreground border-b border-border last:border-0">
+                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                          <ArrowUp className="w-2.5 h-2.5 text-muted-foreground" />
                         </div>
                         <span dangerouslySetInnerHTML={{
-                          __html: c.content.replace(/\*\*(.*?)\*\*/g, "<strong class='text-gray-600'>$1</strong>"),
+                          __html: c.content.replace(/\*\*(.*?)\*\*/g, "<strong class='text-muted-foreground'>$1</strong>"),
                         }} />
-                        <span className="ml-auto text-gray-300 whitespace-nowrap">
+                        <span className="ml-auto text-muted-foreground/60 whitespace-nowrap">
                           {formatDistanceToNow(new Date(c.created_at), { addSuffix: true })}
                         </span>
                       </div>
@@ -775,7 +775,7 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
 
               {/* New top-level comment editor */}
               {tab === "comments" && (
-                <div className="px-4 pb-4 pt-2 border-t border-gray-100 flex-shrink-0">
+                <div className="px-4 pb-4 pt-2 border-t border-border flex-shrink-0">
                   <CommentEditor
                     onSubmit={(html) => addCommentMutation.mutate({ html, parentId: null })}
                     isPending={addCommentMutation.isPending && replyingToRootId === null}
@@ -785,10 +785,10 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
             </div>
 
             {/* Right sidebar */}
-            <div className="w-60 flex-shrink-0 p-5 space-y-5 text-xs overflow-y-auto border-l border-gray-100">
+            <div className="w-60 flex-shrink-0 p-5 space-y-5 text-xs overflow-y-auto border-l border-border">
               {/* Status */}
               <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Status</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Status</p>
                 {isAdmin ? (
                   <div className="relative">
                     <button
@@ -799,14 +799,14 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
                       <ChevronUp className={cn("w-3 h-3 transition-transform", statusOpen ? "" : "rotate-180")} />
                     </button>
                     {statusOpen && (
-                      <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-10 py-1 overflow-hidden">
+                      <div className="absolute top-full left-0 mt-1 w-full bg-card border border-border rounded-lg shadow-lg z-10 py-1 overflow-hidden">
                         {ALL_STATUSES.map((s) => (
                           <button
                             key={s}
                             onClick={() => { onStatusChange(row.id, s); setStatusOpen(false); }}
                             className={cn(
-                              "w-full text-left px-3 py-1.5 text-[11px] hover:bg-gray-50 transition font-medium",
-                              s === row.status ? "text-brand font-semibold" : "text-gray-700",
+                              "w-full text-left px-3 py-1.5 text-[11px] hover:bg-muted transition font-medium",
+                              s === row.status ? "text-brand font-semibold" : "text-foreground",
                             )}
                           >
                             {STATUS_LABEL[s]}
@@ -824,7 +824,7 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
 
               {/* Board */}
               <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Board</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Board</p>
                 <span className={cn("px-2 py-0.5 rounded-full border text-[10px] font-medium", TYPE_STYLE[row.feedback_type] ?? TYPE_STYLE.general)}>
                   {TYPE_LABEL[row.feedback_type] ?? row.feedback_type}
                 </span>
@@ -832,29 +832,29 @@ function DetailModal({ row, onClose, onVote, isAdmin, currentUserId, currentUser
 
               {/* Date */}
               <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Date</p>
-                <p className="text-gray-600">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Date</p>
+                <p className="text-muted-foreground">
                   {formatDistanceToNow(new Date(row.created_at), { addSuffix: true })}
                 </p>
               </div>
 
               {/* Author */}
               <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Author</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Author</p>
                 <div className="flex items-center gap-1.5">
                   <div className="w-5 h-5 rounded-full bg-brand/10 text-brand text-[9px] font-bold flex items-center justify-center">
                     {initials(row.user_email ?? "?")}
                   </div>
-                  <span className="text-gray-600 truncate">{row.user_email?.split("@")[0]}</span>
+                  <span className="text-muted-foreground truncate">{row.user_email?.split("@")[0]}</span>
                 </div>
               </div>
 
               {/* Upvotes */}
               <div>
-                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Upvoters</p>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Upvoters</p>
                 <div className="flex items-center gap-1.5">
-                  <ChevronUp className="w-3.5 h-3.5 text-gray-400" />
-                  <span className="text-gray-600 font-semibold">{row.upvote_count}</span>
+                  <ChevronUp className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-muted-foreground font-semibold">{row.upvote_count}</span>
                 </div>
               </div>
             </div>
@@ -883,7 +883,7 @@ function FeedbackCard({ row, onOpen, onVote }: {
 }) {
   return (
     <div
-      className="bg-white border border-gray-200 rounded-xl p-4 flex gap-3 hover:border-gray-300 hover:shadow-sm transition cursor-pointer"
+      className="bg-card border border-border rounded-xl p-4 flex gap-3 hover:border-border hover:shadow-sm transition cursor-pointer"
       onClick={() => onOpen(row)}
     >
       <VoteButton feedbackId={row.id} count={row.upvote_count} voted={row.user_has_voted} onVote={onVote} />
@@ -900,16 +900,16 @@ function FeedbackCard({ row, onOpen, onVote }: {
           )}
         </div>
 
-        <p className="text-sm font-semibold text-gray-900 truncate">
+        <p className="text-sm font-semibold text-foreground truncate">
           {row.subject || row.message.replace(/<[^>]*>/g, "").slice(0, 80)}
         </p>
         {row.subject && (
-          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
             {row.message.replace(/<[^>]*>/g, "")}
           </p>
         )}
 
-        <div className="flex items-center gap-3 mt-2 text-[11px] text-gray-400">
+        <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
           <span>{row.user_email?.split("@")[0]}</span>
           <span>·</span>
           <span>{formatDistanceToNow(new Date(row.created_at), { addSuffix: true })}</span>
@@ -931,9 +931,9 @@ const ROADMAP_COLS = [
     label: "Backlog",
     statuses: ["open"],
     Icon: Inbox,
-    iconClass: "text-gray-400",
-    labelClass: "text-gray-700",
-    countClass: "bg-gray-100 text-gray-600",
+    iconClass: "text-muted-foreground",
+    labelClass: "text-foreground",
+    countClass: "bg-muted text-muted-foreground",
     accentClass: "border-t-gray-300",
   },
   {
@@ -986,19 +986,19 @@ function RoadmapCard({
       }}
       onClick={() => onOpen(row)}
       className={cn(
-        "bg-white border border-gray-200 rounded-xl p-3.5 transition group select-none",
+        "bg-card border border-border rounded-xl p-3.5 transition group select-none",
         isAdmin ? "cursor-grab active:cursor-grabbing" : "cursor-pointer",
-        isDragging ? "opacity-40 scale-95 shadow-lg border-brand" : "hover:border-gray-300 hover:shadow-sm",
+        isDragging ? "opacity-40 scale-95 shadow-lg border-brand" : "hover:border-border hover:shadow-sm",
       )}
     >
-      <p className="text-sm font-semibold text-gray-900 leading-snug mb-2.5 group-hover:text-brand transition-colors line-clamp-3">
+      <p className="text-sm font-semibold text-foreground leading-snug mb-2.5 group-hover:text-brand transition-colors line-clamp-3">
         {row.subject || row.message.replace(/<[^>]*>/g, "").slice(0, 100)}
       </p>
       <div className="flex items-center gap-2">
         <span className={cn("px-2 py-0.5 rounded-full border text-[10px] font-medium", TYPE_STYLE[row.feedback_type] ?? TYPE_STYLE.general)}>
           {TYPE_LABEL[row.feedback_type] ?? row.feedback_type}
         </span>
-        <div className="ml-auto flex items-center gap-3 text-[11px] text-gray-400">
+        <div className="ml-auto flex items-center gap-3 text-[11px] text-muted-foreground">
           <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" />{row.comment_count}</span>
           <span className="flex items-center gap-1"><ChevronUp className="w-3 h-3" />{row.upvote_count}</span>
         </div>
@@ -1075,7 +1075,7 @@ function RoadmapView({
               {colRows.length === 0 && !isOver ? (
                 <div className={cn(
                   "border-2 border-dashed rounded-xl py-10 text-center text-xs transition-colors",
-                  isAdmin ? "border-gray-200 text-gray-300" : "border-gray-100 text-gray-200",
+                  isAdmin ? "border-border text-muted-foreground/60" : "border-border text-muted-foreground/60",
                 )}>
                   {isAdmin ? "Drop here" : "No items"}
                 </div>
@@ -1114,10 +1114,10 @@ function ChangelogView({ rows, onOpen }: { rows: FeedbackRow[]; onOpen: (r: Feed
 
   if (shipped.length === 0) {
     return (
-      <div className="max-w-2xl text-center py-20 text-gray-400">
+      <div className="max-w-2xl text-center py-20 text-muted-foreground">
         <CheckCircle2 className="w-10 h-10 mx-auto mb-3 opacity-20" />
         <p className="text-sm font-medium">No shipped features yet.</p>
-        <p className="text-xs mt-1 text-gray-300">Completed feature requests will appear here.</p>
+        <p className="text-xs mt-1 text-muted-foreground/60">Completed feature requests will appear here.</p>
       </div>
     );
   }
@@ -1127,7 +1127,7 @@ function ChangelogView({ rows, onOpen }: { rows: FeedbackRow[]; onOpen: (r: Feed
       {shipped.map((row) => (
         <div
           key={row.id}
-          className="bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-gray-300 hover:shadow-sm transition group"
+          className="bg-card border border-border rounded-xl p-4 cursor-pointer hover:border-border hover:shadow-sm transition group"
           onClick={() => onOpen(row)}
         >
           <div className="flex items-center gap-2 mb-2">
@@ -1137,19 +1137,19 @@ function ChangelogView({ rows, onOpen }: { rows: FeedbackRow[]; onOpen: (r: Feed
             <span className={cn("px-2 py-0.5 rounded-full border text-[10px] font-medium", TYPE_STYLE[row.feedback_type] ?? TYPE_STYLE.general)}>
               {TYPE_LABEL[row.feedback_type] ?? row.feedback_type}
             </span>
-            <span className="ml-auto text-[10px] text-gray-400">
+            <span className="ml-auto text-[10px] text-muted-foreground">
               {formatDistanceToNow(new Date(row.created_at), { addSuffix: true })}
             </span>
           </div>
-          <h3 className="text-sm font-semibold text-gray-900 group-hover:text-brand transition-colors">
+          <h3 className="text-sm font-semibold text-foreground group-hover:text-brand transition-colors">
             {row.subject || row.message.replace(/<[^>]*>/g, "").slice(0, 80)}
           </h3>
           {row.subject && (
-            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
               {row.message.replace(/<[^>]*>/g, "")}
             </p>
           )}
-          <div className="flex items-center gap-3 mt-2.5 text-[11px] text-gray-400">
+          <div className="flex items-center gap-3 mt-2.5 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1"><ChevronUp className="w-3 h-3" />{row.upvote_count} upvotes</span>
             <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" />{row.comment_count} comments</span>
           </div>
@@ -1247,8 +1247,8 @@ export default function FeedbackPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Feature Requests</h1>
-          <p className="text-xs text-gray-400 mt-0.5">{rows.length} submission{rows.length !== 1 ? "s" : ""}</p>
+          <h1 className="text-xl font-bold text-foreground">Feature Requests</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">{rows.length} submission{rows.length !== 1 ? "s" : ""}</p>
         </div>
         <button
           onClick={() => setSubmitOpen(true)}
@@ -1260,7 +1260,7 @@ export default function FeedbackPage() {
       </div>
 
       {/* Page-level tabs */}
-      <div className="flex items-center border-b border-gray-200 mb-6 gap-1">
+      <div className="flex items-center border-b border-border mb-6 gap-1">
         {PAGE_TABS.map(({ key, label, Icon }) => (
           <button
             key={key}
@@ -1269,7 +1269,7 @@ export default function FeedbackPage() {
               "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition",
               pageTab === key
                 ? "border-brand text-brand"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+                : "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
             )}
           >
             <Icon className="w-4 h-4" />
@@ -1283,7 +1283,7 @@ export default function FeedbackPage() {
         <>
           {/* Filter bar */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
+            <div className="flex bg-muted rounded-lg p-0.5 gap-0.5">
               {(["new", "top", "trending"] as Tab[]).map((t) => {
                 const Icon = TAB_ICONS[t];
                 return (
@@ -1292,7 +1292,7 @@ export default function FeedbackPage() {
                     onClick={() => setTab(t)}
                     className={cn(
                       "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition capitalize",
-                      tab === t ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700",
+                      tab === t ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <Icon className="w-3.5 h-3.5" />
@@ -1304,7 +1304,7 @@ export default function FeedbackPage() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-              className="ml-auto px-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand"
+              className="ml-auto px-3 py-1.5 border border-border rounded-lg text-xs text-muted-foreground bg-card focus:outline-none focus:ring-2 focus:ring-brand"
             >
               <option value="all">All Types</option>
               {Object.entries(TYPE_LABEL).map(([k, v]) => (
@@ -1314,9 +1314,9 @@ export default function FeedbackPage() {
           </div>
 
           {isLoading ? (
-            <div className="text-center py-16 text-sm text-gray-400">Loading…</div>
+            <div className="text-center py-16 text-sm text-muted-foreground">Loading…</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-16 text-gray-400 text-sm">
+            <div className="text-center py-16 text-muted-foreground text-sm">
               {rows.length === 0 ? "No feedback submitted yet." : "No results for this filter."}
             </div>
           ) : (
@@ -1337,7 +1337,7 @@ export default function FeedbackPage() {
       {/* ── Roadmap tab ── */}
       {pageTab === "roadmap" && (
         isLoading
-          ? <div className="text-center py-16 text-sm text-gray-400">Loading…</div>
+          ? <div className="text-center py-16 text-sm text-muted-foreground">Loading…</div>
           : <RoadmapView
               rows={rows}
               onOpen={setSelected}
@@ -1349,7 +1349,7 @@ export default function FeedbackPage() {
       {/* ── Changelog tab ── */}
       {pageTab === "changelog" && (
         isLoading
-          ? <div className="text-center py-16 text-sm text-gray-400">Loading…</div>
+          ? <div className="text-center py-16 text-sm text-muted-foreground">Loading…</div>
           : <ChangelogView rows={rows} onOpen={setSelected} />
       )}
 

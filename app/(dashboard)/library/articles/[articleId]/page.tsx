@@ -32,7 +32,7 @@ function ToolbarBtn({
       onMouseDown={(e) => { e.preventDefault(); onClick(); }}
       className={cn(
         "p-1.5 rounded-md transition text-sm",
-        active ? "bg-gray-200 text-gray-900" : "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+        active ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
       )}
     >
       {children}
@@ -131,7 +131,7 @@ export default function ArticleDetailPage() {
     ],
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none focus:outline-none min-h-[320px] max-h-[520px] overflow-y-auto px-4 pt-3 pb-2 text-gray-800",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[320px] max-h-[520px] overflow-y-auto px-4 pt-3 pb-2 text-foreground",
       },
     },
   });
@@ -338,13 +338,13 @@ export default function ArticleDetailPage() {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="text-xl font-bold text-gray-900 flex-1 border-b border-gray-200 focus:outline-none focus:border-brand pb-1"
+            className="text-xl font-bold text-foreground flex-1 border-b border-border focus:outline-none focus:border-brand pb-1"
             placeholder="Article title"
           />
         ) : (
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{article.title}</h1>
-            <p className="text-xs text-gray-400 mt-1">
+            <h1 className="text-xl font-bold text-foreground">{article.title}</h1>
+            <p className="text-xs text-muted-foreground mt-1">
               {article.created_by_name && `Created by ${article.created_by_name} · `}
               Last updated {new Date(article.updated_at).toLocaleString()}
               {article.updated_by_name && ` by ${article.updated_by_name}`}
@@ -355,7 +355,7 @@ export default function ArticleDetailPage() {
         <div className="flex items-center gap-2 flex-shrink-0">
           {editing ? (
             <>
-              <button onClick={() => { setEditing(false); router.replace(`/library/articles/${id}`); }} className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700">
+              <button onClick={() => { setEditing(false); router.replace(`/library/articles/${id}`); }} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
                 Cancel
               </button>
               <button
@@ -370,7 +370,7 @@ export default function ArticleDetailPage() {
             <>
               <button
                 onClick={() => setEditing(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition"
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-border text-muted-foreground text-xs font-medium rounded-lg hover:bg-muted transition"
                 title="Anyone can edit this article"
               >
                 <Pencil className="w-3.5 h-3.5" /> Edit
@@ -396,11 +396,11 @@ export default function ArticleDetailPage() {
 
       {editing && (
         <div className="mb-4 flex items-center gap-3">
-          <label className="text-xs text-gray-500 flex-shrink-0">Category</label>
+          <label className="text-xs text-muted-foreground flex-shrink-0">Category</label>
           <select
             value={categoryId ?? ""}
             onChange={(e) => setCategoryId(Number(e.target.value))}
-            className="px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {categories?.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
@@ -414,27 +414,27 @@ export default function ArticleDetailPage() {
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
           placeholder="One-line summary (shown in article lists)"
-          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+          className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
         />
       ) : (
-        article.summary && <p className="text-sm text-gray-500 mb-4">{article.summary}</p>
+        article.summary && <p className="text-sm text-muted-foreground mb-4">{article.summary}</p>
       )}
 
       {/* Linked datasets */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 mb-4">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Datasets</h3>
+      <div className="bg-card border border-border rounded-xl p-4 mb-4">
+        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Datasets</h3>
 
         {editing && (
           <div className="relative mb-3">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
             <input
               value={datasetQuery}
               onChange={(e) => setDatasetQuery(e.target.value)}
               placeholder="Search datasets to link..."
-              className="w-full pl-8 pr-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-8 pr-3 py-2 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             {datasetResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              <div className="absolute z-10 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
                 {datasetResults
                   .filter((r) => !linkedDatasets.some((d) => d.id === r.id))
                   .map((r) => (
@@ -445,10 +445,10 @@ export default function ArticleDetailPage() {
                         setDatasetQuery("");
                         setDatasetResults([]);
                       }}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-muted flex items-center gap-2"
                     >
-                      <Database className="w-3 h-3 text-gray-400" /> {r.name}
-                      {r.row_count != null && <span className="text-gray-400">({r.row_count.toLocaleString()} rows)</span>}
+                      <Database className="w-3 h-3 text-muted-foreground" /> {r.name}
+                      {r.row_count != null && <span className="text-muted-foreground">({r.row_count.toLocaleString()} rows)</span>}
                     </button>
                   ))}
               </div>
@@ -457,14 +457,14 @@ export default function ArticleDetailPage() {
         )}
 
         {linkedDatasets.length === 0 ? (
-          <p className="text-xs text-gray-400">No datasets linked yet.</p>
+          <p className="text-xs text-muted-foreground">No datasets linked yet.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {linkedDatasets.map((d) => (
               <div key={d.id} className="relative flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-1.5">
                 <Database className="w-3.5 h-3.5 text-brand" />
-                <span className="text-xs font-medium text-gray-700">{d.name}</span>
-                {d.row_count != null && <span className="text-[10px] text-gray-400">{d.row_count.toLocaleString()} rows</span>}
+                <span className="text-xs font-medium text-foreground">{d.name}</span>
+                {d.row_count != null && <span className="text-[10px] text-muted-foreground">{d.row_count.toLocaleString()} rows</span>}
                 {!editing && (
                   <>
                     <button
@@ -491,23 +491,23 @@ export default function ArticleDetailPage() {
                         <Import className="w-3.5 h-3.5" />
                       )}
                     </button>
-                    <a href={`/datasets/${d.id}`} title="Open dataset" className="text-gray-400 hover:text-gray-600">
+                    <a href={`/datasets/${d.id}`} title="Open dataset" className="text-muted-foreground hover:text-muted-foreground">
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
 
                     {importPickerFor === d.id && (
-                      <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-20 py-1.5">
-                        <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                      <div className="absolute top-full left-0 mt-1 w-56 bg-card rounded-xl shadow-lg border border-border z-20 py-1.5">
+                        <p className="px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
                           Import into…
                         </p>
                         {!workspaces || workspaces.length === 0 ? (
-                          <p className="px-3 py-2 text-xs text-gray-400">No workspaces available.</p>
+                          <p className="px-3 py-2 text-xs text-muted-foreground">No workspaces available.</p>
                         ) : (
                           workspaces.map((w) => (
                             <button
                               key={w.id}
                               onClick={() => importDataset(d, w.id)}
-                              className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 truncate"
+                              className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted truncate"
                             >
                               {w.name}
                             </button>
@@ -518,7 +518,7 @@ export default function ArticleDetailPage() {
                   </>
                 )}
                 {editing && (
-                  <button onClick={() => setLinkedDatasets((prev) => prev.filter((x) => x.id !== d.id))} className="text-gray-400 hover:text-red-500">
+                  <button onClick={() => setLinkedDatasets((prev) => prev.filter((x) => x.id !== d.id))} className="text-muted-foreground hover:text-red-500">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -532,11 +532,11 @@ export default function ArticleDetailPage() {
       </div>
 
       {/* Content */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
+      <div className="bg-card border border-border rounded-xl p-5 mb-4">
         {editing ? (
-          <div className="tiptap-canvas rounded-xl border-2 border-gray-300 shadow-sm overflow-hidden transition focus-within:ring-2 focus-within:ring-brand focus-within:border-brand">
+          <div className="tiptap-canvas rounded-xl border-2 border-border shadow-sm overflow-hidden transition focus-within:ring-2 focus-within:ring-brand focus-within:border-brand">
             <EditorContent editor={editor} />
-            <div className="flex items-center gap-0.5 px-3 py-2 border-t border-gray-100 bg-gray-50/50">
+            <div className="flex items-center gap-0.5 px-3 py-2 border-t border-border bg-muted/50">
               <ToolbarBtn title="Bold" active={editor?.isActive("bold")} onClick={() => editor?.chain().focus().toggleBold().run()}>
                 <Bold className="w-3.5 h-3.5" />
               </ToolbarBtn>
@@ -558,7 +558,7 @@ export default function ArticleDetailPage() {
             </div>
           </div>
         ) : isContentEmpty(article.content) ? (
-          <p className="text-sm text-gray-400">No content yet — click Edit to write the business use case, project use case, and anything else worth knowing.</p>
+          <p className="text-sm text-muted-foreground">No content yet — click Edit to write the business use case, project use case, and anything else worth knowing.</p>
         ) : (
           <div
             className="prose prose-sm max-w-none doc-article-content"
@@ -568,18 +568,18 @@ export default function ArticleDetailPage() {
       </div>
 
       {/* Attachments */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             Attachments {article.attachments.length > 0 && `(${article.attachments.length})`}
           </h3>
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 border border-border text-muted-foreground text-xs font-medium rounded-lg hover:bg-muted transition disabled:opacity-50"
           >
             {uploading ? (
-              <span className="w-3.5 h-3.5 border-[1.5px] border-gray-300 border-t-brand rounded-full animate-spin" />
+              <span className="w-3.5 h-3.5 border-[1.5px] border-border border-t-brand rounded-full animate-spin" />
             ) : (
               <Upload className="w-3.5 h-3.5" />
             )}
@@ -594,7 +594,7 @@ export default function ArticleDetailPage() {
         </div>
 
         {article.attachments.length === 0 ? (
-          <p className="text-xs text-gray-400">No attachments yet. Up to {MAX_ATTACHMENT_MB}MB per file.</p>
+          <p className="text-xs text-muted-foreground">No attachments yet. Up to {MAX_ATTACHMENT_MB}MB per file.</p>
         ) : (
           <div className="space-y-1.5">
             {article.attachments.map((att) => {
@@ -605,24 +605,24 @@ export default function ArticleDetailPage() {
                 <div
                   key={att.id}
                   className={cn(
-                    "relative flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-gray-100 bg-gray-50/50 transition",
+                    "relative flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg border border-border bg-muted/50 transition",
                     isDeleting && "opacity-40"
                   )}
                 >
                   <button
                     onClick={() => downloadAttachment(att)}
                     disabled={isDownloading || isDeleting}
-                    className="flex items-center gap-2 text-xs text-gray-700 hover:text-brand min-w-0 flex-1 disabled:cursor-wait"
+                    className="flex items-center gap-2 text-xs text-foreground hover:text-brand min-w-0 flex-1 disabled:cursor-wait"
                   >
                     {isDownloading ? (
-                      <span className="w-3.5 h-3.5 flex-shrink-0 border-[1.5px] border-gray-300 border-t-brand rounded-full animate-spin" />
+                      <span className="w-3.5 h-3.5 flex-shrink-0 border-[1.5px] border-border border-t-brand rounded-full animate-spin" />
                     ) : (
-                      <Paperclip className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                      <Paperclip className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                     )}
                     <span className="truncate font-medium">{att.filename}</span>
-                    <span className="text-gray-400 flex-shrink-0">{fmtBytes(att.file_size_bytes)}</span>
+                    <span className="text-muted-foreground flex-shrink-0">{fmtBytes(att.file_size_bytes)}</span>
                     {att.uploaded_by_name && (
-                      <span className="text-gray-400 flex-shrink-0 hidden sm:inline">· {att.uploaded_by_name}</span>
+                      <span className="text-muted-foreground flex-shrink-0 hidden sm:inline">· {att.uploaded_by_name}</span>
                     )}
                   </button>
                   {isImportableDataset(att.filename) && (
@@ -630,10 +630,10 @@ export default function ArticleDetailPage() {
                       onClick={() => setAttachmentImportPickerFor(attachmentImportPickerFor === att.id ? null : att.id)}
                       disabled={isImporting || isDeleting}
                       title="Import into one of your workspaces"
-                      className="text-gray-400 hover:text-brand flex-shrink-0 disabled:cursor-wait"
+                      className="text-muted-foreground hover:text-brand flex-shrink-0 disabled:cursor-wait"
                     >
                       {isImporting ? (
-                        <span className="w-3.5 h-3.5 inline-block border-[1.5px] border-gray-300 border-t-brand rounded-full animate-spin" />
+                        <span className="w-3.5 h-3.5 inline-block border-[1.5px] border-border border-t-brand rounded-full animate-spin" />
                       ) : (
                         <Import className="w-3.5 h-3.5" />
                       )}
@@ -642,24 +642,24 @@ export default function ArticleDetailPage() {
                   <button
                     onClick={() => removeAttachment(att)}
                     disabled={isDeleting || isDownloading}
-                    className="text-gray-300 hover:text-red-500 flex-shrink-0 disabled:cursor-wait"
+                    className="text-muted-foreground/60 hover:text-red-500 flex-shrink-0 disabled:cursor-wait"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
 
                   {attachmentImportPickerFor === att.id && (
-                    <div className="absolute top-full right-0 mt-1 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-20 py-1.5">
-                      <p className="px-3 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                    <div className="absolute top-full right-0 mt-1 w-56 bg-card rounded-xl shadow-lg border border-border z-20 py-1.5">
+                      <p className="px-3 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">
                         Import into…
                       </p>
                       {!workspaces || workspaces.length === 0 ? (
-                        <p className="px-3 py-2 text-xs text-gray-400">No workspaces available.</p>
+                        <p className="px-3 py-2 text-xs text-muted-foreground">No workspaces available.</p>
                       ) : (
                         workspaces.map((w) => (
                           <button
                             key={w.id}
                             onClick={() => importAttachment(att, w.id)}
-                            className="w-full text-left px-3 py-2 text-xs text-gray-700 hover:bg-gray-50 truncate"
+                            className="w-full text-left px-3 py-2 text-xs text-foreground hover:bg-muted truncate"
                           >
                             {w.name}
                           </button>

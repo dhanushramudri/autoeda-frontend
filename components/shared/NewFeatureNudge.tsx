@@ -89,7 +89,7 @@ export function NewFeatureNudge({ label, className }: NewFeatureNudgeProps) {
 
           <span
             className="absolute whitespace-nowrap text-[11px] font-semibold
-                       text-purple-600 bg-white px-2.5 py-0.5 rounded-full
+                       text-purple-600 bg-card px-2.5 py-0.5 rounded-full
                        shadow-sm border border-purple-200"
             style={{
               right: 4,

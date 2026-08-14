@@ -61,7 +61,7 @@ export default function WorkspaceAnalyticsPage() {
         { label: "Analytics" },
       ]} />
 
-      <h1 className="text-2xl font-bold text-gray-900 mt-4 mb-6">Workspace Analytics</h1>
+      <h1 className="text-2xl font-bold text-foreground mt-4 mb-6">Workspace Analytics</h1>
 
       {isLoading && <PageSpinner />}
 
@@ -107,8 +107,8 @@ export default function WorkspaceAnalyticsPage() {
 
           {/* Quality scores bar chart */}
           {barData.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">Quality Scores by Dataset</h2>
+            <div className="bg-card rounded-xl border border-border p-5 mb-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3">Quality Scores by Dataset</h2>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={barData} margin={{ top: 5, right: 20, bottom: 30, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -127,8 +127,8 @@ export default function WorkspaceAnalyticsPage() {
 
           {/* Quality trend over time */}
           {trendChartData.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-5 mb-5">
-              <h2 className="text-sm font-semibold text-gray-700 mb-3">Quality Score Trends</h2>
+            <div className="bg-card rounded-xl border border-border p-5 mb-5">
+              <h2 className="text-sm font-semibold text-foreground mb-3">Quality Score Trends</h2>
               <ResponsiveContainer width="100%" height={200}>
                 <LineChart data={trendChartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -145,32 +145,32 @@ export default function WorkspaceAnalyticsPage() {
           )}
 
           {/* Datasets table */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-5 py-3 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-700">All Datasets</h2>
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            <div className="px-5 py-3 border-b border-border">
+              <h2 className="text-sm font-semibold text-foreground">All Datasets</h2>
             </div>
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500">Dataset</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500">Rows</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500">Columns</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500">Missing %</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-gray-500">Quality</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500">Last EDA Run</th>
+                <tr className="border-b border-border bg-muted">
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Dataset</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground">Rows</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground">Columns</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground">Missing %</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-semibold text-muted-foreground">Quality</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-muted-foreground">Last EDA Run</th>
                   <th className="px-4 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
                 {datasets.map((ds) => (
-                  <tr key={ds.id} className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/datasets/${ds.id}`)}>
+                  <tr key={ds.id} className="border-b border-border hover:bg-muted cursor-pointer" onClick={() => router.push(`/datasets/${ds.id}`)}>
                     <td className="px-4 py-2.5">
-                      <p className="text-sm font-medium text-gray-800">{ds.name}</p>
-                      <p className="text-xs text-gray-400">{ds.status}</p>
+                      <p className="text-sm font-medium text-foreground">{ds.name}</p>
+                      <p className="text-xs text-muted-foreground">{ds.status}</p>
                     </td>
-                    <td className="px-4 py-2.5 text-right text-xs text-gray-600">{ds.row_count?.toLocaleString() ?? " -- "}</td>
-                    <td className="px-4 py-2.5 text-right text-xs text-gray-600">{ds.column_count ?? " -- "}</td>
-                    <td className="px-4 py-2.5 text-right text-xs text-gray-600">
+                    <td className="px-4 py-2.5 text-right text-xs text-muted-foreground">{ds.row_count?.toLocaleString() ?? " -- "}</td>
+                    <td className="px-4 py-2.5 text-right text-xs text-muted-foreground">{ds.column_count ?? " -- "}</td>
+                    <td className="px-4 py-2.5 text-right text-xs text-muted-foreground">
                       {ds.missing_pct != null ? `${ds.missing_pct.toFixed(1)}%` : " -- "}
                     </td>
                     <td className="px-4 py-2.5 text-right">
@@ -178,18 +178,18 @@ export default function WorkspaceAnalyticsPage() {
                         {ds.quality_score ?? " -- "}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-400">
+                    <td className="px-4 py-2.5 text-xs text-muted-foreground">
                       {ds.last_eda_run ? format(new Date(ds.last_eda_run), "MMM d, yyyy") : "Never"}
                     </td>
                     <td className="px-4 py-2.5">
-                      <ChevronRight className="w-4 h-4 text-gray-300" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
             {datasets.length === 0 && (
-              <div className="p-8 text-center text-gray-400 text-sm">No datasets in this workspace yet.</div>
+              <div className="p-8 text-center text-muted-foreground text-sm">No datasets in this workspace yet.</div>
             )}
           </div>
         </>

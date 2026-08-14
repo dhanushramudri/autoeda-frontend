@@ -2,20 +2,116 @@
 
 import { useAuthStore } from "@/store/authStore";
 import { useWorkspaceStore } from "@/store/workspaceStore";
-import { workspacesApi } from "@/lib/api";
+import { workspacesApi, jobsApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Workspace } from "@/types";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, Check, BookOpen } from "lucide-react";
+import { ChevronDown, Check, BookOpen, Bell, Loader2, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NewFeatureNudge } from "@/components/shared/NewFeatureNudge";
+import { formatDistanceToNow } from "date-fns";
+
+// ── Jobs Panel ────────────────────────────────────────────────────────────────
+
+interface Job { job_id: string; status: string; progress: number; message?: string }
+
+function JobsPanel() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const { data: jobs, refetch } = useQuery<Job[]>({
+    queryKey: ["jobs-panel"],
+    queryFn: () => jobsApi.list().then((r) => r.data),
+    refetchInterval: open ? 2000 : 8000,
+  });
+
+  // Auto-poll faster when there are active jobs
+  const hasActive = (jobs ?? []).some((j) => j.status === "pending" || j.status === "running");
+  useQuery({
+    queryKey: ["jobs-panel-active"],
+    queryFn: () => jobsApi.list().then((r) => r.data),
+    refetchInterval: hasActive ? 1500 : false,
+    enabled: hasActive,
+  });
+
+  useEffect(() => {
+    function h(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener("mousedown", h);
+    return () => document.removeEventListener("mousedown", h);
+  }, []);
+
+  const activeCount = (jobs ?? []).filter((j) => j.status === "pending" || j.status === "running").length;
+
+  function statusIcon(status: string) {
+    if (status === "running" || status === "pending") return <Loader2 className="w-3.5 h-3.5 text-brand animate-spin" />;
+    if (status === "completed") return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />;
+    if (status === "failed") return <AlertCircle className="w-3.5 h-3.5 text-red-500" />;
+    return <Clock className="w-3.5 h-3.5 text-muted-foreground" />;
+  }
+
+  function statusColor(status: string) {
+    if (status === "running" || status === "pending") return "text-brand";
+    if (status === "completed") return "text-emerald-600";
+    if (status === "failed") return "text-red-600";
+    return "text-muted-foreground";
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => { setOpen((v) => !v); refetch(); }}
+        className="relative w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted transition text-muted-foreground"
+        title="Background Jobs"
+      >
+        <Bell className="w-4 h-4" />
+        {activeCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-brand rounded-full flex items-center justify-center text-[9px] text-white font-bold">
+            {activeCount}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute top-full right-0 mt-2 w-80 bg-card rounded-xl shadow-xl border border-border z-50 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <span className="text-xs font-semibold text-foreground">Background Jobs</span>
+            {hasActive && <span className="text-[10px] text-brand animate-pulse">● Live</span>}
+          </div>
+          <div className="max-h-80 overflow-y-auto divide-y divide-border">
+            {(!jobs || jobs.length === 0) ? (
+              <p className="px-4 py-6 text-xs text-muted-foreground text-center">No jobs yet</p>
+            ) : jobs.map((job) => (
+              <div key={job.job_id} className="px-4 py-3">
+                <div className="flex items-start gap-2">
+                  <div className="flex-shrink-0 mt-0.5">{statusIcon(job.status)}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className={cn("text-xs font-medium truncate", statusColor(job.status))}>
+                      {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{job.message ?? "—"}</p>
+                    {(job.status === "running" || job.status === "pending") && (
+                      <div className="mt-1.5 h-1 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-brand rounded-full transition-all" style={{ width: `${Math.max(job.progress, 5)}%` }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function Topbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const user = useAuthStore((s) => s.user);
   const { currentWorkspaceId, setCurrentWorkspace } = useWorkspaceStore();
 
   const [wsOpen, setWsOpen] = useState(false);
@@ -45,29 +141,29 @@ export function Topbar() {
   const showNudge = pathname === "/workspaces";
 
   return (
-    <header className="h-14 border-b border-gray-200 bg-white flex items-center px-6 gap-4 flex-shrink-0">
+    <header className="h-14 border-b border-border bg-card flex items-center px-6 gap-4 flex-shrink-0">
       {/* Workspace switcher */}
       <div className="relative" ref={wsRef} data-tour="workspace-selector">
         <button
           onClick={() => setWsOpen((v) => !v)}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition text-sm font-medium text-gray-700"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border hover:border-border hover:bg-muted transition text-sm font-medium text-foreground"
         >
           <span className="max-w-[160px] truncate">
             {currentWs?.name ?? "Select workspace"}
           </span>
-          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
         </button>
 
         {wsOpen && (
-          <div className="absolute top-full left-0 mt-1 w-64 bg-white rounded-xl shadow-lg border border-gray-200 z-50 py-1.5 animate-fade-in">
-            <p className="px-4 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
+          <div className="absolute top-full left-0 mt-1 w-64 bg-card rounded-xl shadow-lg border border-border z-50 py-1.5 animate-fade-in">
+            <p className="px-4 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
               Workspaces
             </p>
             {(workspaces ?? []).map((ws: Workspace) => (
               <button
                 key={ws.id}
                 onClick={() => handleSwitchWorkspace(ws.id)}
-                className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-sm text-gray-700 transition"
+                className="w-full flex items-center gap-2 px-4 py-2 hover:bg-muted text-sm text-foreground transition"
               >
                 <span className="flex-1 text-left truncate">{ws.name}</span>
                 {ws.id === currentWorkspaceId && (
@@ -75,7 +171,7 @@ export function Topbar() {
                 )}
               </button>
             ))}
-            <div className="border-t border-gray-100 mt-1 pt-1">
+            <div className="border-t border-border mt-1 pt-1">
               <button
                 onClick={() => { router.push("/workspaces"); setWsOpen(false); }}
                 className="w-full text-left px-4 py-2 text-xs text-brand hover:bg-brand/10 transition"
@@ -88,6 +184,9 @@ export function Topbar() {
       </div>
 
       <div className="flex-1" />
+
+      {/* Jobs panel */}
+      <JobsPanel />
 
       <div className="relative">
         {showNudge && (

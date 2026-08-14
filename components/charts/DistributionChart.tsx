@@ -38,7 +38,7 @@ export function DistributionChart({ data, column }: Props) {
       {chartData.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-semibold text-gray-700">Distribution — {column}</h4>
+            <h4 className="text-sm font-semibold text-foreground">Distribution — {column}</h4>
           </div>
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={chartData} margin={{ top: 4, right: 16, bottom: 4, left: 0 }}>
@@ -76,9 +76,9 @@ export function DistributionChart({ data, column }: Props) {
             { label: "Q3", value: box_stats.q3 },
             { label: "Max", value: box_stats.max },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-gray-50 rounded-lg p-3 text-center">
-              <p className="text-[10px] text-gray-400 mb-0.5">{label}</p>
-              <p className="text-sm font-semibold text-gray-800">
+            <div key={label} className="bg-muted rounded-lg p-3 text-center">
+              <p className="text-[10px] text-muted-foreground mb-0.5">{label}</p>
+              <p className="text-sm font-semibold text-foreground">
                 {typeof value === "number" ? value.toFixed(3) : " -- "}
               </p>
             </div>
@@ -88,9 +88,9 @@ export function DistributionChart({ data, column }: Props) {
 
       {/* Normality test */}
       {normality && (
-        <div className="bg-gray-50 rounded-lg p-3 flex items-center gap-4 text-xs">
-          <span className="text-gray-500">Normality ({normality.test}):</span>
-          <span className="font-mono text-gray-700">
+        <div className="bg-muted rounded-lg p-3 flex items-center gap-4 text-xs">
+          <span className="text-muted-foreground">Normality ({normality.test}):</span>
+          <span className="font-mono text-foreground">
             p = {normality.p_value?.toFixed(4) ?? " -- "}
           </span>
           <span

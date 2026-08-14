@@ -186,11 +186,11 @@ function MethodLoadingIndicator({ loadingMethods, initialLoadTime }: { loadingMe
   const totalComplete = loadingMethods.filter(m => m.status === "done").length;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 mb-5">
+    <div className="bg-card border border-border rounded-xl p-4 mb-5">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-xs font-semibold text-gray-600">Loading Additional Methods</p>
-          <p className="text-[10px] text-gray-400 mt-0.5">
+          <p className="text-xs font-semibold text-muted-foreground">Loading Additional Methods</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
             {totalComplete}/{loadingMethods.length} loaded
             {!allDone && (
               <span className="ml-2 inline-flex items-center gap-1">
@@ -207,7 +207,7 @@ function MethodLoadingIndicator({ loadingMethods, initialLoadTime }: { loadingMe
           <div key={method.id} className="flex items-center gap-2">
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium text-gray-700">{method.name}</span>
+                <span className="text-xs font-medium text-foreground">{method.name}</span>
                 <span
                   className={cn(
                     "text-[10px] font-semibold",
@@ -217,7 +217,7 @@ function MethodLoadingIndicator({ loadingMethods, initialLoadTime }: { loadingMe
                       ? "text-red-600"
                       : method.status === "loading"
                       ? "text-blue-600"
-                      : "text-gray-400"
+                      : "text-muted-foreground"
                   )}
                 >
                   {method.status === "done"
@@ -229,7 +229,7 @@ function MethodLoadingIndicator({ loadingMethods, initialLoadTime }: { loadingMe
                     : "Pending"}
                 </span>
               </div>
-              <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-300",
@@ -239,7 +239,7 @@ function MethodLoadingIndicator({ loadingMethods, initialLoadTime }: { loadingMe
                       ? "bg-red-500"
                       : method.status === "loading"
                       ? "bg-blue-500"
-                      : "bg-gray-300"
+                      : "bg-muted"
                   )}
                   style={{
                     width: method.status === "loading" ? "66%" : method.status === "done" ? "100%" : "0%",
@@ -274,10 +274,10 @@ function ScoreBar({ value, max, color, showValue = true }: { value: number; max:
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   return (
     <div className="flex items-center gap-2">
-      <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
+      <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden flex-shrink-0">
         <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color }} />
       </div>
-      {showValue && <span className="text-xs tabular-nums text-gray-600 font-mono">{fmt(value, 4)}</span>}
+      {showValue && <span className="text-xs tabular-nums text-muted-foreground font-mono">{fmt(value, 4)}</span>}
     </div>
   );
 }
@@ -361,7 +361,7 @@ function ModelScoreCard({ data }: { data: FIResult }) {
   const color = score > 0.85 ? "#059669" : score > 0.65 ? "#D97706" : "#DC2626";
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-start gap-4">
+    <div className="bg-card border border-border rounded-xl p-4 flex items-start gap-4">
       <div className="relative flex-shrink-0">
         <ScoreGauge value={score} color={color} size={56} />
         <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold tabular-nums" style={{ color }}>
@@ -369,12 +369,12 @@ function ModelScoreCard({ data }: { data: FIResult }) {
         </span>
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">RF OOB {metric}</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">RF OOB {metric}</p>
         <p className="text-lg font-bold tabular-nums mt-0.5" style={{ color }}>
           {data.model_score != null ? `${(score * 100).toFixed(1)}%` : "—"}
         </p>
         {cvMean != null && (
-          <p className="text-[10px] text-gray-400 mt-0.5 tabular-nums">
+          <p className="text-[10px] text-muted-foreground mt-0.5 tabular-nums">
             CV: {(cvMean * 100).toFixed(1)}% ± {cvStd != null ? (cvStd * 100).toFixed(1) : "?"}%
           </p>
         )}
@@ -434,7 +434,7 @@ const maxSHAP = shapValues.length
             </p>
             <div className="flex flex-wrap gap-2">
               {redundantGroups.slice(0, 4).map((g, i) => (
-                <div key={i} className="flex items-center gap-1 bg-white border border-amber-200 rounded-lg px-2 py-1">
+                <div key={i} className="flex items-center gap-1 bg-card border border-amber-200 rounded-lg px-2 py-1">
                   {g.features.map((f, j) => (
                     <span key={f} className="flex items-center gap-1">
                       <span className="font-mono text-[10px] text-amber-700">{f}</span>
@@ -477,23 +477,23 @@ const maxSHAP = shapValues.length
             mono: true,
           },
         ].map(({ label, value, sub, color, mono }) => (
-          <div key={label} className="bg-white border border-gray-200 rounded-xl p-4">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+          <div key={label} className="bg-card border border-border rounded-xl p-4">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
             <p className={cn("text-lg font-bold truncate", mono && "font-mono text-sm")} style={{ color }}>
               {value}
             </p>
-            {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
+            {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Top features — RF vs SHAP comparison */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-gray-800">Top Features</h3>
-              <p className="text-[10px] text-gray-400 mt-0.5">RF importance vs SHAP</p>
+              <h3 className="text-sm font-bold text-foreground">Top Features</h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">RF importance vs SHAP</p>
             </div>
           </div>
           <div className="space-y-3">
@@ -504,16 +504,16 @@ const maxSHAP = shapValues.length
               const shapPct = maxSHAP > 0 ? (shapImp / maxSHAP) * 100 : 0;
               return (
                 <div key={fm.feature} className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-gray-300 w-4 flex-shrink-0 tabular-nums">{i + 1}</span>
-                  <span className="font-mono text-xs text-gray-700 truncate w-28 flex-shrink-0" title={fm.feature}>
+                  <span className="text-[10px] font-bold text-muted-foreground/60 w-4 flex-shrink-0 tabular-nums">{i + 1}</span>
+                  <span className="font-mono text-xs text-foreground truncate w-28 flex-shrink-0" title={fm.feature}>
                     {fm.feature}
                   </span>
                   <div className="flex-1 space-y-0.5">
-                    <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${rfPct}%`, backgroundColor: BRAND_PALETTE[i % BRAND_PALETTE.length] }} />
                     </div>
                     {maxSHAP > 0 && (
-                      <div className="h-1 bg-gray-100 rounded-full overflow-hidden opacity-60">
+                      <div className="h-1 bg-muted rounded-full overflow-hidden opacity-60">
                         <div className="h-full rounded-full" style={{ width: `${shapPct}%`, backgroundColor: "#059669" }} />
                       </div>
                     )}
@@ -525,10 +525,10 @@ const maxSHAP = shapValues.length
           </div>
           {maxSHAP > 0 && (
             <div className="flex gap-3 mt-3">
-              <span className="flex items-center gap-1 text-[9px] text-gray-400">
+              <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
                 <span className="w-2.5 h-1.5 rounded-sm bg-blue-500" />RF
               </span>
-              <span className="flex items-center gap-1 text-[9px] text-gray-400">
+              <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
                 <span className="w-2.5 h-1 rounded-sm bg-emerald-500" />SHAP
               </span>
             </div>
@@ -537,20 +537,20 @@ const maxSHAP = shapValues.length
 
         {/* Class distribution or correlation */}
         {data.class_distribution ? (
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <h3 className="text-sm font-bold text-gray-800 mb-1">
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h3 className="text-sm font-bold text-foreground mb-1">
               Target Distribution
-              <span className="ml-2 font-mono text-xs font-normal text-gray-400">{data.target}</span>
+              <span className="ml-2 font-mono text-xs font-normal text-muted-foreground">{data.target}</span>
             </h3>
-            <p className="text-[10px] text-gray-400 mb-4">{Object.keys(data.class_distribution).length} classes</p>
+            <p className="text-[10px] text-muted-foreground mb-4">{Object.keys(data.class_distribution).length} classes</p>
             <div className="space-y-2">
               {Object.entries(data.class_distribution).map(([cls, stats], i) => (
                 <div key={cls} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-600 w-24 truncate flex-shrink-0 font-mono" title={cls}>{cls}</span>
-                  <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <span className="text-xs text-muted-foreground w-24 truncate flex-shrink-0 font-mono" title={cls}>{cls}</span>
+                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${stats.pct}%`, backgroundColor: BRAND_PALETTE[i % BRAND_PALETTE.length] }} />
                   </div>
-                  <span className="text-[10px] tabular-nums text-gray-500 w-24 text-right flex-shrink-0">
+                  <span className="text-[10px] tabular-nums text-muted-foreground w-24 text-right flex-shrink-0">
                     {stats.pct.toFixed(1)}% ({stats.count.toLocaleString()})
                   </span>
                 </div>
@@ -558,16 +558,16 @@ const maxSHAP = shapValues.length
             </div>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-xl p-5">
-            <h3 className="text-sm font-bold text-gray-800 mb-4">Correlation with Target</h3>
+          <div className="bg-card border border-border rounded-xl p-5">
+            <h3 className="text-sm font-bold text-foreground mb-4">Correlation with Target</h3>
             <div className="space-y-2">
               {(data.correlations ?? []).slice(0, 8).map((item, i) => {
                 const abs = Math.abs(item.correlation);
                 const isPos = item.correlation >= 0;
                 return (
                   <div key={item.feature} className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-gray-600 w-28 truncate flex-shrink-0">{item.feature}</span>
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <span className="font-mono text-xs text-muted-foreground w-28 truncate flex-shrink-0">{item.feature}</span>
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${abs * 100}%`, backgroundColor: isPos ? "#1D4ED8" : "#DC2626" }} />
                     </div>
                     <span className={cn("text-[10px] tabular-nums w-14 text-right flex-shrink-0 font-semibold", isPos ? "text-blue-600" : "text-red-600")}>
@@ -592,7 +592,7 @@ const maxSHAP = shapValues.length
           </div>
           <div className="flex flex-wrap gap-1.5">
             {data.drop_candidates.map(f => (
-              <span key={f} className="px-2.5 py-1 bg-white border border-amber-200 rounded-lg text-xs font-mono text-amber-700">{f}</span>
+              <span key={f} className="px-2.5 py-1 bg-card border border-amber-200 rounded-lg text-xs font-mono text-amber-700">{f}</span>
             ))}
           </div>
         </div>
@@ -638,7 +638,7 @@ const maxPerm = useMemo(() =>
   }, [sortKey]);
 
   function SortIcon({ col }: { col: SortKey }) {
-    if (sortKey !== col) return <ChevronsUpDown className="w-3 h-3 text-gray-300" />;
+    if (sortKey !== col) return <ChevronsUpDown className="w-3 h-3 text-muted-foreground/60" />;
     return sortDir === "asc"
       ? <ChevronUp className="w-3 h-3 text-blue-600" />
       : <ChevronDown className="w-3 h-3 text-blue-600" />;
@@ -646,7 +646,7 @@ const maxPerm = useMemo(() =>
 
   const TH = ({ col, label }: { col: SortKey; label: string }) => (
     <th
-      className="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide cursor-pointer select-none hover:text-gray-700 transition whitespace-nowrap"
+      className="px-3 py-2.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide cursor-pointer select-none hover:text-foreground transition whitespace-nowrap"
       onClick={() => toggleSort(col)}
     >
       <span className="flex items-center gap-1">{label}<SortIcon col={col} /></span>
@@ -675,14 +675,14 @@ const maxPerm = useMemo(() =>
   return (
     <div className="space-y-3">
       {/* Toolbar */}
-      <div className="bg-white border border-gray-200 rounded-xl p-3 flex flex-wrap items-center gap-3">
+      <div className="bg-card border border-border rounded-xl p-3 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[180px] max-w-xs">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Filter features…"
-            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -696,7 +696,7 @@ const maxPerm = useMemo(() =>
                 "px-2.5 py-1 rounded-full text-[10px] font-semibold border transition",
                 selectedRec === rec
                   ? "bg-gray-900 text-white border-gray-900"
-                  : "text-gray-500 border-gray-200 hover:border-gray-400"
+                  : "text-muted-foreground border-border hover:border-border"
               )}
             >
               {rec === "all" ? "All" : REC_CONFIG[rec].label} ({recCounts[rec] ?? 0})
@@ -704,26 +704,26 @@ const maxPerm = useMemo(() =>
           ))}
         </div>
 
-        <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer select-none">
+        <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none">
           <input type="checkbox" checked={hideDrop} onChange={e => setHideDrop(e.target.checked)} className="rounded" />
           Hide drop
         </label>
 
-        <span className="text-xs text-gray-400 tabular-nums ml-auto">{sorted.length}/{data.feature_meta.length}</span>
+        <span className="text-xs text-muted-foreground tabular-nums ml-auto">{sorted.length}/{data.feature_meta.length}</span>
 
-        <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition text-gray-600">
+        <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded-lg hover:bg-muted transition text-muted-foreground">
           <Download className="w-3.5 h-3.5" /> Export CSV
         </button>
 
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-card rounded-xl border border-border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-xs border-separate border-spacing-0">
-            <thead className="sticky top-0 bg-gray-50 z-10">
+            <thead className="sticky top-0 bg-muted z-10">
               <tr>
-                <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">#</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Feature</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">#</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Feature</th>
                 <TH col="rf_importance"        label="RF" />
                 <TH col="permutation_importance" label="Perm." />
                 <TH col="shap_value"           label="SHAP" />
@@ -731,19 +731,19 @@ const maxPerm = useMemo(() =>
                 <TH col="anova_f"              label="ANOVA" />
                 <TH col="correlation"          label="Corr." />
                 <TH col="missing_pct"          label="Missing" />
-                <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Type</th>
-                <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Status</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Type</th>
+                <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
               </tr>
             </thead>
             <tbody>
               {sorted.map((fm, idx) => (
                 <tr key={fm.feature} className={cn(
-                  "border-b border-gray-50 hover:bg-blue-50/30 transition-colors",
-                  idx % 2 === 0 ? "bg-white" : "bg-gray-50/40",
+                  "border-b border-border hover:bg-blue-50/30 transition-colors",
+                  idx % 2 === 0 ? "bg-card" : "bg-muted/40",
                   fm.recommendation === "drop" && "opacity-50"
                 )}>
-                  <td className="px-3 py-2 text-gray-300 tabular-nums font-mono text-[10px]">{idx + 1}</td>
-                  <td className="px-3 py-2 font-mono font-semibold text-gray-800 max-w-[160px]">
+                  <td className="px-3 py-2 text-muted-foreground/60 tabular-nums font-mono text-[10px]">{idx + 1}</td>
+                  <td className="px-3 py-2 font-mono font-semibold text-foreground max-w-[160px]">
                     <div className="flex items-center gap-1.5">
                       {(data.leakage_suspects ?? []).find(s => s.feature === fm.feature) && (
                         <span title="Possible leakage">
@@ -756,41 +756,41 @@ const maxPerm = useMemo(() =>
                   <td className="px-3 py-2">
                     {fm.rf_importance != null
                       ? <ScoreBar value={fm.rf_importance} max={maxRF} color="#1D4ED8" />
-                      : <span className="text-gray-300">—</span>}
+                      : <span className="text-muted-foreground/60">—</span>}
                   </td>
                   <td className="px-3 py-2">
                     {fm.permutation_importance != null
                       ? <ScoreBar value={Math.max(fm.permutation_importance, 0)} max={maxPerm} color="#7C3AED" />
-                      : <span className="text-gray-300">—</span>}
+                      : <span className="text-muted-foreground/60">—</span>}
                   </td>
                   <td className="px-3 py-2">
                     {fm.shap_value != null
                       ? <ScoreBar value={fm.shap_value} max={maxShap} color="#059669" />
-                      : <span className="text-gray-300">—</span>}
+                      : <span className="text-muted-foreground/60">—</span>}
                   </td>
                   <td className="px-3 py-2">
                     {fm.mi_score != null
                       ? <ScoreBar value={fm.mi_score} max={maxMI} color="#0891B2" />
-                      : <span className="text-gray-300">—</span>}
+                      : <span className="text-muted-foreground/60">—</span>}
                   </td>
                   <td className="px-3 py-2">
                     {fm.anova_f != null
                       ? <ScoreBar value={fm.anova_f} max={maxAnova} color="#DC2626" />
-                      : <span className="text-gray-300">—</span>}
+                      : <span className="text-muted-foreground/60">—</span>}
                   </td>
                   <td className="px-3 py-2">
                     {fm.correlation != null ? (
                       <span className={cn("font-semibold tabular-nums",
                         fm.correlation > 0.5 ? "text-blue-600" :
-                        fm.correlation < -0.5 ? "text-red-600" : "text-gray-500")}>
+                        fm.correlation < -0.5 ? "text-red-600" : "text-muted-foreground")}>
                         {fm.correlation.toFixed(3)}
                       </span>
-                    ) : <span className="text-gray-300">—</span>}
+                    ) : <span className="text-muted-foreground/60">—</span>}
                   </td>
                   <td className="px-3 py-2">
                     <span className={cn("font-semibold tabular-nums",
                       fm.missing_pct > 30 ? "text-red-500" :
-                      fm.missing_pct > 10 ? "text-amber-500" : "text-gray-400")}>
+                      fm.missing_pct > 10 ? "text-amber-500" : "text-muted-foreground")}>
                       {fm.missing_pct.toFixed(1)}%
                     </span>
                   </td>
@@ -799,7 +799,7 @@ const maxPerm = useMemo(() =>
                 </tr>
               ))}
               {sorted.length === 0 && (
-                <tr><td colSpan={11} className="px-3 py-10 text-center text-sm text-gray-400">No features match your filter.</td></tr>
+                <tr><td colSpan={11} className="px-3 py-10 text-center text-sm text-muted-foreground">No features match your filter.</td></tr>
               )}
             </tbody>
           </table>
@@ -856,12 +856,12 @@ function ChartsTab({ data }: { data: FIResult }) {
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-2.5 text-xs shadow-sm">
-        <p className="font-mono font-semibold text-gray-800 mb-1">{d.name}</p>
-        <p className="text-gray-600">{active.label}: <span className="font-mono font-semibold" style={{ color: active.color }}>{Number(d.value).toFixed(6)}</span></p>
-        {d.std != null && <p className="text-gray-400">±{Number(d.std).toFixed(6)}</p>}
+      <div className="bg-card border border-border rounded-lg p-2.5 text-xs shadow-sm">
+        <p className="font-mono font-semibold text-foreground mb-1">{d.name}</p>
+        <p className="text-muted-foreground">{active.label}: <span className="font-mono font-semibold" style={{ color: active.color }}>{Number(d.value).toFixed(6)}</span></p>
+        {d.std != null && <p className="text-muted-foreground">±{Number(d.std).toFixed(6)}</p>}
         {method === "correlation" && d.raw != null && (
-          <p className="text-gray-400">raw r = {Number(d.raw).toFixed(4)}</p>
+          <p className="text-muted-foreground">raw r = {Number(d.raw).toFixed(4)}</p>
         )}
       </div>
     );
@@ -870,9 +870,9 @@ function ChartsTab({ data }: { data: FIResult }) {
   return (
     <div className="space-y-5">
       {/* Method selector */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4">
+      <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs font-semibold text-gray-600">Importance Method</p>
+          <p className="text-xs font-semibold text-muted-foreground">Importance Method</p>
           <div className="flex gap-1">
             {(["bar", "radar"] as const).map(m => (
               <button
@@ -880,7 +880,7 @@ function ChartsTab({ data }: { data: FIResult }) {
                 onClick={() => setVisMode(m)}
                 className={cn(
                   "px-2.5 py-1 text-[10px] font-semibold rounded-lg border transition",
-                  visMode === m ? "bg-gray-900 text-white border-gray-900" : "border-gray-200 text-gray-500 hover:border-gray-400"
+                  visMode === m ? "bg-gray-900 text-white border-gray-900" : "border-border text-muted-foreground hover:border-border"
                 )}
               >
                 {m === "bar" ? "Bar" : "Radar"}
@@ -897,7 +897,7 @@ function ChartsTab({ data }: { data: FIResult }) {
                 "text-left px-3 py-2.5 rounded-lg border text-xs transition",
                 method === key
                   ? "border-current shadow-sm text-white"
-                  : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
+                  : "border-border text-muted-foreground hover:border-border hover:bg-muted"
               )}
               style={method === key ? { backgroundColor: cfg.color, borderColor: cfg.color } : {}}
             >
@@ -910,7 +910,7 @@ function ChartsTab({ data }: { data: FIResult }) {
                 )}
               </div>
               <p className="font-semibold text-[11px]">{cfg.label}</p>
-              <p className={cn("mt-0.5 text-[9px] leading-tight", method === key ? "text-white/70" : "text-gray-400")}>
+              <p className={cn("mt-0.5 text-[9px] leading-tight", method === key ? "text-white/70" : "text-muted-foreground")}>
                 {cfg.desc.slice(0, 38)}…
               </p>
             </button>
@@ -920,27 +920,27 @@ function ChartsTab({ data }: { data: FIResult }) {
 
       {/* Top N slider */}
       <div className="flex items-center gap-3 px-1">
-        <span className="text-xs text-gray-500 flex-shrink-0">Show top</span>
+        <span className="text-xs text-muted-foreground flex-shrink-0">Show top</span>
         <input type="range" min={5} max={Math.min(data.n_features, 30)} value={topN}
           onChange={e => setTopN(Number(e.target.value))} className="flex-1 max-w-xs" />
-        <span className="text-xs font-semibold text-gray-700 w-8 tabular-nums">{topN}</span>
-        <span className="text-xs text-gray-400">features</span>
+        <span className="text-xs font-semibold text-foreground w-8 tabular-nums">{topN}</span>
+        <span className="text-xs text-muted-foreground">features</span>
       </div>
 
       {/* Chart */}
       {visMode === "bar" ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <span style={{ color: active.color }}>{active.icon}</span>
                 {active.label} — Feature Scores
               </h3>
-              <p className="text-xs text-gray-400 mt-0.5">{active.desc}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{active.desc}</p>
             </div>
           </div>
           {chartData.length === 0 ? (
-            <div className="flex items-center justify-center h-40 text-sm text-gray-400">No data available for this method.</div>
+            <div className="flex items-center justify-center h-40 text-sm text-muted-foreground">No data available for this method.</div>
           ) : (
             <ResponsiveContainer width="100%" height={chartHeight}>
               <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 80, bottom: 4, left: 150 }}>
@@ -963,11 +963,11 @@ function ChartsTab({ data }: { data: FIResult }) {
         </div>
       ) : (
         /* Radar */
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold text-gray-800">All-Method Radar — Top 6 Features</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Normalised 0–100 across RF, SHAP, MI, ANOVA, Permutation</p>
+              <h3 className="text-sm font-bold text-foreground">All-Method Radar — Top 6 Features</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Normalised 0–100 across RF, SHAP, MI, ANOVA, Permutation</p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={360}>
@@ -986,9 +986,9 @@ function ChartsTab({ data }: { data: FIResult }) {
       )}
 
       {/* All-method comparison mini-grid */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <h3 className="text-sm font-bold text-gray-800 mb-1">6-Method Comparison</h3>
-        <p className="text-xs text-gray-400 mb-4">Top 12 features across all methods (normalised 0–1 per method)</p>
+      <div className="bg-card border border-border rounded-xl p-5">
+        <h3 className="text-sm font-bold text-foreground mb-1">6-Method Comparison</h3>
+        <p className="text-xs text-muted-foreground mb-4">Top 12 features across all methods (normalised 0–1 per method)</p>
         <div className="space-y-2">
           {data.feature_meta.slice(0, 12).map(fm => {
             const rfN  = fm.rf_importance  != null ? fm.rf_importance  / Math.max(...data.feature_meta.map(x => x.rf_importance  ?? 0), 0.0001) : 0;
@@ -1002,8 +1002,8 @@ function ChartsTab({ data }: { data: FIResult }) {
             const segW = (v: number) => `${(v / 6) * 100}%`;
             return (
               <div key={fm.feature} className="flex items-center gap-3">
-                <span className="font-mono text-xs text-gray-700 w-28 truncate flex-shrink-0">{fm.feature}</span>
-                <div className="flex-1 flex h-3 rounded overflow-hidden gap-px bg-gray-100">
+                <span className="font-mono text-xs text-foreground w-28 truncate flex-shrink-0">{fm.feature}</span>
+                <div className="flex-1 flex h-3 rounded overflow-hidden gap-px bg-muted">
                   {[
                     { v: rfN, c: "#1D4ED8" }, { v: pmN, c: "#7C3AED" },
                     { v: shN, c: "#059669" }, { v: miN, c: "#0891B2" },
@@ -1013,7 +1013,7 @@ function ChartsTab({ data }: { data: FIResult }) {
                       className="transition-all duration-500" title={`${(v * 100).toFixed(0)}%`} />
                   ))}
                 </div>
-                <span className="text-[10px] text-gray-400 tabular-nums w-8 text-right">{(total / 6 * 100).toFixed(0)}%</span>
+                <span className="text-[10px] text-muted-foreground tabular-nums w-8 text-right">{(total / 6 * 100).toFixed(0)}%</span>
                 <Badge rec={fm.recommendation} />
               </div>
             );
@@ -1021,7 +1021,7 @@ function ChartsTab({ data }: { data: FIResult }) {
         </div>
         <div className="flex gap-4 mt-3 flex-wrap">
           {[["#1D4ED8","RF"], ["#7C3AED","Perm"], ["#059669","SHAP"], ["#0891B2","MI"], ["#DC2626","ANOVA"], ["#D97706","|r|"]].map(([c, l]) => (
-            <span key={l} className="flex items-center gap-1 text-[10px] text-gray-400">
+            <span key={l} className="flex items-center gap-1 text-[10px] text-muted-foreground">
               <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: c }} />{l}
             </span>
           ))}
@@ -1036,10 +1036,10 @@ function ChartsTab({ data }: { data: FIResult }) {
 function StabilityTab({ data }: { data: FIResult }) {
   if (!data.stability || data.stability.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-20 text-gray-400">
+      <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
         <Shield className="w-10 h-10" />
         <p className="text-sm">Stability analysis not available for this dataset.</p>
-        <p className="text-xs text-gray-300">Requires at least 50 samples.</p>
+        <p className="text-xs text-muted-foreground/60">Requires at least 50 samples.</p>
       </div>
     );
   }
@@ -1090,26 +1090,26 @@ function StabilityTab({ data }: { data: FIResult }) {
             mono: true,
           },
         ].map(({ label, value, sub, color, mono }) => (
-          <div key={label} className="bg-white border border-gray-200 rounded-xl p-4">
-            <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{label}</p>
+          <div key={label} className="bg-card border border-border rounded-xl p-4">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
             <p className={cn("text-lg font-bold truncate", mono && "font-mono text-sm")} style={{ color }}>{value}</p>
-            {sub && <p className="text-[10px] text-gray-400 mt-0.5">{sub}</p>}
+            {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
           </div>
         ))}
       </div>
 
       {/* Stability table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100">
-          <h3 className="text-sm font-bold text-gray-800">Bootstrap Stability Rankings</h3>
-          <p className="text-xs text-gray-400 mt-0.5">Sorted by coefficient of variation (CV = std/mean)</p>
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-bold text-foreground">Bootstrap Stability Rankings</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Sorted by coefficient of variation (CV = std/mean)</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted">
               <tr>
                 {["Feature", "Mean Importance", "Std Dev", "CV", "Rank Stability", "Verdict"].map(h => (
-                  <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-400 uppercase tracking-wide">{h}</th>
+                  <th key={h} className="px-4 py-2.5 text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -1118,12 +1118,12 @@ function StabilityTab({ data }: { data: FIResult }) {
                 const isStable = s.cv < 0.3;
                 const isUnstable = s.cv >= 0.5;
                 return (
-                  <tr key={s.feature} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/40"}>
-                    <td className="px-4 py-2.5 font-mono font-semibold text-gray-800">{s.feature}</td>
+                  <tr key={s.feature} className={idx % 2 === 0 ? "bg-card" : "bg-muted/40"}>
+                    <td className="px-4 py-2.5 font-mono font-semibold text-foreground">{s.feature}</td>
                     <td className="px-4 py-2.5">
                       <ScoreBar value={s.mean_importance} max={maxMean} color="#1D4ED8" />
                     </td>
-                    <td className="px-4 py-2.5 tabular-nums text-gray-500 font-mono text-[10px]">{s.std_importance.toFixed(4)}</td>
+                    <td className="px-4 py-2.5 tabular-nums text-muted-foreground font-mono text-[10px]">{s.std_importance.toFixed(4)}</td>
                     <td className="px-4 py-2.5">
                       <span className={cn(
                         "font-mono font-bold tabular-nums",
@@ -1134,10 +1134,10 @@ function StabilityTab({ data }: { data: FIResult }) {
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
-                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden">
                           <div className="h-full rounded-full" style={{ width: `${s.rank_stability * 100}%`, backgroundColor: s.rank_stability > 0.8 ? "#059669" : "#D97706" }} />
                         </div>
-                        <span className="tabular-nums text-[10px] text-gray-500">{(s.rank_stability * 100).toFixed(0)}%</span>
+                        <span className="tabular-nums text-[10px] text-muted-foreground">{(s.rank_stability * 100).toFixed(0)}%</span>
                       </div>
                     </td>
                     <td className="px-4 py-2.5">
@@ -1166,10 +1166,10 @@ function StabilityTab({ data }: { data: FIResult }) {
 function InteractionsTab({ data }: { data: FIResult }) {
   if (!data.interactions || data.interactions.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-3 py-20 text-gray-400">
+      <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
         <Network className="w-10 h-10" />
         <p className="text-sm">Feature interaction analysis not available.</p>
-        <p className="text-xs text-gray-300">Requires at least 3 features and 100 samples.</p>
+        <p className="text-xs text-muted-foreground/60">Requires at least 3 features and 100 samples.</p>
       </div>
     );
   }
@@ -1199,20 +1199,20 @@ function InteractionsTab({ data }: { data: FIResult }) {
       </div>
 
       {/* Top interaction pairs */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <h3 className="text-sm font-bold text-gray-800 mb-4">Top Interaction Pairs</h3>
+      <div className="bg-card border border-border rounded-xl p-5">
+        <h3 className="text-sm font-bold text-foreground mb-4">Top Interaction Pairs</h3>
         <div className="space-y-3">
           {top.map((pair, i) => {
             const pct = (pair.interaction_score / maxScore) * 100;
             const interactionShare = pair.combined > 0 ? (pair.interaction_score / pair.combined) * 100 : 0;
             return (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 hover:bg-blue-50/50 transition-colors">
-                <span className="text-[10px] font-bold text-gray-300 w-4 flex-shrink-0 mt-1 tabular-nums">{i + 1}</span>
+              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted hover:bg-blue-50/50 transition-colors">
+                <span className="text-[10px] font-bold text-muted-foreground/60 w-4 flex-shrink-0 mt-1 tabular-nums">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className="font-mono text-xs font-semibold text-gray-800 bg-blue-100 px-2 py-0.5 rounded">{pair.feature_a}</span>
-                    <span className="text-gray-400 text-xs">×</span>
-                    <span className="font-mono text-xs font-semibold text-gray-800 bg-purple-100 px-2 py-0.5 rounded">{pair.feature_b}</span>
+                    <span className="font-mono text-xs font-semibold text-foreground bg-blue-100 px-2 py-0.5 rounded">{pair.feature_a}</span>
+                    <span className="text-muted-foreground text-xs">×</span>
+                    <span className="font-mono text-xs font-semibold text-foreground bg-purple-100 px-2 py-0.5 rounded">{pair.feature_b}</span>
                     {interactionShare > 5 && (
                       <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
                         {interactionShare.toFixed(0)}% of combined effect is interaction
@@ -1220,15 +1220,15 @@ function InteractionsTab({ data }: { data: FIResult }) {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-500" style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-[10px] font-mono text-gray-500 tabular-nums">{pair.interaction_score.toFixed(4)}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground tabular-nums">{pair.interaction_score.toFixed(4)}</span>
                   </div>
                   <div className="flex gap-4 mt-1">
-                    <span className="text-[10px] text-gray-400">{pair.feature_a}: {pair.a_alone.toFixed(3)}</span>
-                    <span className="text-[10px] text-gray-400">{pair.feature_b}: {pair.b_alone.toFixed(3)}</span>
-                    <span className="text-[10px] text-gray-600 font-semibold">Combined: {pair.combined.toFixed(3)}</span>
+                    <span className="text-[10px] text-muted-foreground">{pair.feature_a}: {pair.a_alone.toFixed(3)}</span>
+                    <span className="text-[10px] text-muted-foreground">{pair.feature_b}: {pair.b_alone.toFixed(3)}</span>
+                    <span className="text-[10px] text-muted-foreground font-semibold">Combined: {pair.combined.toFixed(3)}</span>
                   </div>
                 </div>
               </div>
@@ -1239,15 +1239,15 @@ function InteractionsTab({ data }: { data: FIResult }) {
 
       {/* Interaction heatmap */}
       {features.length >= 3 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="text-sm font-bold text-gray-800 mb-4">Interaction Matrix (top {features.length} features)</h3>
+        <div className="bg-card border border-border rounded-xl p-5">
+          <h3 className="text-sm font-bold text-foreground mb-4">Interaction Matrix (top {features.length} features)</h3>
           <div className="overflow-x-auto">
             <table className="text-[10px] font-mono">
               <thead>
                 <tr>
                   <th className="w-28" />
                   {features.map(f => (
-                    <th key={f} className="pb-2 text-gray-500 font-normal text-center rotate-45 origin-bottom-left" style={{ minWidth: 56 }}>
+                    <th key={f} className="pb-2 text-muted-foreground font-normal text-center rotate-45 origin-bottom-left" style={{ minWidth: 56 }}>
                       <span className="block truncate max-w-[52px]" title={f}>{f.length > 7 ? f.slice(0, 7) + "…" : f}</span>
                     </th>
                   ))}
@@ -1256,7 +1256,7 @@ function InteractionsTab({ data }: { data: FIResult }) {
               <tbody>
                 {features.map(fa => (
                   <tr key={fa}>
-                    <td className="pr-2 text-gray-600 text-right truncate max-w-[100px] py-0.5">{fa}</td>
+                    <td className="pr-2 text-muted-foreground text-right truncate max-w-[100px] py-0.5">{fa}</td>
                     {features.map(fb => {
                       const score = matrixMap[`${fa}|${fb}`] ?? (fa === fb ? null : 0);
                       const pct = score != null && maxScore > 0 ? score / maxScore : 0;
@@ -1280,7 +1280,7 @@ function InteractionsTab({ data }: { data: FIResult }) {
               </tbody>
             </table>
           </div>
-          <p className="text-[10px] text-gray-400 mt-3">Darker = stronger interaction. Diagonal = self (n/a).</p>
+          <p className="text-[10px] text-muted-foreground mt-3">Darker = stronger interaction. Diagonal = self (n/a).</p>
         </div>
       )}
     </div>
@@ -1387,7 +1387,7 @@ function InsightsTab({ data }: { data: FIResult }) {
   return (
     <div className="space-y-4 max-w-3xl">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="text-xs text-gray-400">{insights.length} auto-generated insights based on all methods</p>
+        <p className="text-xs text-muted-foreground">{insights.length} auto-generated insights based on all methods</p>
       </div>
 
       {insights.map((item, i) => {
@@ -1404,8 +1404,8 @@ function InsightsTab({ data }: { data: FIResult }) {
       })}
 
       {/* Action checklist */}
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mt-6">
-        <h3 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+      <div className="bg-card border border-border rounded-xl p-5 mt-6">
+        <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
           <Target className="w-4 h-4 text-blue-600" />
           Feature Selection Checklist
         </h3>
@@ -1424,8 +1424,8 @@ function InsightsTab({ data }: { data: FIResult }) {
             <div key={i} className="flex items-start gap-2.5">
               {item.done
                 ? <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                : <div className="w-4 h-4 rounded-full border-2 border-gray-200 flex-shrink-0 mt-0.5" />}
-              <span className={cn("text-xs", item.done ? "text-gray-700" : "text-gray-400")}>{item.text}</span>
+                : <div className="w-4 h-4 rounded-full border-2 border-border flex-shrink-0 mt-0.5" />}
+              <span className={cn("text-xs", item.done ? "text-foreground" : "text-muted-foreground")}>{item.text}</span>
             </div>
           ))}
         </div>
@@ -1569,12 +1569,12 @@ export default function FeatureImportancePage() {
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 mt-4 mb-5">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-blue-600" />
               Feature Importance
-              {!initialData && initialLoading && <RefreshCw className="w-3.5 h-3.5 text-gray-400 animate-spin" />}
+              {!initialData && initialLoading && <RefreshCw className="w-3.5 h-3.5 text-muted-foreground animate-spin" />}
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               6-method analysis: RF · Permutation · SHAP · Mutual Info · ANOVA · Correlation — with stability & interaction detection
             </p>
           </div>
@@ -1582,13 +1582,13 @@ export default function FeatureImportancePage() {
           {/* Target selector */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2">
-              <Target className="w-3.5 h-3.5 text-gray-400" />
-              <label className="text-xs font-semibold text-gray-600">Target column</label>
+              <Target className="w-3.5 h-3.5 text-muted-foreground" />
+              <label className="text-xs font-semibold text-muted-foreground">Target column</label>
             </div>
             <select
               value={activeTarget}
               onChange={e => setTarget(e.target.value)}
-              className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[160px]"
+              className="px-3 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card min-w-[160px]"
             >
               {allCols.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -1628,7 +1628,7 @@ export default function FeatureImportancePage() {
         )}
 
         {!activeTarget ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400">
+          <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
             <TrendingUp className="w-10 h-10" />
             <p className="text-sm">Select a target column above to run feature importance analysis</p>
           </div>
@@ -1636,11 +1636,11 @@ export default function FeatureImportancePage() {
           <div className="space-y-4">
             <div className="grid grid-cols-4 gap-3">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" />
+                <div key={i} className="h-20 bg-muted rounded-xl animate-pulse" />
               ))}
             </div>
-            <div className="h-64 bg-gray-100 rounded-xl animate-pulse" />
-            <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+            <div className="h-64 bg-muted rounded-xl animate-pulse" />
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
               Loading Random Forest importance (~10s)…
             </div>
@@ -1649,12 +1649,12 @@ export default function FeatureImportancePage() {
           <div className="flex flex-col items-center gap-3 py-20 text-red-500">
             <AlertTriangle className="w-8 h-8" />
             <p className="text-sm font-semibold">Analysis failed</p>
-            <p className="text-xs text-gray-400">{(initialError as Error).message}</p>
+            <p className="text-xs text-muted-foreground">{(initialError as Error).message}</p>
           </div>
         ) : data && data.feature_meta.length > 0 ? (
           <>
             {/* Tab bar */}
-            <div className="flex gap-1 bg-gray-100 rounded-xl p-1 w-fit mb-5 flex-wrap">
+            <div className="flex gap-1 bg-muted rounded-xl p-1 w-fit mb-5 flex-wrap">
               {TABS.map(t => (
                 <button
                   key={t.key}
@@ -1662,8 +1662,8 @@ export default function FeatureImportancePage() {
                   className={cn(
                     "flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition",
                     activeTab === t.key
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-card text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {t.icon}
@@ -1690,7 +1690,7 @@ export default function FeatureImportancePage() {
             <p className="text-sm font-semibold">{data.error}</p>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-3 py-20 text-gray-400">
+          <div className="flex flex-col items-center gap-3 py-20 text-muted-foreground">
             <TrendingUp className="w-10 h-10" />
             <p className="text-sm">No feature importance data available for this target.</p>
           </div>

@@ -57,17 +57,17 @@ export default function SettingsPage() {
   });
 
   const inputClass =
-    "w-full px-3 py-2 border border-gray-300 dark:border-border rounded-lg text-sm bg-white dark:bg-background text-gray-900 dark:text-foreground focus:outline-none focus:ring-2 focus:ring-brand";
+    "w-full px-3 py-2 border border-border dark:border-border rounded-lg text-sm bg-card dark:bg-background text-foreground dark:text-foreground focus:outline-none focus:ring-2 focus:ring-brand";
 
   return (
     <div className="p-8 max-w-2xl mx-auto">
       <Breadcrumb items={[{ label: "Settings" }]} />
 
       <div className="mt-4 mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-foreground">
+        <h1 className="text-2xl font-bold text-foreground dark:text-foreground">
           Settings
         </h1>
-        <p className="text-sm text-gray-500 dark:text-muted-foreground mt-0.5">
+        <p className="text-sm text-muted-foreground dark:text-muted-foreground mt-0.5">
           Manage your account and preferences
         </p>
       </div>
@@ -86,11 +86,11 @@ export default function SettingsPage() {
       )}
 
       {/* Appearance */}
-      <div className="bg-white dark:bg-secondary rounded-xl border border-gray-200 dark:border-border p-6 mb-6">
-        <h2 className="text-base font-semibold text-gray-800 dark:text-foreground mb-1">
+      <div className="bg-card dark:bg-secondary rounded-xl border border-border dark:border-border p-6 mb-6">
+        <h2 className="text-base font-semibold text-foreground dark:text-foreground mb-1">
           Appearance
         </h2>
-        <p className="text-sm text-gray-500 dark:text-muted-foreground mb-4">
+        <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-4">
           Choose your preferred interface theme
         </p>
         <div className="flex gap-3">
@@ -104,7 +104,7 @@ export default function SettingsPage() {
                   "flex-1 flex flex-col items-center gap-2.5 py-4 px-3 rounded-xl border-2 transition-all",
                   active
                     ? "border-brand bg-brand/5 dark:bg-brand/10"
-                    : "border-gray-200 dark:border-border hover:border-brand/40 dark:hover:border-brand/40"
+                    : "border-border dark:border-border hover:border-brand/40 dark:hover:border-brand/40"
                 )}
               >
                 {t === "light" ? (
@@ -113,7 +113,7 @@ export default function SettingsPage() {
                       "w-5 h-5",
                       active
                         ? "text-brand"
-                        : "text-gray-400 dark:text-muted-foreground"
+                        : "text-muted-foreground dark:text-muted-foreground"
                     )}
                   />
                 ) : (
@@ -122,7 +122,7 @@ export default function SettingsPage() {
                       "w-5 h-5",
                       active
                         ? "text-brand"
-                        : "text-gray-400 dark:text-muted-foreground"
+                        : "text-muted-foreground dark:text-muted-foreground"
                     )}
                   />
                 )}
@@ -132,7 +132,7 @@ export default function SettingsPage() {
                       "text-xs font-medium capitalize",
                       active
                         ? "text-brand"
-                        : "text-gray-600 dark:text-muted-foreground"
+                        : "text-muted-foreground dark:text-muted-foreground"
                     )}
                   >
                     {t}
@@ -151,24 +151,24 @@ export default function SettingsPage() {
       </div>
 
       {/* Profile */}
-      <div className="bg-white dark:bg-secondary rounded-xl border border-gray-200 dark:border-border p-6 mb-6">
-        <h2 className="text-base font-semibold text-gray-800 dark:text-foreground mb-4">
+      <div className="bg-card dark:bg-secondary rounded-xl border border-border dark:border-border p-6 mb-6">
+        <h2 className="text-base font-semibold text-foreground dark:text-foreground mb-4">
           Profile
         </h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-foreground/80 mb-1">
+            <label className="block text-sm font-medium text-foreground dark:text-foreground/80 mb-1">
               Email
             </label>
             <input
               type="email"
               value={user?.email ?? ""}
               disabled
-              className="w-full px-3 py-2 border border-gray-200 dark:border-border rounded-lg text-sm text-gray-500 dark:text-muted-foreground bg-gray-50 dark:bg-background cursor-not-allowed"
+              className="w-full px-3 py-2 border border-border dark:border-border rounded-lg text-sm text-muted-foreground dark:text-muted-foreground bg-muted dark:bg-background cursor-not-allowed"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-foreground/80 mb-1">
+            <label className="block text-sm font-medium text-foreground dark:text-foreground/80 mb-1">
               Full name
             </label>
             <input
@@ -189,13 +189,13 @@ export default function SettingsPage() {
       </div>
 
       {/* Change password */}
-      <div className="bg-white dark:bg-secondary rounded-xl border border-gray-200 dark:border-border p-6">
-        <h2 className="text-base font-semibold text-gray-800 dark:text-foreground mb-4">
+      <div className="bg-card dark:bg-secondary rounded-xl border border-border dark:border-border p-6">
+        <h2 className="text-base font-semibold text-foreground dark:text-foreground mb-4">
           Change Password
         </h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-foreground/80 mb-1">
+            <label className="block text-sm font-medium text-foreground dark:text-foreground/80 mb-1">
               Current password
             </label>
             <input
@@ -206,7 +206,7 @@ export default function SettingsPage() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-foreground/80 mb-1">
+            <label className="block text-sm font-medium text-foreground dark:text-foreground/80 mb-1">
               New password
             </label>
             <input

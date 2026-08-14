@@ -46,7 +46,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left — white panel */}
-      <div className="hidden lg:flex w-1/2 flex-col items-center justify-center bg-white px-16 relative overflow-hidden">
+      <div className="hidden lg:flex w-1/2 flex-col items-center justify-center bg-card px-16 relative overflow-hidden">
 
         {/* Animated SVG background */}
 <svg
@@ -171,8 +171,8 @@ export default function LoginPage() {
             <img src="/logo.png" alt="AutoEDA" className="w-full h-full object-contain" />
           </div>
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 tracking-tight">AutoEDA</h1>
-            <p className="mt-2 text-base text-gray-400 font-medium tracking-wide">
+            <h1 className="text-4xl font-bold text-foreground tracking-tight">AutoEDA</h1>
+            <p className="mt-2 text-base text-muted-foreground font-medium tracking-wide">
               Automated Exploratory Data Analysis
             </p>
           </div>
@@ -185,7 +185,7 @@ export default function LoginPage() {
 
           {/* Mobile logo */}
           <div className="flex items-center justify-center gap-3 mb-10 lg:hidden">
-            <div className="w-9 h-9 rounded-lg overflow-hidden bg-white flex items-center justify-center">
+            <div className="w-9 h-9 rounded-lg overflow-hidden bg-card flex items-center justify-center">
               <img src="/logo.png" alt="AutoEDA" className="w-full h-full object-contain" />
             </div>
             <span className="text-white text-xl font-bold">AutoEDA</span>

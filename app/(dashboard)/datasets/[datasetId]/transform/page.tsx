@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, Fragment } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
@@ -11,7 +11,7 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import {
   Wand2, Download, Trash2, Plus, CheckCircle, Sparkles,
   Loader2, ChevronDown, ChevronRight, GripVertical,
-  AlertTriangle, SendHorizonal,
+  AlertTriangle, SendHorizonal, AlertOctagon, Info, WandSparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +38,8 @@ type TransformOp =
   | { type: "sqrt_transform"; column: string; new_name?: string }
   | { type: "bin"; column: string; bins: number; strategy: "cut" | "qcut"; new_name?: string }
   | { type: "extract_datetime"; column: string; parts: string[] }
-  | { type: "text_clean"; column: string; strip?: boolean; lowercase?: boolean; uppercase?: boolean; replace_from?: string; replace_to?: string; remove_special?: boolean };
+  | { type: "text_clean"; column: string; strip?: boolean; lowercase?: boolean; uppercase?: boolean; replace_from?: string; replace_to?: string; remove_special?: boolean }
+  | { type: "map_values"; column: string; mapping: Record<string, string> };
 
 // ── Label builder ─────────────────────────────────────────────────────────────
 function opLabel(op: TransformOp): string {
@@ -65,6 +66,7 @@ function opLabel(op: TransformOp): string {
     case "bin":                return `Bin "${op.column}" into ${op.bins} groups (${op.strategy})`;
     case "extract_datetime":   return `Extract from "${op.column}": ${op.parts.join(", ")}`;
     case "text_clean":         return `Clean text "${op.column}"`;
+    case "map_values":         return `Standardize ${Object.keys(op.mapping).length} value(s) in "${op.column}"`;
   }
 }
 
@@ -74,7 +76,7 @@ const OP_COLORS: Record<string, string> = {
   select_columns: "bg-blue-50 text-blue-700 border-blue-200",
   rename_column: "bg-sky-50 text-sky-700 border-sky-200",
   cast_type: "bg-indigo-50 text-indigo-700 border-indigo-200",
-  reorder_columns: "bg-slate-50 text-slate-700 border-slate-200",
+  reorder_columns: "bg-muted text-foreground border-border",
   create_column: "bg-violet-50 text-violet-700 border-violet-200",
   fill_missing: "bg-amber-50 text-amber-700 border-amber-200",
   drop_rows_where_null: "bg-orange-50 text-orange-700 border-orange-200",
@@ -84,7 +86,7 @@ const OP_COLORS: Record<string, string> = {
   cap_outliers: "bg-emerald-50 text-emerald-700 border-emerald-200",
   drop_outliers: "bg-rose-50 text-rose-700 border-rose-200",
   sample_rows: "bg-lime-50 text-lime-700 border-lime-200",
-  sort_rows: "bg-gray-50 text-gray-700 border-gray-200",
+  sort_rows: "bg-muted text-foreground border-border",
   encode: "bg-purple-50 text-purple-700 border-purple-200",
   scale: "bg-blue-50 text-blue-700 border-blue-200",
   log_transform: "bg-green-50 text-green-700 border-green-200",
@@ -92,6 +94,7 @@ const OP_COLORS: Record<string, string> = {
   bin: "bg-pink-50 text-pink-700 border-pink-200",
   extract_datetime: "bg-orange-50 text-orange-700 border-orange-200",
   text_clean: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
+  map_values: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
 };
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -100,7 +103,7 @@ export default function TransformStudioPage() {
   const queryClient = useQueryClient();
   const [ops, setOps] = useState<TransformOp[]>([]);
   const [result, setResult] = useState<{ rows: number; columns: number; errors: { op: string; error: string }[] } | null>(null);
-  const [activeTab, setActiveTab] = useState<"missing" | "columns" | "clean" | "feature">("missing");
+  const [activeTab, setActiveTab] = useState<"smart" | "missing" | "columns" | "clean" | "feature">("smart");
   const [nlOpen, setNlOpen] = useState(false);
 
   const { data: dataset } = useQuery({
@@ -184,8 +187,8 @@ export default function TransformStudioPage() {
 
         <div className="mt-4 mb-5 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Transform Studio</h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <h1 className="text-2xl font-bold text-foreground">Transform Studio</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
               {profile?.total_rows?.toLocaleString()} rows × {profile?.total_columns} columns
             </p>
           </div>
@@ -223,7 +226,7 @@ export default function TransformStudioPage() {
                   }}
                   placeholder={`e.g. "fill missing age with median", "create revenue_per_user = revenue / users", "drop duplicate rows"`}
                   rows={2}
-                  className="flex-1 text-sm border border-indigo-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white resize-none placeholder:text-indigo-300"
+                  className="flex-1 text-sm border border-indigo-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-card resize-none placeholder:text-indigo-300"
                 />
                 <button
                   onClick={() => nlMutation.mutate()}
@@ -243,12 +246,12 @@ export default function TransformStudioPage() {
               )}
 
               {nlPreview && (
-                <div className="mt-3 bg-white border border-indigo-100 rounded-lg p-3 space-y-2">
-                  <p className="text-xs text-gray-600">{nlPreview.explanation}</p>
+                <div className="mt-3 bg-card border border-indigo-100 rounded-lg p-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">{nlPreview.explanation}</p>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={cn(
                       "text-xs px-2 py-1 rounded-md border font-mono",
-                      OP_COLORS[(nlPreview.op as { type: string }).type] ?? "bg-gray-50 text-gray-700 border-gray-200"
+                      OP_COLORS[(nlPreview.op as { type: string }).type] ?? "bg-muted text-foreground border-border"
                     )}>
                       {opLabel(nlPreview.op as TransformOp)}
                     </span>
@@ -265,7 +268,7 @@ export default function TransformStudioPage() {
                     </button>
                     <button
                       onClick={() => { setNlPreview(null); setNlPrompt(""); }}
-                      className="text-xs text-gray-400 hover:text-gray-600 transition"
+                      className="text-xs text-muted-foreground hover:text-muted-foreground transition"
                     >
                       Dismiss
                     </button>
@@ -281,20 +284,25 @@ export default function TransformStudioPage() {
           {/* ── Operation Builder (3 cols) ── */}
           <div className="lg:col-span-3 space-y-3">
             {/* Tabs */}
-            <div className="flex gap-1 bg-gray-100 rounded-lg p-1 text-xs font-medium">
-              {(["missing", "columns", "clean", "feature"] as const).map((t) => (
+            <div className="flex gap-1 bg-muted rounded-lg p-1 text-xs font-medium">
+              {(["smart", "missing", "columns", "clean", "feature"] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setActiveTab(t)}
                   className={cn(
                     "flex-1 py-1.5 rounded-md capitalize transition",
-                    activeTab === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                    activeTab === t ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {t === "missing" ? "Missing" : t === "columns" ? "Columns" : t === "clean" ? "Clean" : "Feature Eng"}
+                  {t === "smart" ? "Smart Clean" : t === "missing" ? "Missing" : t === "columns" ? "Columns" : t === "clean" ? "Clean" : "Feature Eng"}
                 </button>
               ))}
             </div>
+
+            {/* Tab: Smart Clean */}
+            {activeTab === "smart" && (
+              <SmartCleanPanel datasetId={datasetId} ops={ops} addOp={addOp} />
+            )}
 
             {/* Tab: Missing Values */}
             {activeTab === "missing" && (
@@ -397,16 +405,16 @@ export default function TransformStudioPage() {
           <div className="lg:col-span-2">
             <div className="sticky top-4 space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-gray-700">Pipeline <span className="text-gray-400 font-normal">({ops.length} steps)</span></h2>
+                <h2 className="text-sm font-semibold text-foreground">Pipeline <span className="text-muted-foreground font-normal">({ops.length} steps)</span></h2>
                 {ops.length > 0 && (
                   <button onClick={() => { setOps([]); setResult(null); }} className="text-xs text-red-400 hover:text-red-600 transition">Clear all</button>
                 )}
               </div>
 
               {ops.length === 0 ? (
-                <div className="bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 py-10 text-center">
-                  <Wand2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">Add operations from the left panel</p>
+                <div className="bg-muted rounded-xl border-2 border-dashed border-border py-10 text-center">
+                  <Wand2 className="w-8 h-8 text-muted-foreground/60 mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Add operations from the left panel</p>
                 </div>
               ) : (
                 <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
@@ -426,7 +434,7 @@ export default function TransformStudioPage() {
                       onDragEnd={() => { setDragOverIdx(null); dragIdx.current = null; }}
                       className={cn(
                         "flex items-center gap-2 rounded-lg border px-3 py-2.5 select-none transition",
-                        OP_COLORS[op.type] ?? "bg-gray-50 text-gray-700 border-gray-200",
+                        OP_COLORS[op.type] ?? "bg-muted text-foreground border-border",
                         dragOverIdx === i ? "ring-2 ring-brand/50 ring-offset-1 scale-[1.01]" : "cursor-grab active:cursor-grabbing active:opacity-60"
                       )}
                     >
@@ -482,7 +490,7 @@ export default function TransformStudioPage() {
                         a.href = url; a.download = `${dataset?.name ?? "dataset"}_transformed.csv`; a.click();
                         URL.revokeObjectURL(url);
                       })}
-                      className="w-full py-2.5 border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                      className="w-full py-2.5 border border-border text-foreground rounded-lg text-sm font-medium hover:bg-muted transition flex items-center justify-center gap-2"
                     >
                       <Download className="w-4 h-4" /> Export Transformed CSV
                     </button>
@@ -497,14 +505,173 @@ export default function TransformStudioPage() {
   );
 }
 
+// ── Smart Clean ───────────────────────────────────────────────────────────────
+interface SmartCleanSuggestion {
+  column: string;
+  issue_type: "whitespace" | "inconsistent_casing" | "mixed_date_format" | string;
+  severity: "low" | "medium" | "high" | string;
+  description: string;
+  affected_count: number;
+  affected_pct: number;
+  operation: TransformOp;
+  examples: { before: string; after: string }[];
+}
+
+const ISSUE_LABELS: Record<string, string> = {
+  whitespace: "Whitespace",
+  inconsistent_casing: "Inconsistent Casing",
+  fuzzy_duplicates: "Near-Duplicate Values",
+  mixed_date_format: "Mixed Date Format",
+};
+
+function severityMeta(sev: string) {
+  if (sev === "high") return { Icon: AlertOctagon, color: "text-rose-600 bg-rose-50 border-rose-200" };
+  if (sev === "medium") return { Icon: AlertTriangle, color: "text-amber-600 bg-amber-50 border-amber-200" };
+  return { Icon: Info, color: "text-blue-600 bg-blue-50 border-blue-200" };
+}
+
+function SmartCleanPanel({
+  datasetId, ops, addOp,
+}: { datasetId: string; ops: TransformOp[]; addOp: (op: TransformOp) => void }) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["smart-clean", datasetId],
+    queryFn: () => datasetsApi.getSmartClean(datasetId).then((r) => r.data),
+  });
+
+  const suggestions: SmartCleanSuggestion[] = data?.suggestions ?? [];
+
+  const isAdded = (sugg: SmartCleanSuggestion) =>
+    ops.some((o) => o.type === sugg.operation.type && "column" in o && o.column === sugg.column);
+
+  const pending = suggestions.filter((s) => !isAdded(s));
+
+  if (isLoading) {
+    return (
+      <div className="bg-card rounded-xl border border-border py-10 flex items-center justify-center gap-2 text-muted-foreground text-sm">
+        <Loader2 className="w-4 h-4 animate-spin" /> Scanning for cleanable issues…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-xs text-red-700">
+        Failed to load Smart Clean suggestions.
+      </div>
+    );
+  }
+
+  if (suggestions.length === 0) {
+    return (
+      <div className="bg-emerald-50 border border-emerald-200 rounded-xl py-10 text-center">
+        <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+        <p className="text-sm text-emerald-700 font-medium">No cleanable issues detected</p>
+        <p className="text-xs text-emerald-600 mt-1">Casing, whitespace, and date formats all look consistent.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between bg-card rounded-xl border border-border px-4 py-3">
+        <div className="flex items-center gap-2">
+          <WandSparkles className="w-4 h-4 text-brand" />
+          <span className="text-sm font-semibold text-foreground">
+            {suggestions.length} issue{suggestions.length !== 1 ? "s" : ""} found
+          </span>
+        </div>
+        {pending.length > 0 && (
+          <button
+            onClick={() => pending.forEach((s) => addOp(s.operation))}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition"
+          >
+            <Plus className="w-3 h-3" /> Add all {pending.length} to pipeline
+          </button>
+        )}
+      </div>
+
+      {suggestions.map((sugg, i) => (
+        <SmartCleanCard
+          key={`${sugg.column}-${sugg.issue_type}-${i}`}
+          suggestion={sugg}
+          added={isAdded(sugg)}
+          onAdd={() => addOp(sugg.operation)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function SmartCleanCard({
+  suggestion, added, onAdd,
+}: { suggestion: SmartCleanSuggestion; added: boolean; onAdd: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const { Icon, color } = severityMeta(suggestion.severity);
+
+  return (
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
+      <div className="flex items-start gap-3 p-4">
+        <span className={cn("flex items-center justify-center w-7 h-7 rounded-lg border flex-shrink-0", color)}>
+          <Icon className="w-3.5 h-3.5" />
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-mono font-semibold text-foreground">{suggestion.column}</span>
+            <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full border font-medium", color)}>
+              {ISSUE_LABELS[suggestion.issue_type] ?? suggestion.issue_type}
+            </span>
+            <span className="text-[10px] text-muted-foreground">
+              {suggestion.affected_count.toLocaleString()} rows · {suggestion.affected_pct}%
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">{suggestion.description}</p>
+          {suggestion.examples.length > 0 && (
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="text-[11px] text-brand hover:underline mt-1.5 flex items-center gap-0.5"
+            >
+              {expanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+              {expanded ? "Hide" : "Show"} before → after examples
+            </button>
+          )}
+        </div>
+        <button
+          onClick={onAdd}
+          disabled={added}
+          className={cn(
+            "flex-shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition",
+            added ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-brand text-white hover:bg-[#2a0d8a]"
+          )}
+        >
+          {added ? <><CheckCircle className="w-3.5 h-3.5" /> Added</> : <><Plus className="w-3.5 h-3.5" /> Add to pipeline</>}
+        </button>
+      </div>
+      {expanded && (
+        <div className="border-t border-border bg-muted/60 px-4 py-3">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Before</span>
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">After</span>
+            {suggestion.examples.map((ex, i) => (
+              <Fragment key={i}>
+                <span className="font-mono text-muted-foreground truncate">{ex.before}</span>
+                <span className="font-mono text-emerald-700 truncate">{ex.after}</span>
+              </Fragment>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Layout helpers ────────────────────────────────────────────────────────────
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-card rounded-xl border border-border overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"
+        className="w-full flex items-center justify-between px-4 py-3 text-xs font-semibold text-muted-foreground hover:bg-muted transition"
       >
         {title}
         {open ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
@@ -518,16 +685,16 @@ function QuickButton({ label, icon, onClick }: { label: string; icon: React.Reac
   return (
     <button
       onClick={onClick}
-      className="w-full text-left px-4 py-3 bg-white rounded-xl border border-gray-200 hover:border-brand/30 transition text-xs font-medium text-gray-700 flex items-center gap-2"
+      className="w-full text-left px-4 py-3 bg-card rounded-xl border border-border hover:border-brand/30 transition text-xs font-medium text-foreground flex items-center gap-2"
     >
-      <span className="text-gray-400">{icon}</span> {label}
+      <span className="text-muted-foreground">{icon}</span> {label}
     </button>
   );
 }
 
 function ColSelect({ cols, value, onChange, placeholder }: { cols: string[]; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand bg-white">
+    <select value={value} onChange={(e) => onChange(e.target.value)} className="w-full text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand bg-card">
       {placeholder && <option value="">{placeholder}</option>}
       {cols.map((c) => <option key={c} value={c}>{c}</option>)}
     </select>
@@ -540,11 +707,11 @@ function MultiColSelectForm({ cols, buttonLabel, onAdd }: { cols: string[]; butt
   const toggle = (c: string) => setSelected((p) => p.includes(c) ? p.filter((x) => x !== c) : [...p, c]);
   return (
     <div className="space-y-2">
-      <div className="max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-0.5">
+      <div className="max-h-32 overflow-y-auto border border-border rounded-lg p-2 space-y-0.5">
         {cols.map((c) => (
-          <label key={c} className="flex items-center gap-2 cursor-pointer px-1 py-0.5 hover:bg-gray-50 rounded">
+          <label key={c} className="flex items-center gap-2 cursor-pointer px-1 py-0.5 hover:bg-muted rounded">
             <input type="checkbox" checked={selected.includes(c)} onChange={() => toggle(c)} className="rounded" />
-            <span className="text-xs font-mono text-gray-700 truncate">{c}</span>
+            <span className="text-xs font-mono text-foreground truncate">{c}</span>
           </label>
         ))}
       </div>
@@ -565,13 +732,13 @@ function FillMissingForm({ cols, onAdd }: { cols: string[]; onAdd: (op: Transfor
       <div className="grid grid-cols-2 gap-2">
         <ColSelect cols={cols} value={col} onChange={setCol} />
         <select value={strategy} onChange={(e) => setStrategy(e.target.value as typeof strategy)}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand bg-white">
+          className="text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand bg-card">
           {["mean", "median", "mode", "constant", "ffill", "bfill"].map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
       {strategy === "constant" && (
         <input type="text" value={value} onChange={(e) => setValue(e.target.value)} placeholder="Fill value"
-          className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+          className="w-full text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
       )}
       <button onClick={() => col && onAdd({ type: "fill_missing", column: col, strategy, value: value || undefined })}
         className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1">
@@ -588,7 +755,7 @@ function RenameForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp) 
     <div className="flex gap-2 flex-wrap">
       <ColSelect cols={cols} value={col} onChange={setCol} />
       <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="New name"
-        className="flex-1 text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand min-w-0" />
+        className="flex-1 text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand min-w-0" />
       <button onClick={() => col && newName && onAdd({ type: "rename_column", old_name: col, new_name: newName })}
         disabled={!newName}
         className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] disabled:opacity-50 transition flex items-center gap-1">
@@ -605,7 +772,7 @@ function CastTypeForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp
     <div className="flex gap-2 flex-wrap">
       <ColSelect cols={cols} value={col} onChange={setCol} />
       <select value={toType} onChange={(e) => setToType(e.target.value as typeof toType)}
-        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand bg-white">
+        className="text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand bg-card">
         {["int", "float", "str", "datetime", "bool"].map((t) => <option key={t} value={t}>{t}</option>)}
       </select>
       <button onClick={() => col && onAdd({ type: "cast_type", column: col, to_type: toType })}
@@ -622,10 +789,10 @@ function CreateColumnForm({ cols, onAdd }: { cols: string[]; onAdd: (op: Transfo
   return (
     <div className="space-y-2">
       <input value={name} onChange={(e) => setName(e.target.value)} placeholder="New column name"
-        className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+        className="w-full text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
       <input value={expr} onChange={(e) => setExpr(e.target.value)} placeholder={`Expression, e.g. ${cols[0] ?? "col_a"} * 2`}
-        className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand font-mono" />
-      <p className="text-xs text-gray-400">Use column names directly. Supports np.log(), np.sqrt(), abs(), +, -, *, /</p>
+        className="w-full text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand font-mono" />
+      <p className="text-xs text-muted-foreground">Use column names directly. Supports np.log(), np.sqrt(), abs(), +, -, *, /</p>
       <button onClick={() => name && expr && onAdd({ type: "create_column", name, expression: expr })}
         disabled={!name || !expr}
         className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] disabled:opacity-50 transition flex items-center gap-1">
@@ -640,9 +807,9 @@ function ReorderForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp)
   return (
     <div className="space-y-2">
       <textarea value={order} onChange={(e) => setOrder(e.target.value)} rows={2}
-        className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand font-mono resize-none"
+        className="w-full text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand font-mono resize-none"
         placeholder="col1, col2, col3 ..." />
-      <p className="text-xs text-gray-400">Comma-separated column order. Unlisted columns are appended at the end.</p>
+      <p className="text-xs text-muted-foreground">Comma-separated column order. Unlisted columns are appended at the end.</p>
       <button onClick={() => onAdd({ type: "reorder_columns", columns: order.split(",").map((c) => c.trim()).filter(Boolean) })}
         className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1">
         <Plus className="w-3 h-3" /> Add
@@ -658,7 +825,7 @@ function SortForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp) =>
     <div className="flex gap-2 flex-wrap">
       <ColSelect cols={cols} value={col} onChange={setCol} />
       <select value={asc ? "asc" : "desc"} onChange={(e) => setAsc(e.target.value === "asc")}
-        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+        className="text-xs border border-border rounded-lg px-2 py-1.5 bg-card focus:outline-none focus:ring-2 focus:ring-brand">
         <option value="asc">Ascending</option>
         <option value="desc">Descending</option>
       </select>
@@ -680,11 +847,11 @@ function FilterRowsForm({ cols, onAdd }: { cols: string[]; onAdd: (op: Transform
       <div className="grid grid-cols-3 gap-2">
         <ColSelect cols={cols} value={col} onChange={setCol} />
         <select value={op} onChange={(e) => setOp(e.target.value)}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          className="text-xs border border-border rounded-lg px-2 py-1.5 bg-card focus:outline-none focus:ring-2 focus:ring-brand">
           {ops.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
         <input value={value} onChange={(e) => setValue(e.target.value)} placeholder="Value"
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+          className="text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
       </div>
       <button onClick={() => col && value && onAdd({ type: "filter_rows", column: col, operator: op, value })}
         disabled={!col || !value}
@@ -704,9 +871,9 @@ function ClipForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp) =>
       <ColSelect cols={cols} value={col} onChange={setCol} />
       <div className="grid grid-cols-2 gap-2">
         <input value={lower} onChange={(e) => setLower(e.target.value)} placeholder="Min (optional)"
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+          className="text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
         <input value={upper} onChange={(e) => setUpper(e.target.value)} placeholder="Max (optional)"
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+          className="text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
       </div>
       <button onClick={() => col && onAdd({ type: "clip", column: col, lower: lower ? parseFloat(lower) : undefined, upper: upper ? parseFloat(upper) : undefined })}
         className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1">
@@ -723,7 +890,7 @@ function CapOutliersForm({ cols, onAdd }: { cols: string[]; onAdd: (op: Transfor
     <div className="flex gap-2 flex-wrap">
       <ColSelect cols={cols} value={col} onChange={setCol} />
       <select value={method} onChange={(e) => setMethod(e.target.value as typeof method)}
-        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+        className="text-xs border border-border rounded-lg px-2 py-1.5 bg-card focus:outline-none focus:ring-2 focus:ring-brand">
         <option value="iqr">IQR</option>
         <option value="percentile">1st–99th %ile</option>
       </select>
@@ -742,7 +909,7 @@ function DropOutliersForm({ cols, onAdd }: { cols: string[]; onAdd: (op: Transfo
     <div className="flex gap-2 flex-wrap">
       <ColSelect cols={cols} value={col} onChange={setCol} />
       <select value={method} onChange={(e) => setMethod(e.target.value as typeof method)}
-        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+        className="text-xs border border-border rounded-lg px-2 py-1.5 bg-card focus:outline-none focus:ring-2 focus:ring-brand">
         <option value="iqr">IQR</option>
         <option value="zscore">Z-Score</option>
       </select>
@@ -763,18 +930,18 @@ function SampleForm({ onAdd, totalRows }: { onAdd: (op: TransformOp) => void; to
       <div className="flex gap-2">
         {(["n", "frac"] as const).map((m) => (
           <button key={m} onClick={() => setMode(m)}
-            className={cn("text-xs px-2.5 py-1 rounded-md transition", mode === m ? "bg-brand text-white" : "bg-gray-100 text-gray-600")}>
+            className={cn("text-xs px-2.5 py-1 rounded-md transition", mode === m ? "bg-brand text-white" : "bg-muted text-muted-foreground")}>
             {m === "n" ? "Row count" : "Fraction"}
           </button>
         ))}
       </div>
       {mode === "n"
         ? <input type="number" value={n} onChange={(e) => setN(e.target.value)} placeholder="Number of rows"
-            className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+            className="w-full text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
         : <input type="number" value={frac} min="0" max="1" step="0.05" onChange={(e) => setFrac(e.target.value)} placeholder="Fraction (0–1)"
-            className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+            className="w-full text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
       }
-      <p className="text-xs text-gray-400">Total rows: {totalRows.toLocaleString()}</p>
+      <p className="text-xs text-muted-foreground">Total rows: {totalRows.toLocaleString()}</p>
       <button onClick={() => onAdd(mode === "n" ? { type: "sample_rows", n: parseInt(n) } : { type: "sample_rows", frac: parseFloat(frac) })}
         className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1">
         <Plus className="w-3 h-3" /> Add
@@ -793,16 +960,16 @@ function TextCleanForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformO
   return (
     <div className="space-y-2">
       <ColSelect cols={cols} value={col} onChange={setCol} />
-      <div className="flex flex-wrap gap-3 text-xs text-gray-600">
+      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
         <label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={strip} onChange={(e) => setStrip(e.target.checked)} /> Strip whitespace</label>
         <label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={lowercase} onChange={(e) => setLowercase(e.target.checked)} /> Lowercase</label>
         <label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={removeSpecial} onChange={(e) => setRemoveSpecial(e.target.checked)} /> Remove special chars</label>
       </div>
       <div className="grid grid-cols-2 gap-2">
         <input value={repFrom} onChange={(e) => setRepFrom(e.target.value)} placeholder="Find text (optional)"
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+          className="text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
         <input value={repTo} onChange={(e) => setRepTo(e.target.value)} placeholder="Replace with"
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+          className="text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
       </div>
       <button onClick={() => col && onAdd({ type: "text_clean", column: col, lowercase, strip, remove_special: removeSpecial, replace_from: repFrom || undefined, replace_to: repTo || undefined })}
         className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1">
@@ -819,7 +986,7 @@ function EncodeForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp) 
     <div className="flex gap-2 flex-wrap">
       <ColSelect cols={cols} value={col} onChange={setCol} />
       <select value={method} onChange={(e) => setMethod(e.target.value as typeof method)}
-        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+        className="text-xs border border-border rounded-lg px-2 py-1.5 bg-card focus:outline-none focus:ring-2 focus:ring-brand">
         <option value="label">Label Encode</option>
         <option value="onehot">One-Hot Encode</option>
       </select>
@@ -838,7 +1005,7 @@ function ScaleForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp) =
     <div className="flex gap-2 flex-wrap">
       <ColSelect cols={cols} value={col} onChange={setCol} />
       <select value={method} onChange={(e) => setMethod(e.target.value as typeof method)}
-        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+        className="text-xs border border-border rounded-lg px-2 py-1.5 bg-card focus:outline-none focus:ring-2 focus:ring-brand">
         <option value="standard">Standard (Z-score)</option>
         <option value="minmax">Min-Max [0,1]</option>
         <option value="robust">Robust (median/IQR)</option>
@@ -859,12 +1026,12 @@ function LogTransformForm({ cols, onAdd }: { cols: string[]; onAdd: (op: Transfo
       <div className="flex gap-2">
         <ColSelect cols={cols} value={col} onChange={setCol} />
         <select value={variant} onChange={(e) => setVariant(e.target.value as typeof variant)}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          className="text-xs border border-border rounded-lg px-2 py-1.5 bg-card focus:outline-none focus:ring-2 focus:ring-brand">
           <option value="log1p">log1p (safe for 0s)</option>
           <option value="log">log (skip zeros)</option>
         </select>
       </div>
-      <p className="text-xs text-gray-400">Creates a new column `{col}_log1p`. Original column is kept.</p>
+      <p className="text-xs text-muted-foreground">Creates a new column `{col}_log1p`. Original column is kept.</p>
       <button onClick={() => col && onAdd({ type: "log_transform", column: col, variant })}
         className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1">
         <Plus className="w-3 h-3" /> Add
@@ -878,7 +1045,7 @@ function SqrtTransformForm({ cols, onAdd }: { cols: string[]; onAdd: (op: Transf
   return (
     <div className="space-y-2">
       <ColSelect cols={cols} value={col} onChange={setCol} />
-      <p className="text-xs text-gray-400">Creates `{col}_sqrt`. Clips negative values to 0.</p>
+      <p className="text-xs text-muted-foreground">Creates `{col}_sqrt`. Clips negative values to 0.</p>
       <button onClick={() => col && onAdd({ type: "sqrt_transform", column: col })}
         className="text-xs px-3 py-1.5 bg-brand text-white rounded-lg hover:bg-[#2a0d8a] transition flex items-center gap-1">
         <Plus className="w-3 h-3" /> Add
@@ -896,9 +1063,9 @@ function BinForm({ cols, onAdd }: { cols: string[]; onAdd: (op: TransformOp) => 
       <div className="grid grid-cols-3 gap-2">
         <ColSelect cols={cols} value={col} onChange={setCol} />
         <input type="number" value={bins} min={2} max={20} onChange={(e) => setBins(parseInt(e.target.value))} placeholder="# bins"
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
+          className="text-xs border border-border rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand" />
         <select value={strategy} onChange={(e) => setStrategy(e.target.value as typeof strategy)}
-          className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-brand">
+          className="text-xs border border-border rounded-lg px-2 py-1.5 bg-card focus:outline-none focus:ring-2 focus:ring-brand">
           <option value="cut">Equal-width</option>
           <option value="qcut">Equal-frequency</option>
         </select>
@@ -922,7 +1089,7 @@ function DatetimeExtractForm({ cols, onAdd }: { cols: string[]; onAdd: (op: Tran
       <div className="flex flex-wrap gap-2">
         {allParts.map((p) => (
           <button key={p} onClick={() => toggle(p)}
-            className={cn("text-xs px-2 py-0.5 rounded border transition", parts.includes(p) ? "bg-brand text-white border-brand" : "bg-white text-gray-600 border-gray-200 hover:border-brand/40")}>
+            className={cn("text-xs px-2 py-0.5 rounded border transition", parts.includes(p) ? "bg-brand text-white border-brand" : "bg-card text-muted-foreground border-border hover:border-brand/40")}>
             {p}
           </button>
         ))}

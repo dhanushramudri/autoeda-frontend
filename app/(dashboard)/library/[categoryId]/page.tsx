@@ -89,9 +89,9 @@ export default function CategoryArticlesPage() {
             <Icon className="w-7 h-7" style={{ color: color.solid }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{category?.name ?? "Category"}</h1>
-            {category?.description && <p className="text-sm text-gray-500 mt-1 max-w-lg">{category.description}</p>}
-            <p className="text-xs text-gray-400 mt-1.5">{articles?.length ?? 0} article{articles?.length === 1 ? "" : "s"}</p>
+            <h1 className="text-2xl font-bold text-foreground">{category?.name ?? "Category"}</h1>
+            {category?.description && <p className="text-sm text-muted-foreground mt-1 max-w-lg">{category.description}</p>}
+            <p className="text-xs text-muted-foreground mt-1.5">{articles?.length ?? 0} article{articles?.length === 1 ? "" : "s"}</p>
           </div>
         </div>
         <button
@@ -128,14 +128,14 @@ export default function CategoryArticlesPage() {
                 <button
                   key={a.id}
                   onClick={() => router.push(`/library/articles/${a.id}`)}
-                  className="w-full text-left bg-white border border-gray-200 rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-gray-300 group"
+                  className="w-full text-left bg-card border border-border rounded-2xl p-5 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-border group"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-gray-900 group-hover:text-brand transition">{a.title}</h3>
-                      {preview && <p className="text-xs text-gray-400 mt-1 line-clamp-2">{preview}</p>}
+                      <h3 className="text-sm font-bold text-foreground group-hover:text-brand transition">{a.title}</h3>
+                      {preview && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{preview}</p>}
                     </div>
-                    <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-brand flex-shrink-0 transition mt-0.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5" />
+                    <ArrowRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-brand flex-shrink-0 transition mt-0.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5" />
                   </div>
 
                   <div className="flex items-center justify-between gap-3 mt-3.5">
@@ -146,7 +146,7 @@ export default function CategoryArticlesPage() {
                         </span>
                       ))}
                       {a.attachment_count > 0 && (
-                        <span className="flex items-center gap-1 px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full text-[10px] font-medium">
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-muted text-muted-foreground rounded-full text-[10px] font-medium">
                           <Paperclip className="w-2.5 h-2.5" /> {a.attachment_count}
                         </span>
                       )}
@@ -159,7 +159,7 @@ export default function CategoryArticlesPage() {
                       >
                         {initials(a.updated_by_name)}
                       </span>
-                      <span className="text-[10px] text-gray-400 whitespace-nowrap">{relativeTime(a.updated_at)}</span>
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap">{relativeTime(a.updated_at)}</span>
                     </div>
                   </div>
                 </button>

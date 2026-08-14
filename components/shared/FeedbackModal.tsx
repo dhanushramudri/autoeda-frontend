@@ -44,8 +44,8 @@ function ToolbarBtn({
       className={cn(
         "p-1.5 rounded-md transition text-sm",
         active
-          ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
-          : "text-gray-400 hover:text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800",
+          ? "bg-muted dark:bg-gray-700 text-foreground dark:text-white"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted dark:hover:bg-gray-800",
       )}
     >
       {children}
@@ -77,7 +77,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
     ],
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] max-h-[380px] overflow-y-auto px-4 pt-3 pb-2 text-gray-800 dark:text-gray-100",
+        class: "prose prose-sm max-w-none focus:outline-none min-h-[200px] max-h-[380px] overflow-y-auto px-4 pt-3 pb-2 text-foreground dark:text-muted-foreground/60",
       },
     },
   });
@@ -181,20 +181,20 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={handleClose} />
 
-        <div className="relative z-10 w-full max-w-2xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[92vh] flex flex-col">
+        <div className="relative z-10 w-full max-w-2xl bg-card dark:bg-gray-900 rounded-2xl shadow-2xl border border-border dark:border-gray-700 max-h-[92vh] flex flex-col">
 
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
-            <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Create a New Request</h2>
-            <button onClick={handleClose} className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition text-gray-400 hover:text-gray-600">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border dark:border-gray-800 flex-shrink-0">
+            <h2 className="text-sm font-semibold text-foreground dark:text-muted-foreground/60">Create a New Request</h2>
+            <button onClick={handleClose} className="p-1 rounded-md hover:bg-muted dark:hover:bg-gray-800 transition text-muted-foreground hover:text-muted-foreground">
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {done ? (
             <div className="px-5 py-10 text-center">
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">Thank you!</p>
-              <p className="mt-1 text-xs text-gray-400">Your request has been submitted.</p>
+              <p className="text-sm font-semibold text-foreground dark:text-muted-foreground/60">Thank you!</p>
+              <p className="mt-1 text-xs text-muted-foreground">Your request has been submitted.</p>
               <button onClick={handleClose} className="mt-5 px-5 py-2 text-xs font-medium rounded-lg bg-brand text-white hover:bg-[#2a0d8a] transition">Close</button>
             </div>
           ) : (
@@ -202,7 +202,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
 
               {/* Type */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Type</label>
+                <label className="block text-xs font-medium text-muted-foreground dark:text-muted-foreground mb-1.5">Type</label>
                 <div className="flex gap-1.5 flex-wrap">
                   {TYPES.map((t) => (
                     <button key={t.value} type="button" onClick={() => setType(t.value)}
@@ -210,7 +210,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                         "px-3 py-1 rounded-full text-xs font-medium border transition",
                         type === t.value
                           ? "bg-brand border-brand text-white"
-                          : "border-gray-200 dark:border-gray-700 text-gray-500 hover:border-brand hover:text-brand",
+                          : "border-border dark:border-gray-700 text-muted-foreground hover:border-brand hover:text-brand",
                       )}>
                       {t.label}
                     </button>
@@ -220,8 +220,8 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
 
               {/* Rating */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                  Rating <span className="text-gray-400 font-normal">(optional)</span>
+                <label className="block text-xs font-medium text-muted-foreground dark:text-muted-foreground mb-1.5">
+                  Rating <span className="text-muted-foreground font-normal">(optional)</span>
                 </label>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
@@ -229,7 +229,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                       onClick={() => setRating(rating === star ? null : star)}
                       onMouseEnter={() => setHover(star)} onMouseLeave={() => setHover(null)}>
                       <Star className={cn("w-5 h-5 transition",
-                        (hover ?? rating ?? 0) >= star ? "text-amber-400 fill-amber-400" : "text-gray-300")} />
+                        (hover ?? rating ?? 0) >= star ? "text-amber-400 fill-amber-400" : "text-muted-foreground/60")} />
                     </button>
                   ))}
                 </div>
@@ -237,21 +237,21 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
 
               {/* Subject */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
-                  Title {type === "other" ? <span className="text-brand">*</span> : <span className="text-gray-400 font-normal">(optional)</span>}
+                <label className="block text-xs font-medium text-muted-foreground dark:text-muted-foreground mb-1.5">
+                  Title {type === "other" ? <span className="text-brand">*</span> : <span className="text-muted-foreground font-normal">(optional)</span>}
                 </label>
                 <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)}
                   maxLength={255} placeholder="Brief title of your request…"
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition" />
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-border dark:border-gray-700 bg-card dark:bg-gray-800 text-foreground dark:text-muted-foreground/60 placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition" />
               </div>
 
               {/* Description — Tiptap canvas */}
               <div>
-                <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">Description</label>
+                <label className="block text-xs font-medium text-muted-foreground dark:text-muted-foreground mb-1.5">Description</label>
                 <div
                   className={cn(
                     "tiptap-canvas rounded-xl border overflow-hidden transition focus-within:ring-2 focus-within:ring-brand focus-within:border-brand",
-                    dragOver ? "border-brand bg-brand/5" : "border-gray-200 dark:border-gray-700",
+                    dragOver ? "border-brand bg-brand/5" : "border-border dark:border-gray-700",
                   )}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
@@ -264,12 +264,12 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                   {selectedFiles.some((f) => !f.preview) && (
                     <div className="flex flex-wrap gap-2 px-4 pb-2">
                       {selectedFiles.filter((f) => !f.preview).map(({ file }, i) => (
-                        <div key={i} className="relative group flex items-center gap-2 px-2 py-1 rounded-lg border border-gray-200 bg-gray-50 text-xs text-gray-600">
-                          <Video className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        <div key={i} className="relative group flex items-center gap-2 px-2 py-1 rounded-lg border border-border bg-muted text-xs text-muted-foreground">
+                          <Video className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                           <span className="max-w-[120px] truncate">{file.name}</span>
                           <button type="button" onClick={() => removeFile(
                             selectedFiles.findIndex((sf) => sf.file === file)
-                          )} className="text-gray-300 hover:text-red-500 transition">
+                          )} className="text-muted-foreground/60 hover:text-red-500 transition">
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
@@ -278,7 +278,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                   )}
 
                   {/* Toolbar */}
-                  <div className="flex items-center gap-0.5 px-3 py-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
+                  <div className="flex items-center gap-0.5 px-3 py-2 border-t border-border dark:border-gray-700 bg-muted/50 dark:bg-gray-800/50">
                     <ToolbarBtn title="Bold" active={editor?.isActive("bold")} onClick={() => editor?.chain().focus().toggleBold().run()}>
                       <Bold className="w-3.5 h-3.5" />
                     </ToolbarBtn>
@@ -298,7 +298,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                       <Link2 className="w-3.5 h-3.5" />
                     </ToolbarBtn>
 
-                    <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-1" />
+                    <div className="w-px h-4 bg-muted dark:bg-gray-700 mx-1" />
 
                     <ToolbarBtn title="Attach image" onClick={() => imageRef.current?.click()}>
                       <ImageIcon className="w-3.5 h-3.5" />
@@ -310,7 +310,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                       <Smile className="w-3.5 h-3.5" />
                     </ToolbarBtn>
 
-                    <span className="ml-auto text-[10px] text-gray-300 tabular-nums">
+                    <span className="ml-auto text-[10px] text-muted-foreground/60 tabular-nums">
                       {editor?.getText().length ?? 0}/2000
                     </span>
                   </div>
@@ -328,7 +328,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
               {/* Footer */}
               <div className="flex justify-end gap-2 pt-1 pb-1">
                 <button type="button" onClick={handleClose}
-                  className="px-4 py-2 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 transition">
+                  className="px-4 py-2 text-xs font-medium rounded-lg border border-border dark:border-gray-700 text-muted-foreground hover:bg-muted transition">
                   Cancel
                 </button>
                 <button type="submit" disabled={loading}

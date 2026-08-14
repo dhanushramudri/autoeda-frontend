@@ -84,17 +84,17 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
     <div className="fixed inset-0 z-50 pointer-events-none">
       <div
         ref={panelRef}
-        className="absolute right-0 top-0 h-full w-[380px] bg-white border-l border-gray-200 shadow-2xl pointer-events-auto flex flex-col"
+        className="absolute right-0 top-0 h-full w-[380px] bg-card border-l border-border shadow-2xl pointer-events-auto flex flex-col"
         style={{ animation: "slideInRight 0.2s ease-out" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border flex-shrink-0">
           <div>
-            <h3 className="font-semibold text-gray-900 text-sm">{columnName}</h3>
-            {stat && <p className="text-xs text-gray-400 mt-0.5">{stat.dtype}</p>}
+            <h3 className="font-semibold text-foreground text-sm">{columnName}</h3>
+            {stat && <p className="text-xs text-muted-foreground mt-0.5">{stat.dtype}</p>}
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition">
-            <X className="w-4 h-4 text-gray-500" />
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted transition">
+            <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
 
@@ -123,9 +123,9 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
                   ...(stat.skewness != null ? [{ label: "Skewness", value: stat.skewness.toFixed(3), icon: TrendingUp }] : []),
                   ...(stat.outlier_count != null ? [{ label: "Outliers", value: stat.outlier_count.toString(), icon: AlertTriangle, color: stat.outlier_count > 0 ? "text-amber-600" : "text-emerald-600" }] : []),
                 ].map((s, i) => (
-                  <div key={i} className="bg-gray-50 rounded-lg p-2.5">
-                    <p className="text-xs text-gray-400 mb-0.5">{s.label}</p>
-                    <p className={`text-sm font-semibold ${s.color ?? "text-gray-900"}`}>{s.value ?? " -- "}</p>
+                  <div key={i} className="bg-muted rounded-lg p-2.5">
+                    <p className="text-xs text-muted-foreground mb-0.5">{s.label}</p>
+                    <p className={`text-sm font-semibold ${s.color ?? "text-foreground"}`}>{s.value ?? " -- "}</p>
                   </div>
                 ))}
               </div>
@@ -133,10 +133,10 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
               {/* Missing bar */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-500">Missing values</span>
+                  <span className="text-xs text-muted-foreground">Missing values</span>
                   <span className={`text-xs font-medium ${missColor}`}>{missingPct.toFixed(1)}%</span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${missingPct > 50 ? "bg-red-500" : missingPct > 20 ? "bg-amber-500" : "bg-emerald-500"}`}
                     style={{ width: `${missingPct}%` }}
@@ -147,7 +147,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
               {/* Histogram */}
               {histData.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-gray-600 mb-2">Distribution</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Distribution</p>
                   <ResponsiveContainer width="100%" height={80}>
                     <BarChart data={histData} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                       <XAxis dataKey="bin" hide />
@@ -169,18 +169,18 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
               {/* Top values */}
               {topData.length > 0 && (
                 <div>
-                  <p className="text-xs font-medium text-gray-600 mb-2">Top Values</p>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Top Values</p>
                   <div className="space-y-1.5">
                     {topData.map((v, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <span className="text-xs text-gray-600 w-28 truncate">{v.value}</span>
-                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <span className="text-xs text-muted-foreground w-28 truncate">{v.value}</span>
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                           <div
                             className="h-full bg-blue-400 rounded-full"
                             style={{ width: `${Math.min(v.pct, 100)}%` }}
                           />
                         </div>
-                        <span className="text-xs text-gray-400 w-10 text-right">{v.pct.toFixed(1)}%</span>
+                        <span className="text-xs text-muted-foreground w-10 text-right">{v.pct.toFixed(1)}%</span>
                       </div>
                     ))}
                   </div>
@@ -199,7 +199,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
 
               {/* Tags */}
               <div>
-                <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-1">
+                <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
                   <Tag className="w-3 h-3" /> Tags
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -212,7 +212,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
                         className={`text-xs px-2.5 py-1 rounded-full border transition ${
                           active
                             ? "bg-brand text-white border-brand"
-                            : "bg-white text-gray-600 border-gray-300 hover:border-brand/60"
+                            : "bg-card text-muted-foreground border-border hover:border-brand/60"
                         }`}
                       >
                         {tag}
@@ -227,8 +227,8 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
 
         {/* Quick actions */}
         {columnName && onQuickAction && (
-          <div className="flex-shrink-0 border-t border-gray-100 p-4 space-y-2">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quick Actions</p>
+          <div className="flex-shrink-0 border-t border-border p-4 space-y-2">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Quick Actions</p>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { label: "Fill Missing", op: "fill_missing" },
@@ -238,7 +238,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
                 <button
                   key={action.op}
                   onClick={() => { onQuickAction(action.op, columnName); onClose(); }}
-                  className="text-xs py-2 border border-gray-200 rounded-lg text-gray-600 hover:border-brand/60 hover:text-brand transition"
+                  className="text-xs py-2 border border-border rounded-lg text-muted-foreground hover:border-brand/60 hover:text-brand transition"
                 >
                   {action.label}
                 </button>

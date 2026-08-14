@@ -48,14 +48,14 @@ export function WordCloud({
 
   if (!words || words.length === 0) {
     return (
-      <div className="flex h-96 items-center justify-center rounded border border-gray-200 bg-white">
-        <p className="text-gray-500">No words to display</p>
+      <div className="flex h-96 items-center justify-center rounded border border-border bg-card">
+        <p className="text-muted-foreground">No words to display</p>
       </div>
     );
   }
 
   return (
-    <div className="w-full rounded border border-gray-200 bg-white p-4">
+    <div className="w-full rounded border border-border bg-card p-4">
       <ReactWordcloud
         words={words}
         width={width}
