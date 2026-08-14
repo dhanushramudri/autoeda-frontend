@@ -36,9 +36,9 @@ function TextSummary({ result }: { result: Record<string, unknown> }) {
         <span>avg length {Math.round(r.avg_length)}</span>
         {r.sentiment_dist && (
           <span className="ml-auto flex items-center gap-1.5">
-            <span className="text-emerald-600">+{r.sentiment_dist.positive}</span>
+            <span className="text-emerald-600 dark:text-emerald-400">+{r.sentiment_dist.positive}</span>
             <span className="text-muted-foreground">·{r.sentiment_dist.neutral}</span>
-            <span className="text-red-500">-{r.sentiment_dist.negative}</span>
+            <span className="text-red-500 dark:text-red-400">-{r.sentiment_dist.negative}</span>
           </span>
         )}
       </div>
@@ -62,7 +62,7 @@ function RelationshipsSummary({ result }: { result: Record<string, unknown> }) {
     <div className="rounded-xl border border-border bg-card p-3 space-y-2">
       {rels.map((r, i) => (
         <div key={i} className="flex items-start gap-2 text-xs">
-          <Link2 className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 mt-0.5" />
+          <Link2 className="w-3.5 h-3.5 text-violet-400 dark:text-violet-400 flex-shrink-0 mt-0.5" />
           <div>
             <span className="font-medium text-foreground">{r.dataset_a}</span>
             <span className="text-muted-foreground"> ↔ </span>
@@ -106,10 +106,10 @@ function OutlierSummary({ result }: { result: Record<string, unknown> }) {
     <div className="rounded-xl border border-border bg-card p-3.5 space-y-2">
       {columns.map((c) => (
         <div key={c.name} className="flex items-center gap-3">
-          <ShieldAlert className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+          <ShieldAlert className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 flex-shrink-0" />
           <span className="text-xs font-medium text-foreground flex-1 truncate">{c.name}</span>
           <span className="text-xs text-muted-foreground">{c.outlier_count.toLocaleString()} rows</span>
-          <span className="text-xs font-semibold text-amber-600 w-12 text-right">{c.outlier_pct.toFixed(1)}%</span>
+          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 w-12 text-right">{c.outlier_pct.toFixed(1)}%</span>
         </div>
       ))}
     </div>
@@ -169,7 +169,7 @@ function StatTestSummary({ result }: { result: Record<string, unknown> }) {
     <div className="rounded-xl border border-border bg-card p-3.5 space-y-1.5">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold text-foreground">{String(result.label ?? result.test)}</span>
-        <span className={cn("ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full", significant ? "bg-violet-50 text-violet-700" : "bg-muted text-muted-foreground")}>
+        <span className={cn("ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full", significant ? "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400" : "bg-muted text-muted-foreground")}>
           p = {p.toFixed(4)}
         </span>
       </div>
@@ -180,7 +180,7 @@ function StatTestSummary({ result }: { result: Record<string, unknown> }) {
 
 function ActionConfirmation({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 border border-emerald-100 text-xs text-emerald-700 w-fit">
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-800/40 text-xs text-emerald-700 dark:text-emerald-400 w-fit">
       <Icon className="w-3.5 h-3.5 flex-shrink-0" />
       {label}
     </div>
@@ -341,7 +341,7 @@ function ToolTrace({ trace }: { trace: ScoutToolCall[] }) {
       {previews.map((t, i) => <ToolResultPreview key={i} call={t} />)}
 
       {errors.map((t, i) => (
-        <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+        <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <span><strong>{t.tool}</strong>: {String((t.result as Record<string, unknown>)?.error)}</span>
         </div>
@@ -359,7 +359,7 @@ function ToolTrace({ trace }: { trace: ScoutToolCall[] }) {
         <div className="space-y-1.5 pl-1">
           {trace.map((t, i) => (
             <div key={i} className="text-[11px] font-mono text-muted-foreground bg-muted rounded-lg px-2.5 py-1.5 border border-border">
-              <span className="text-violet-500">{t.tool}</span>
+              <span className="text-violet-500 dark:text-violet-400">{t.tool}</span>
               <span className="text-muted-foreground">({JSON.stringify(t.arguments)})</span>
             </div>
           ))}
@@ -563,7 +563,7 @@ function ConversationRail({
             <span
               role="button"
               onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(c.id); }}
-              className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-muted text-muted-foreground/60 hover:text-red-400 transition flex-shrink-0"
+              className="opacity-0 group-hover:opacity-100 p-1 rounded-md hover:bg-muted text-muted-foreground/60 hover:text-red-400 dark:text-red-400 transition flex-shrink-0"
             >
               <Trash2 className="w-3 h-3" />
             </span>
@@ -927,9 +927,9 @@ export default function ScoutPage() {
       <div className="border-t border-border px-6 py-4 flex-shrink-0">
         <div className="max-w-3xl mx-auto">
           {editingId !== null && (
-            <div className="flex items-center justify-between mb-2 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-700">
+            <div className="flex items-center justify-between mb-2 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-700 dark:text-amber-400">
               <span className="flex items-center gap-1.5"><Pencil className="w-3 h-3" /> Editing message — sending will replace it and everything after it</span>
-              <button onClick={handleCancelEdit} className="p-0.5 rounded hover:bg-amber-100 transition"><X className="w-3.5 h-3.5" /></button>
+              <button onClick={handleCancelEdit} className="p-0.5 rounded hover:bg-amber-100 dark:bg-amber-900/30 transition"><X className="w-3.5 h-3.5" /></button>
             </div>
           )}
           {attachedImage && (
@@ -942,7 +942,7 @@ export default function ScoutPage() {
                   </div>
                 )}
               </div>
-              <span className={cn("text-[11px]", attachedImage.error ? "text-red-500" : "text-muted-foreground")}>
+              <span className={cn("text-[11px]", attachedImage.error ? "text-red-500 dark:text-red-400" : "text-muted-foreground")}>
                 {attachedImage.error ?? (attachedImage.uploading ? "Uploading…" : "Image attached")}
               </span>
               <button onClick={handleRemoveImage} className="p-0.5 rounded hover:bg-muted transition"><X className="w-3.5 h-3.5 text-muted-foreground" /></button>

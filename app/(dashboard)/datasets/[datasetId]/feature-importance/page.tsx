@@ -160,16 +160,16 @@ const BRAND_PALETTE = [
 ];
 
 const REC_CONFIG = {
-  keep_strong:   { label: "Strong",       cls: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800", dot: "bg-emerald-500" },
-  keep:          { label: "Keep",         cls: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800",          dot: "bg-blue-400"  },
-  consider_drop: { label: "Weak",         cls: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800",    dot: "bg-amber-400" },
-  drop:          { label: "Drop",         cls: "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:border-red-800",              dot: "bg-red-400"   },
+  keep_strong:   { label: "Strong",       cls: "bg-emerald-50 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800", dot: "bg-emerald-500" },
+  keep:          { label: "Keep",         cls: "bg-blue-50 text-blue-700 dark:text-blue-400 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800",          dot: "bg-blue-400"  },
+  consider_drop: { label: "Weak",         cls: "bg-amber-50 text-amber-700 dark:text-amber-400 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800",    dot: "bg-amber-400" },
+  drop:          { label: "Drop",         cls: "bg-red-50 text-red-700 dark:text-red-400 border-red-200 dark:bg-red-900/20 dark:border-red-800",              dot: "bg-red-400"   },
 };
 
 const WARN_CFG = {
-  danger:  { cls: "bg-red-50 border-red-200 text-red-800",    icon: <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" /> },
-  warning: { cls: "bg-amber-50 border-amber-200 text-amber-800", icon: <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" /> },
-  info:    { cls: "bg-blue-50 border-blue-200 text-blue-800",  icon: <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" /> },
+  danger:  { cls: "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-800",    icon: <XCircle className="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" /> },
+  warning: { cls: "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800", icon: <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" /> },
+  info:    { cls: "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-800",  icon: <Info className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" /> },
 };
 
 const METHOD_CONFIG: Record<ChartMethod, { label: string; desc: string; color: string; icon: React.ReactNode; new?: boolean }> = {
@@ -212,11 +212,11 @@ function MethodLoadingIndicator({ loadingMethods, initialLoadTime }: { loadingMe
                   className={cn(
                     "text-[10px] font-semibold",
                     method.status === "done"
-                      ? "text-emerald-600"
+                      ? "text-emerald-600 dark:text-emerald-400"
                       : method.status === "error"
-                      ? "text-red-600"
+                      ? "text-red-600 dark:text-red-400"
                       : method.status === "loading"
-                      ? "text-blue-600"
+                      ? "text-blue-600 dark:text-blue-400"
                       : "text-muted-foreground"
                   )}
                 >
@@ -252,9 +252,9 @@ function MethodLoadingIndicator({ loadingMethods, initialLoadTime }: { loadingMe
       </div>
 
       {!allDone && (
-        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex gap-2">
-          <Zap className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-blue-700">
+        <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg flex gap-2">
+          <Zap className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-blue-700 dark:text-blue-400">
             Initial results loaded in ~{(initialLoadTime / 1000).toFixed(1)}s. Additional methods loading in background. Check back in a moment!
           </p>
         </div>
@@ -297,7 +297,7 @@ function DTypeChip({ dtype }: { dtype: string }) {
   return (
     <span className={cn(
       "inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold",
-      isNum ? "bg-blue-50 text-blue-600" : "bg-purple-50 text-purple-600"
+      isNum ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400" : "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400"
     )}>
       {dtype.replace("64", "").replace("32", "")}
     </span>
@@ -405,18 +405,18 @@ const maxSHAP = shapValues.length
     <div className="space-y-6">
       {/* Leakage alert */}
       {leakageSuspects.length > 0 && (
-        <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex gap-3">
-          <Zap className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-300 dark:border-red-700 rounded-xl p-4 flex gap-3">
+          <Zap className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-red-800">Possible Data Leakage Detected</p>
+            <p className="text-sm font-bold text-red-800 dark:text-red-300">Possible Data Leakage Detected</p>
             <div className="mt-1.5 space-y-1">
               {leakageSuspects.map(s => (
                 <div key={s.feature} className="flex items-start gap-2">
                   <span className={cn(
                     "px-1.5 py-0.5 rounded text-[9px] font-bold flex-shrink-0 mt-0.5",
-                    s.severity === "high" ? "bg-red-200 text-red-700" : "bg-amber-100 text-amber-700"
+                    s.severity === "high" ? "bg-red-200 text-red-700 dark:text-red-400" : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400"
                   )}>{s.severity}</span>
-                  <span className="text-xs text-red-700"><span className="font-mono">{s.feature}</span> — {s.reason}</span>
+                  <span className="text-xs text-red-700 dark:text-red-400"><span className="font-mono">{s.feature}</span> — {s.reason}</span>
                 </div>
               ))}
             </div>
@@ -426,22 +426,22 @@ const maxSHAP = shapValues.length
 
       {/* Redundant feature groups */}
       {redundantGroups.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-          <GitCompare className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex gap-3">
+          <GitCompare className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-amber-800 mb-2">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-300 mb-2">
               {redundantGroups.length} Redundant Feature Group{redundantGroups.length > 1 ? "s" : ""} (high inter-correlation)
             </p>
             <div className="flex flex-wrap gap-2">
               {redundantGroups.slice(0, 4).map((g, i) => (
-                <div key={i} className="flex items-center gap-1 bg-card border border-amber-200 rounded-lg px-2 py-1">
+                <div key={i} className="flex items-center gap-1 bg-card border border-amber-200 dark:border-amber-800 rounded-lg px-2 py-1">
                   {g.features.map((f, j) => (
                     <span key={f} className="flex items-center gap-1">
-                      <span className="font-mono text-[10px] text-amber-700">{f}</span>
+                      <span className="font-mono text-[10px] text-amber-700 dark:text-amber-400">{f}</span>
                       {j < g.features.length - 1 && <span className="text-amber-300 text-[10px]">↔</span>}
                     </span>
                   ))}
-                  <span className="ml-1 text-[9px] text-amber-500 font-semibold">r={g.max_correlation.toFixed(2)}</span>
+                  <span className="ml-1 text-[9px] text-amber-500 dark:text-amber-400 font-semibold">r={g.max_correlation.toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -570,7 +570,7 @@ const maxSHAP = shapValues.length
                     <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                       <div className="h-full rounded-full" style={{ width: `${abs * 100}%`, backgroundColor: isPos ? "#1D4ED8" : "#DC2626" }} />
                     </div>
-                    <span className={cn("text-[10px] tabular-nums w-14 text-right flex-shrink-0 font-semibold", isPos ? "text-blue-600" : "text-red-600")}>
+                    <span className={cn("text-[10px] tabular-nums w-14 text-right flex-shrink-0 font-semibold", isPos ? "text-blue-600 dark:text-blue-400" : "text-red-600 dark:text-red-400")}>
                       {item.correlation.toFixed(3)}
                     </span>
                   </div>
@@ -583,16 +583,16 @@ const maxSHAP = shapValues.length
 
       {/* Drop candidates */}
       {data.drop_candidates.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <AlertTriangle className="w-4 h-4 text-amber-500" />
-            <h3 className="text-sm font-semibold text-amber-800">
+            <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-300">
               {data.drop_candidates.length} Low-Importance Feature{data.drop_candidates.length > 1 ? "s" : ""} to Consider Dropping
             </h3>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {data.drop_candidates.map(f => (
-              <span key={f} className="px-2.5 py-1 bg-card border border-amber-200 rounded-lg text-xs font-mono text-amber-700">{f}</span>
+              <span key={f} className="px-2.5 py-1 bg-card border border-amber-200 dark:border-amber-800 rounded-lg text-xs font-mono text-amber-700 dark:text-amber-400">{f}</span>
             ))}
           </div>
         </div>
@@ -640,8 +640,8 @@ const maxPerm = useMemo(() =>
   function SortIcon({ col }: { col: SortKey }) {
     if (sortKey !== col) return <ChevronsUpDown className="w-3 h-3 text-muted-foreground/60" />;
     return sortDir === "asc"
-      ? <ChevronUp className="w-3 h-3 text-blue-600" />
-      : <ChevronDown className="w-3 h-3 text-blue-600" />;
+      ? <ChevronUp className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+      : <ChevronDown className="w-3 h-3 text-blue-600 dark:text-blue-400" />;
   }
 
   const TH = ({ col, label }: { col: SortKey; label: string }) => (
@@ -738,7 +738,7 @@ const maxPerm = useMemo(() =>
             <tbody>
               {sorted.map((fm, idx) => (
                 <tr key={fm.feature} className={cn(
-                  "border-b border-border hover:bg-blue-50/30 transition-colors",
+                  "border-b border-border hover:bg-blue-50/30 dark:bg-blue-950/40 transition-colors",
                   idx % 2 === 0 ? "bg-card" : "bg-muted/40",
                   fm.recommendation === "drop" && "opacity-50"
                 )}>
@@ -747,7 +747,7 @@ const maxPerm = useMemo(() =>
                     <div className="flex items-center gap-1.5">
                       {(data.leakage_suspects ?? []).find(s => s.feature === fm.feature) && (
                         <span title="Possible leakage">
-                          <Zap className="w-3 h-3 text-red-500 flex-shrink-0" />
+                          <Zap className="w-3 h-3 text-red-500 dark:text-red-400 flex-shrink-0" />
                         </span>
                       )}
                       <span className="truncate" title={fm.feature}>{fm.feature}</span>
@@ -781,16 +781,16 @@ const maxPerm = useMemo(() =>
                   <td className="px-3 py-2">
                     {fm.correlation != null ? (
                       <span className={cn("font-semibold tabular-nums",
-                        fm.correlation > 0.5 ? "text-blue-600" :
-                        fm.correlation < -0.5 ? "text-red-600" : "text-muted-foreground")}>
+                        fm.correlation > 0.5 ? "text-blue-600 dark:text-blue-400" :
+                        fm.correlation < -0.5 ? "text-red-600 dark:text-red-400" : "text-muted-foreground")}>
                         {fm.correlation.toFixed(3)}
                       </span>
                     ) : <span className="text-muted-foreground/60">—</span>}
                   </td>
                   <td className="px-3 py-2">
                     <span className={cn("font-semibold tabular-nums",
-                      fm.missing_pct > 30 ? "text-red-500" :
-                      fm.missing_pct > 10 ? "text-amber-500" : "text-muted-foreground")}>
+                      fm.missing_pct > 30 ? "text-red-500 dark:text-red-400" :
+                      fm.missing_pct > 10 ? "text-amber-500 dark:text-amber-400" : "text-muted-foreground")}>
                       {fm.missing_pct.toFixed(1)}%
                     </span>
                   </td>
@@ -904,7 +904,7 @@ function ChartsTab({ data }: { data: FIResult }) {
               <div className="flex items-center gap-1 mb-0.5">
                 <span style={method === key ? { color: "rgba(255,255,255,0.9)" } : { color: cfg.color }}>{cfg.icon}</span>
                 {cfg.new && (
-                  <span className={cn("text-[8px] font-bold px-1 rounded", method === key ? "bg-white/20 text-white" : "bg-emerald-100 text-emerald-700")}>
+                  <span className={cn("text-[8px] font-bold px-1 rounded", method === key ? "bg-white/20 text-white" : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400")}>
                     NEW
                   </span>
                 )}
@@ -1049,11 +1049,11 @@ function StabilityTab({ data }: { data: FIResult }) {
   return (
     <div className="space-y-5">
       {/* What is stability */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
-        <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+      <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex gap-3">
+        <Info className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-semibold text-blue-800">What is Stability?</p>
-          <p className="text-xs text-blue-700 mt-0.5 leading-relaxed">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">What is Stability?</p>
+          <p className="text-xs text-blue-700 dark:text-blue-400 mt-0.5 leading-relaxed">
             Stability measures how consistently a feature's importance ranks across 10 bootstrap samples.
             A CV (coefficient of variation) near 0 means the feature's importance is reliable;
             a high CV means it fluctuates — potentially unreliable for production use.
@@ -1127,7 +1127,7 @@ function StabilityTab({ data }: { data: FIResult }) {
                     <td className="px-4 py-2.5">
                       <span className={cn(
                         "font-mono font-bold tabular-nums",
-                        isStable ? "text-emerald-600" : isUnstable ? "text-red-600" : "text-amber-600"
+                        isStable ? "text-emerald-600 dark:text-emerald-400" : isUnstable ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"
                       )}>
                         {s.cv.toFixed(3)}
                       </span>
@@ -1143,9 +1143,9 @@ function StabilityTab({ data }: { data: FIResult }) {
                     <td className="px-4 py-2.5">
                       <span className={cn(
                         "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border",
-                        isStable ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
-                        isUnstable ? "bg-red-50 text-red-700 border-red-200" :
-                        "bg-amber-50 text-amber-700 border-amber-200"
+                        isStable ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" :
+                        isUnstable ? "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800" :
+                        "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
                       )}>
                         {isStable ? "Stable" : isUnstable ? "Unstable" : "Moderate"}
                       </span>
@@ -1187,11 +1187,11 @@ function InteractionsTab({ data }: { data: FIResult }) {
 
   return (
     <div className="space-y-5">
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
-        <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+      <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl p-4 flex gap-3">
+        <Info className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" />
         <div>
-          <p className="text-sm font-semibold text-blue-800">What are Feature Interactions?</p>
-          <p className="text-xs text-blue-700 mt-0.5 leading-relaxed">
+          <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">What are Feature Interactions?</p>
+          <p className="text-xs text-blue-700 dark:text-blue-400 mt-0.5 leading-relaxed">
             Interaction score measures how much more predictive two features are <em>together</em> compared to each individually.
             High interaction = synergy. Pairs with high combined importance but low individual importance may benefit from an engineered cross-feature.
           </p>
@@ -1206,15 +1206,15 @@ function InteractionsTab({ data }: { data: FIResult }) {
             const pct = (pair.interaction_score / maxScore) * 100;
             const interactionShare = pair.combined > 0 ? (pair.interaction_score / pair.combined) * 100 : 0;
             return (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted hover:bg-blue-50/50 transition-colors">
+              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-muted hover:bg-blue-50/50 dark:bg-blue-950/40 transition-colors">
                 <span className="text-[10px] font-bold text-muted-foreground/60 w-4 flex-shrink-0 mt-1 tabular-nums">{i + 1}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <span className="font-mono text-xs font-semibold text-foreground bg-blue-100 px-2 py-0.5 rounded">{pair.feature_a}</span>
+                    <span className="font-mono text-xs font-semibold text-foreground bg-blue-100 dark:bg-blue-900/30 px-2 py-0.5 rounded">{pair.feature_a}</span>
                     <span className="text-muted-foreground text-xs">×</span>
-                    <span className="font-mono text-xs font-semibold text-foreground bg-purple-100 px-2 py-0.5 rounded">{pair.feature_b}</span>
+                    <span className="font-mono text-xs font-semibold text-foreground bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded">{pair.feature_b}</span>
                     {interactionShare > 5 && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full">
                         {interactionShare.toFixed(0)}% of combined effect is interaction
                       </span>
                     )}
@@ -1378,10 +1378,10 @@ function InsightsTab({ data }: { data: FIResult }) {
   }, [data]);
 
   const LEVEL_CFG = {
-    success: { cls: "border-emerald-200 bg-emerald-50", icon: <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />, title: "text-emerald-800", body: "text-emerald-700" },
-    info:    { cls: "border-blue-200 bg-blue-50",       icon: <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />,          title: "text-blue-800",    body: "text-blue-700" },
-    warning: { cls: "border-amber-200 bg-amber-50",     icon: <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />, title: "text-amber-800",   body: "text-amber-700" },
-    danger:  { cls: "border-red-200 bg-red-50",         icon: <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />,        title: "text-red-800",     body: "text-red-700" },
+    success: { cls: "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40", icon: <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 flex-shrink-0 mt-0.5" />, title: "text-emerald-800", body: "text-emerald-700" },
+    info:    { cls: "border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40",       icon: <Info className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" />,          title: "text-blue-800",    body: "text-blue-700" },
+    warning: { cls: "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40",     icon: <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" />, title: "text-amber-800",   body: "text-amber-700" },
+    danger:  { cls: "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40",         icon: <XCircle className="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />,        title: "text-red-800",     body: "text-red-700" },
   };
 
   return (
@@ -1406,7 +1406,7 @@ function InsightsTab({ data }: { data: FIResult }) {
       {/* Action checklist */}
       <div className="bg-card border border-border rounded-xl p-5 mt-6">
         <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-          <Target className="w-4 h-4 text-blue-600" />
+          <Target className="w-4 h-4 text-blue-600 dark:text-blue-400" />
           Feature Selection Checklist
         </h3>
         <div className="space-y-2.5">
@@ -1423,7 +1423,7 @@ function InsightsTab({ data }: { data: FIResult }) {
           ].map((item, i) => (
             <div key={i} className="flex items-start gap-2.5">
               {item.done
-                ? <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                ? <CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
                 : <div className="w-4 h-4 rounded-full border-2 border-border flex-shrink-0 mt-0.5" />}
               <span className={cn("text-xs", item.done ? "text-foreground" : "text-muted-foreground")}>{item.text}</span>
             </div>
@@ -1570,7 +1570,7 @@ export default function FeatureImportancePage() {
         <div className="flex flex-wrap items-start justify-between gap-4 mt-4 mb-5">
           <div>
             <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+              <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               Feature Importance
               {!initialData && initialLoading && <RefreshCw className="w-3.5 h-3.5 text-muted-foreground animate-spin" />}
             </h1>
@@ -1596,8 +1596,8 @@ export default function FeatureImportancePage() {
               <span className={cn(
                 "px-2 py-0.5 rounded-full text-[10px] font-semibold",
                 data.problem_type === "classification"
-                  ? "bg-violet-100 text-violet-700"
-                  : "bg-cyan-100 text-cyan-700"
+                  ? "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400"
+                  : "bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400"
               )}>
                 {data.problem_type}
               </span>
@@ -1646,7 +1646,7 @@ export default function FeatureImportancePage() {
             </div>
           </div>
         ) : initialError ? (
-          <div className="flex flex-col items-center gap-3 py-20 text-red-500">
+          <div className="flex flex-col items-center gap-3 py-20 text-red-500 dark:text-red-400">
             <AlertTriangle className="w-8 h-8" />
             <p className="text-sm font-semibold">Analysis failed</p>
             <p className="text-xs text-muted-foreground">{(initialError as Error).message}</p>
@@ -1669,7 +1669,7 @@ export default function FeatureImportancePage() {
                   {t.icon}
                   {t.label}
                   {t.badge && (
-                    <span className="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[8px] font-bold">
+                    <span className="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded text-[8px] font-bold">
                       {t.badge}
                     </span>
                   )}
@@ -1685,7 +1685,7 @@ export default function FeatureImportancePage() {
             {activeTab === "insights" && <InsightsTab data={data} />}
           </>
         ) : data?.error ? (
-          <div className="flex flex-col items-center gap-3 py-20 text-amber-500">
+          <div className="flex flex-col items-center gap-3 py-20 text-amber-500 dark:text-amber-400">
             <AlertTriangle className="w-8 h-8" />
             <p className="text-sm font-semibold">{data.error}</p>
           </div>

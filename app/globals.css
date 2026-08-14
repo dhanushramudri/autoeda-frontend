@@ -111,6 +111,15 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
+  /* Sensible themed default for form controls that don't set their own
+     background — otherwise they keep the browser's native white background
+     while inheriting the page's (light-in-dark-mode) text color, which reads
+     as invisible text in dark mode. Any component with an explicit bg-*
+     class still overrides this, since utilities beat @layer base. */
+  input, textarea, select {
+    @apply bg-input text-foreground;
+  }
+
   html {
     scroll-behavior: smooth;
   }

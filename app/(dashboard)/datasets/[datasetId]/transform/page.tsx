@@ -72,29 +72,29 @@ function opLabel(op: TransformOp): string {
 
 // ── Op category badge ─────────────────────────────────────────────────────────
 const OP_COLORS: Record<string, string> = {
-  drop_columns: "bg-red-50 text-red-700 border-red-200",
-  select_columns: "bg-blue-50 text-blue-700 border-blue-200",
-  rename_column: "bg-sky-50 text-sky-700 border-sky-200",
-  cast_type: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  drop_columns: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800",
+  select_columns: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+  rename_column: "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border-sky-200 dark:border-sky-800",
+  cast_type: "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800",
   reorder_columns: "bg-muted text-foreground border-border",
-  create_column: "bg-violet-50 text-violet-700 border-violet-200",
-  fill_missing: "bg-amber-50 text-amber-700 border-amber-200",
-  drop_rows_where_null: "bg-orange-50 text-orange-700 border-orange-200",
-  drop_duplicates: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  filter_rows: "bg-teal-50 text-teal-700 border-teal-200",
-  clip: "bg-cyan-50 text-cyan-700 border-cyan-200",
-  cap_outliers: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  drop_outliers: "bg-rose-50 text-rose-700 border-rose-200",
-  sample_rows: "bg-lime-50 text-lime-700 border-lime-200",
+  create_column: "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-800",
+  fill_missing: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800",
+  drop_rows_where_null: "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800",
+  drop_duplicates: "bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+  filter_rows: "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-800",
+  clip: "bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800",
+  cap_outliers: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+  drop_outliers: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800",
+  sample_rows: "bg-lime-50 dark:bg-lime-950/40 text-lime-700 dark:text-lime-400 border-lime-200 dark:border-lime-800",
   sort_rows: "bg-muted text-foreground border-border",
-  encode: "bg-purple-50 text-purple-700 border-purple-200",
-  scale: "bg-blue-50 text-blue-700 border-blue-200",
-  log_transform: "bg-green-50 text-green-700 border-green-200",
-  sqrt_transform: "bg-green-50 text-green-700 border-green-200",
-  bin: "bg-pink-50 text-pink-700 border-pink-200",
-  extract_datetime: "bg-orange-50 text-orange-700 border-orange-200",
-  text_clean: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
-  map_values: "bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200",
+  encode: "bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800",
+  scale: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+  log_transform: "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800",
+  sqrt_transform: "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800",
+  bin: "bg-pink-50 dark:bg-pink-950/40 text-pink-700 dark:text-pink-400 border-pink-200 dark:border-pink-800",
+  extract_datetime: "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800",
+  text_clean: "bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-700 dark:text-fuchsia-400 border-fuchsia-200 dark:border-fuchsia-800",
+  map_values: "bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-700 dark:text-fuchsia-400 border-fuchsia-200 dark:border-fuchsia-800",
 };
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
@@ -195,22 +195,22 @@ export default function TransformStudioPage() {
         </div>
 
         {/* ── NL Transform Prompt (collapsible) ── */}
-        <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-xl mb-4 overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 dark:border-indigo-800 rounded-xl mb-4 overflow-hidden">
           <button
             onClick={() => setNlOpen((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-indigo-100/40 transition"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-indigo-100/40 dark:bg-indigo-900/30 transition"
           >
-            <span className="text-sm font-semibold text-indigo-700 flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
               <Sparkles className="w-4 h-4" /> Describe a transformation
             </span>
             {nlOpen
-              ? <ChevronDown className="w-4 h-4 text-indigo-400" />
-              : <ChevronRight className="w-4 h-4 text-indigo-400" />}
+              ? <ChevronDown className="w-4 h-4 text-indigo-400 dark:text-indigo-400" />
+              : <ChevronRight className="w-4 h-4 text-indigo-400 dark:text-indigo-400" />}
           </button>
 
           {nlOpen && (
             <div className="px-4 pb-4">
-              <p className="text-xs text-indigo-500 mb-3">
+              <p className="text-xs text-indigo-500 dark:text-indigo-400 mb-3">
                 Tell the AI what to do in plain English — it will generate the exact pipeline step.
               </p>
               <div className="flex gap-2 items-start">
@@ -226,7 +226,7 @@ export default function TransformStudioPage() {
                   }}
                   placeholder={`e.g. "fill missing age with median", "create revenue_per_user = revenue / users", "drop duplicate rows"`}
                   rows={2}
-                  className="flex-1 text-sm border border-indigo-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-card resize-none placeholder:text-indigo-300"
+                  className="flex-1 text-sm border border-indigo-200 dark:border-indigo-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-card resize-none placeholder:text-indigo-300"
                 />
                 <button
                   onClick={() => nlMutation.mutate()}
@@ -240,13 +240,13 @@ export default function TransformStudioPage() {
               </div>
 
               {nlError && (
-                <p className="mt-2 text-xs text-red-600 flex items-center gap-1">
+                <p className="mt-2 text-xs text-red-600 dark:text-red-400 flex items-center gap-1">
                   <AlertTriangle className="w-3.5 h-3.5" /> {nlError}
                 </p>
               )}
 
               {nlPreview && (
-                <div className="mt-3 bg-card border border-indigo-100 rounded-lg p-3 space-y-2">
+                <div className="mt-3 bg-card border border-indigo-100 dark:border-indigo-800/40 rounded-lg p-3 space-y-2">
                   <p className="text-xs text-muted-foreground">{nlPreview.explanation}</p>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={cn(
@@ -407,7 +407,7 @@ export default function TransformStudioPage() {
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-foreground">Pipeline <span className="text-muted-foreground font-normal">({ops.length} steps)</span></h2>
                 {ops.length > 0 && (
-                  <button onClick={() => { setOps([]); setResult(null); }} className="text-xs text-red-400 hover:text-red-600 transition">Clear all</button>
+                  <button onClick={() => { setOps([]); setResult(null); }} className="text-xs text-red-400 dark:text-red-400 hover:text-red-600 transition">Clear all</button>
                 )}
               </div>
 
@@ -466,14 +466,14 @@ export default function TransformStudioPage() {
                   </button>
 
                   {result && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3 text-xs text-emerald-800 space-y-1">
+                    <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-lg px-4 py-3 text-xs text-emerald-800 dark:text-emerald-300 space-y-1">
                       <p className="flex items-center gap-1.5 font-semibold">
                         <CheckCircle className="w-3.5 h-3.5" /> Done — {result.rows.toLocaleString()} rows × {result.columns} columns
                       </p>
                       {result.errors?.length > 0 && (
                         <div className="space-y-0.5">
                           {result.errors.map((e, i) => (
-                            <p key={i} className="text-amber-700 flex items-center gap-1">
+                            <p key={i} className="text-amber-700 dark:text-amber-400 flex items-center gap-1">
                               <AlertTriangle className="w-3 h-3" /> {e.op}: {e.error}
                             </p>
                           ))}
@@ -525,9 +525,9 @@ const ISSUE_LABELS: Record<string, string> = {
 };
 
 function severityMeta(sev: string) {
-  if (sev === "high") return { Icon: AlertOctagon, color: "text-rose-600 bg-rose-50 border-rose-200" };
-  if (sev === "medium") return { Icon: AlertTriangle, color: "text-amber-600 bg-amber-50 border-amber-200" };
-  return { Icon: Info, color: "text-blue-600 bg-blue-50 border-blue-200" };
+  if (sev === "high") return { Icon: AlertOctagon, color: "text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800" };
+  if (sev === "medium") return { Icon: AlertTriangle, color: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800" };
+  return { Icon: Info, color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800" };
 }
 
 function SmartCleanPanel({
@@ -555,7 +555,7 @@ function SmartCleanPanel({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-xs text-red-700">
+      <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4 text-xs text-red-700 dark:text-red-400">
         Failed to load Smart Clean suggestions.
       </div>
     );
@@ -563,10 +563,10 @@ function SmartCleanPanel({
 
   if (suggestions.length === 0) {
     return (
-      <div className="bg-emerald-50 border border-emerald-200 rounded-xl py-10 text-center">
-        <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-        <p className="text-sm text-emerald-700 font-medium">No cleanable issues detected</p>
-        <p className="text-xs text-emerald-600 mt-1">Casing, whitespace, and date formats all look consistent.</p>
+      <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl py-10 text-center">
+        <CheckCircle className="w-8 h-8 text-emerald-400 dark:text-emerald-400 mx-auto mb-2" />
+        <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium">No cleanable issues detected</p>
+        <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Casing, whitespace, and date formats all look consistent.</p>
       </div>
     );
   }
@@ -640,7 +640,7 @@ function SmartCleanCard({
           disabled={added}
           className={cn(
             "flex-shrink-0 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition",
-            added ? "bg-emerald-50 text-emerald-600 border border-emerald-200" : "bg-brand text-white hover:bg-[#2a0d8a]"
+            added ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" : "bg-brand text-white hover:bg-[#2a0d8a]"
           )}
         >
           {added ? <><CheckCircle className="w-3.5 h-3.5" /> Added</> : <><Plus className="w-3.5 h-3.5" /> Add to pipeline</>}
@@ -654,7 +654,7 @@ function SmartCleanCard({
             {suggestion.examples.map((ex, i) => (
               <Fragment key={i}>
                 <span className="font-mono text-muted-foreground truncate">{ex.before}</span>
-                <span className="font-mono text-emerald-700 truncate">{ex.after}</span>
+                <span className="font-mono text-emerald-700 dark:text-emerald-400 truncate">{ex.after}</span>
               </Fragment>
             ))}
           </div>

@@ -16,9 +16,9 @@ interface ChartCardProps {
 }
 
 const SEVERITY_STYLES = {
-  info: "bg-blue-50 border-blue-200 text-blue-700",
-  warning: "bg-amber-50 border-amber-200 text-amber-700",
-  danger: "bg-red-50 border-red-200 text-red-700",
+  info: "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400",
+  warning: "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400",
+  danger: "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400",
 };
 
 export function ChartCard({

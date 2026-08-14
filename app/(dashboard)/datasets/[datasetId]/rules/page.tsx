@@ -65,7 +65,7 @@ export default function RulesPage() {
   };
 
   const passRatePct = results ? Math.round(results.pass_rate * 100) : null;
-  const passColor = passRatePct == null ? "text-muted-foreground" : passRatePct >= 90 ? "text-emerald-600" : passRatePct >= 70 ? "text-amber-600" : "text-red-600";
+  const passColor = passRatePct == null ? "text-muted-foreground" : passRatePct >= 90 ? "text-emerald-600 dark:text-emerald-400" : passRatePct >= 70 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400";
 
   return (
     <>
@@ -109,7 +109,7 @@ export default function RulesPage() {
                     <p className="text-xs font-medium text-foreground">{RULE_TYPES.find((r) => r.value === rule.rule_type)?.label}</p>
                     {rule.column_name && <p className="text-xs text-muted-foreground truncate">{rule.column_name}</p>}
                   </div>
-                  <button onClick={() => setRules((prev) => prev.filter((_, i) => i !== idx))} className="text-muted-foreground/60 hover:text-red-400 ml-2">
+                  <button onClick={() => setRules((prev) => prev.filter((_, i) => i !== idx))} className="text-muted-foreground/60 hover:text-red-400 dark:text-red-400 ml-2">
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
@@ -194,14 +194,14 @@ export default function RulesPage() {
                   <div>
                     <div className="flex items-center gap-2">
                       {r.fail_count === 0
-                        ? <CheckCircle className="w-4 h-4 text-emerald-500" />
-                        : r.fail_pct > 20 ? <XCircle className="w-4 h-4 text-red-500" /> : <AlertCircle className="w-4 h-4 text-amber-500" />}
+                        ? <CheckCircle className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                        : r.fail_pct > 20 ? <XCircle className="w-4 h-4 text-red-500 dark:text-red-400" /> : <AlertCircle className="w-4 h-4 text-amber-500 dark:text-amber-400" />}
                       <span className="text-sm font-medium text-foreground">{r.label}</span>
                     </div>
                     {r.column_name && <p className="text-xs text-muted-foreground mt-0.5 ml-6">{r.column_name}</p>}
                   </div>
                   <div className="text-right">
-                    <span className={`text-lg font-bold ${r.pass_pct >= 90 ? "text-emerald-600" : r.pass_pct >= 70 ? "text-amber-600" : "text-red-600"}`}>
+                    <span className={`text-lg font-bold ${r.pass_pct >= 90 ? "text-emerald-600 dark:text-emerald-400" : r.pass_pct >= 70 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400"}`}>
                       {r.pass_pct.toFixed(1)}%
                     </span>
                     <p className="text-xs text-muted-foreground">pass rate</p>

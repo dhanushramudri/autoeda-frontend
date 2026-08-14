@@ -85,11 +85,11 @@ function sourceGroupLabel(sourceType?: string): string {
 }
 
 const TYPE_BADGE_COLOR: Record<string, string> = {
-  INTEGER: "text-blue-400", BIGINT: "text-blue-400",
-  DOUBLE: "text-purple-400", FLOAT: "text-purple-400",
-  VARCHAR: "text-emerald-400", TEXT: "text-emerald-400",
-  BOOLEAN: "text-amber-400",
-  DATE: "text-pink-400", TIMESTAMP: "text-pink-400",
+  INTEGER: "text-blue-400 dark:text-blue-400", BIGINT: "text-blue-400",
+  DOUBLE: "text-purple-400 dark:text-purple-400", FLOAT: "text-purple-400",
+  VARCHAR: "text-emerald-400 dark:text-emerald-400", TEXT: "text-emerald-400",
+  BOOLEAN: "text-amber-400 dark:text-amber-400",
+  DATE: "text-pink-400 dark:text-pink-400", TIMESTAMP: "text-pink-400",
 };
 
 function typeColor(t: string) {
@@ -148,7 +148,7 @@ function TableNode({ slug, label, columns, rowCount, isLoadingCols, onExpand, on
         onClick={toggle}
         className="w-full flex items-center gap-1.5 px-2 py-[5px] hover:bg-muted transition group"
       >
-        <Table2 className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+        <Table2 className="w-3.5 h-3.5 text-blue-400 dark:text-blue-400 flex-shrink-0" />
         <div className="flex-1 min-w-0 text-left">
           <span className="font-mono text-[11px] text-foreground truncate block">{label || slug}</span>
           {slug !== label && slug && (
@@ -224,7 +224,7 @@ function CatalogSectionBlock({ section, search, workspaceId, onInsertSelect, onI
         onClick={() => setCollapsed((p) => !p)}
         className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-muted transition sticky top-0 bg-card z-10"
       >
-        <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${section.type === "datasets" ? "text-indigo-500" : "text-brand"}`} />
+        <Icon className={`w-3.5 h-3.5 flex-shrink-0 ${section.type === "datasets" ? "text-indigo-500 dark:text-indigo-400" : "text-brand"}`} />
         <span className="text-xs font-semibold text-foreground flex-1 text-left truncate">{section.label}</span>
         {section.status && section.type === "source" && <StatusDot status={section.status} />}
         <span className="text-[9px] text-muted-foreground flex-shrink-0">{filteredItems.length}</span>
@@ -233,7 +233,7 @@ function CatalogSectionBlock({ section, search, workspaceId, onInsertSelect, onI
 
       {/* Error banner */}
       {!collapsed && section.error && (
-        <div className="mx-3 mb-2 px-2 py-1.5 bg-red-50 border border-red-200 rounded text-[10px] text-red-600 flex items-center gap-1">
+        <div className="mx-3 mb-2 px-2 py-1.5 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded text-[10px] text-red-600 dark:text-red-400 flex items-center gap-1">
           <XCircle className="w-3 h-3 flex-shrink-0" />
           {section.error.slice(0, 120)}
         </div>
@@ -594,7 +594,7 @@ export default function WarehousePage() {
             >
               Results
               {result && !result.error && (
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-blue-100 text-brand text-[10px]">
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-brand text-[10px]">
                   {result.row_count}
                 </span>
               )}
@@ -651,7 +651,7 @@ export default function WarehousePage() {
                             <button
                               key={item.slug}
                               onClick={() => insertSelect(item.slug)}
-                              className="font-mono text-[10px] bg-blue-50 text-brand px-2 py-0.5 rounded hover:bg-brand/20 transition"
+                              className="font-mono text-[10px] bg-blue-50 dark:bg-blue-950/40 text-brand px-2 py-0.5 rounded hover:bg-brand/20 transition"
                             >
                               {item.slug}
                             </button>
@@ -662,9 +662,9 @@ export default function WarehousePage() {
                   </div>
                 )}
                 {result?.error && (
-                  <div className="m-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm font-semibold text-red-700 mb-1">Query Error</p>
-                    <pre className="text-xs text-red-600 whitespace-pre-wrap font-mono">{result.error}</pre>
+                  <div className="m-4 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg">
+                    <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Query Error</p>
+                    <pre className="text-xs text-red-600 dark:text-red-400 whitespace-pre-wrap font-mono">{result.error}</pre>
                   </div>
                 )}
                 {result && !result.error && result.columns.length > 0 && (
@@ -684,7 +684,7 @@ export default function WarehousePage() {
                     <p className="text-sm">Click Explain to see the query plan</p>
                   </div>
                 ) : (
-                  <pre className="m-4 p-4 bg-gray-900 text-green-400 rounded-lg text-xs font-mono overflow-auto whitespace-pre-wrap">{plan}</pre>
+                  <pre className="m-4 p-4 bg-gray-900 text-green-400 dark:text-green-400 rounded-lg text-xs font-mono overflow-auto whitespace-pre-wrap">{plan}</pre>
                 )}
               </>
             )}

@@ -166,11 +166,11 @@ function TSMethodLoadingIndicator({ methods }: { methods: TSMethodLoadingState[]
             key={m.id}
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border ${
               m.status === "done"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
                 : m.status === "error"
-                ? "bg-red-50 text-red-700 border-red-200"
+                ? "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
                 : m.status === "loading"
-                ? "bg-blue-50 text-blue-700 border-blue-200"
+                ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                 : "bg-muted text-muted-foreground border-border"
             }`}
           >
@@ -257,11 +257,11 @@ function Section({ title, icon, defaultOpen = true, children, badge }: {
 
 function Badge({ color, children }: { color: "green" | "red" | "yellow" | "gray" | "blue"; children: React.ReactNode }) {
   const cls = {
-    green: "bg-green-50 text-green-700 border-green-200",
-    red: "bg-red-50 text-red-700 border-red-200",
-    yellow: "bg-amber-50 text-amber-700 border-amber-200",
+    green: "bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800",
+    red: "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800",
+    yellow: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800",
     gray: "bg-muted text-muted-foreground border-border",
-    blue: "bg-blue-50 text-blue-700 border-blue-200",
+    blue: "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800",
   }[color];
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${cls}`}>{children}</span>;
 }
@@ -568,21 +568,21 @@ function DataQualityPanel({ q }: { q?: NonNullable<TSData["data_quality"]> }) {
           <Badge color={scoreColor}>{score.toFixed(0)} / 100</Badge>
         </div>
         <KVRow label="Total points" value={q.n_total?.toLocaleString?.() ?? "—"} />
-        <KVRow label="Missing values" value={<span className={(q.missing_pct ?? 0) > 5 ? "text-red-600 font-medium" : ""}>{q.n_missing ?? 0} ({(q.missing_pct ?? 0).toFixed(2)}%)</span>} />
-        <KVRow label="Duplicate timestamps" value={<span className={(q.n_duplicates ?? 0) > 0 ? "text-amber-600 font-medium" : ""}>{q.n_duplicates ?? 0}</span>} />
+        <KVRow label="Missing values" value={<span className={(q.missing_pct ?? 0) > 5 ? "text-red-600 dark:text-red-400 font-medium" : ""}>{q.n_missing ?? 0} ({(q.missing_pct ?? 0).toFixed(2)}%)</span>} />
+        <KVRow label="Duplicate timestamps" value={<span className={(q.n_duplicates ?? 0) > 0 ? "text-amber-600 dark:text-amber-400 font-medium" : ""}>{q.n_duplicates ?? 0}</span>} />
         <KVRow label="Zero values" value={q.n_zeros ?? 0} />
         <KVRow label="Constant runs (≥5)" value={q.n_const_runs ?? "—"} />
       </div>
       <div>
         <p className="text-sm font-medium text-foreground mb-3">Temporal Regularity</p>
         <KVRow label="Inferred frequency" value={<Badge color="blue">{q.inferred_freq ?? "unknown"}</Badge>} />
-        <KVRow label="Irregular intervals" value={<span className={(q.irregular_pct ?? 0) > 10 ? "text-amber-600 font-medium" : ""}>{q.irregular_pct != null ? `${q.irregular_pct.toFixed(1)}%` : "—"}</span>} />
+        <KVRow label="Irregular intervals" value={<span className={(q.irregular_pct ?? 0) > 10 ? "text-amber-600 dark:text-amber-400 font-medium" : ""}>{q.irregular_pct != null ? `${q.irregular_pct.toFixed(1)}%` : "—"}</span>} />
         {Array.isArray(q.gaps) && q.gaps.length > 0 && (
           <div className="mt-2">
             <p className="text-xs text-muted-foreground font-medium mb-1">Detected gaps ({q.gaps.length})</p>
             <div className="space-y-1 max-h-28 overflow-y-auto">
               {q.gaps.slice(0, 10).map((g, i) => (
-                <div key={i} className="text-xs text-muted-foreground bg-amber-50 rounded px-2 py-1">
+                <div key={i} className="text-xs text-muted-foreground bg-amber-50 dark:bg-amber-950/40 rounded px-2 py-1">
                   {fmtDate(g?.start)} → {fmtDate(g?.end)}
                 </div>
               ))}
@@ -617,7 +617,7 @@ function DescriptiveStatsPanel({ stats }: { stats?: NonNullable<TSData["descript
       <div>
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Shape</p>
         <KVRow label="Skewness" value={
-          <span className={Math.abs(stats.skewness ?? 0) > 1 ? "text-amber-600 font-medium" : ""}>{fmt(stats.skewness)}</span>
+          <span className={Math.abs(stats.skewness ?? 0) > 1 ? "text-amber-600 dark:text-amber-400 font-medium" : ""}>{fmt(stats.skewness)}</span>
         } mono />
         <KVRow label="Kurtosis" value={fmt(stats.kurtosis)} mono />
         <KVRow label="Range" value={fmt(stats.range)} mono />
@@ -673,7 +673,7 @@ function StationarityPanel({ stationarity, diffSuggestions }: {
             <p className="text-xs text-muted-foreground mb-2">{t.nullHypothesis}</p>
             <KVRow label="Statistic" value={fmt(t.data.statistic)} mono />
             <KVRow label="p-value" value={
-              <span className={(t.data.pvalue ?? 1) < 0.05 ? "text-green-600 font-medium" : "text-red-600"}>
+              <span className={(t.data.pvalue ?? 1) < 0.05 ? "text-green-600 dark:text-green-400 font-medium" : "text-red-600 dark:text-red-400"}>
                 {fmt(t.data.pvalue, 6)}
               </span>
             } mono />
@@ -682,7 +682,7 @@ function StationarityPanel({ stationarity, diffSuggestions }: {
         ))}
       </div>
       {stationarity.zivot_andrews && (
-        <div className="border border-amber-100 bg-amber-50 rounded-lg p-3">
+        <div className="border border-amber-100 dark:border-amber-800/40 bg-amber-50 dark:bg-amber-950/40 rounded-lg p-3">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-semibold text-foreground">Zivot-Andrews Structural Break Test</span>
             <Badge color={stationarity.zivot_andrews.pvalue != null && stationarity.zivot_andrews.pvalue < 0.05 ? "yellow" : "green"}>
@@ -713,7 +713,7 @@ function NormalityPanel({ normality }: { normality?: NonNullable<TSData["normali
             </Badge>
           </div>
           <KVRow label="Statistic" value={fmt(test?.statistic)} mono />
-          <KVRow label="p-value" value={<span className={(test?.pvalue ?? 1) > 0.05 ? "text-green-600" : "text-red-600"}>{fmt(test?.pvalue, 6)}</span>} mono />
+          <KVRow label="p-value" value={<span className={(test?.pvalue ?? 1) > 0.05 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>{fmt(test?.pvalue, 6)}</span>} mono />
         </div>
       ))}
     </div>
@@ -740,7 +740,7 @@ function TrendPanel({ trend }: { trend?: NonNullable<TSData["trend_tests"]> }) {
               {mk.trend ?? "unknown"}
             </Badge>
           </div>
-          <KVRow label="p-value" value={<span className={(mk.p_value ?? 1) < 0.05 ? "text-green-600 font-medium" : "text-muted-foreground"}>{fmt(mk.p_value, 6)}</span>} mono />
+          <KVRow label="p-value" value={<span className={(mk.p_value ?? 1) < 0.05 ? "text-green-600 dark:text-green-400 font-medium" : "text-muted-foreground"}>{fmt(mk.p_value, 6)}</span>} mono />
           <KVRow label="Tau (τ)" value={fmt(mk.tau)} mono />
           <KVRow label="Sen's slope" value={fmt(mk.sen_slope)} mono />
           <p className="text-xs text-muted-foreground mt-1.5 italic">{mk.interpretation ?? "—"}</p>
@@ -833,10 +833,10 @@ function AnomalyPanel({ anomaliesFull, data }: {
             </thead>
             <tbody>
               {list.slice(0, 50).map((a: any, i: number) => (
-                <tr key={i} className="border-t border-border hover:bg-red-50">
+                <tr key={i} className="border-t border-border hover:bg-red-50 dark:bg-red-950/40">
                   <td className="px-3 py-1.5 text-foreground">{fmtDate(a?.date)}</td>
                   <td className="px-3 py-1.5 text-right font-mono text-foreground">{fmt(a?.value)}</td>
-                  {tab === "zscore" && <td className="px-3 py-1.5 text-right font-mono text-red-600">{fmt(Math.abs(a?.z_score ?? 0))}</td>}
+                  {tab === "zscore" && <td className="px-3 py-1.5 text-right font-mono text-red-600 dark:text-red-400">{fmt(Math.abs(a?.z_score ?? 0))}</td>}
                   {tab === "iqr" && (
                     <td className="px-3 py-1.5 text-right font-mono text-muted-foreground">
                       [{fmt(a?.fence_lower)}, {fmt(a?.fence_upper)}]
@@ -884,7 +884,7 @@ function ChangePointPanel({ changePoints }: { changePoints?: NonNullable<TSData[
             </thead>
             <tbody>
               {points.slice(0, 20).map((cp, i) => (
-                <tr key={i} className="border-t border-border hover:bg-amber-50">
+                <tr key={i} className="border-t border-border hover:bg-amber-50 dark:bg-amber-950/40">
                   <td className="px-3 py-1.5 font-mono text-muted-foreground">{cp?.index ?? "—"}</td>
                   <td className="px-3 py-1.5 text-foreground">{fmtDate(cp?.date)}</td>
                   <td className="px-3 py-1.5 text-right font-mono text-foreground">{fmt(cp?.value)}</td>
@@ -955,21 +955,21 @@ function ForecastingReadinessPanel({ readiness }: { readiness?: NonNullable<TSDa
     <div className="space-y-4">
       {/* Issues */}
       {Array.isArray(readiness.issues) && readiness.issues.length > 0 ? (
-        <div className="bg-amber-50 border border-amber-100 rounded-lg p-3">
-          <p className="text-xs font-semibold text-amber-800 mb-2 flex items-center gap-1.5">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-800/40 rounded-lg p-3">
+          <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mb-2 flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5" /> Pre-processing required
           </p>
           <ul className="space-y-1">
             {readiness.issues.map((issue, i) => (
-              <li key={i} className="text-xs text-amber-700 flex items-start gap-1.5">
+              <li key={i} className="text-xs text-amber-700 dark:text-amber-400 flex items-start gap-1.5">
                 <span className="mt-0.5 shrink-0">•</span>{issue}
               </li>
             ))}
           </ul>
         </div>
       ) : (
-        <div className="bg-green-50 border border-green-100 rounded-lg p-3">
-          <p className="text-xs font-semibold text-green-800 flex items-center gap-1.5">
+        <div className="bg-green-50 dark:bg-green-950/40 border border-green-100 dark:border-green-800/40 rounded-lg p-3">
+          <p className="text-xs font-semibold text-green-800 dark:text-green-300 flex items-center gap-1.5">
             <CheckCircle className="w-3.5 h-3.5" /> Data is ready for modelling
           </p>
         </div>
@@ -996,7 +996,7 @@ function ForecastingReadinessPanel({ readiness }: { readiness?: NonNullable<TSDa
         <p className="text-xs font-semibold text-foreground">Model Recommendations</p>
         {Array.isArray(readiness.recommendations) && readiness.recommendations.length > 0 ? (
           readiness.recommendations.map((r, i) => (
-            <div key={i} className={`border rounded-lg p-3 ${i === 0 ? "border-brand bg-blue-50" : "border-border"}`}>
+            <div key={i} className={`border rounded-lg p-3 ${i === 0 ? "border-brand bg-blue-50 dark:bg-blue-950/40" : "border-border"}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-semibold text-foreground">{r?.model ?? "Unknown"}</span>
                 {i === 0 && <Badge color="blue">Recommended</Badge>}
@@ -1019,14 +1019,14 @@ function ForecastingReadinessPanel({ readiness }: { readiness?: NonNullable<TSDa
 function SummaryCards({ data }: { data: TSData }) {
   const trendValue = data.trend_tests?.mann_kendall?.trend ?? (data.has_trend ? "trend" : "no trend");
   const TrendIcon = trendValue?.includes("increas") ? TrendingUp : trendValue?.includes("decreas") ? TrendingDown : Minus;
-  const trendColor = trendValue?.includes("increas") ? "text-green-600" : trendValue?.includes("decreas") ? "text-red-600" : "text-muted-foreground";
+  const trendColor = trendValue?.includes("increas") ? "text-green-600 dark:text-green-400" : trendValue?.includes("decreas") ? "text-red-600 dark:text-red-400" : "text-muted-foreground";
 
   const cards = [
     {
       label: "Data points",
       value: data.n_points?.toLocaleString?.() ?? "?",
       sub: data.data_quality?.inferred_freq ? `freq: ${data.data_quality.inferred_freq}` : undefined,
-      icon: <Activity className="w-4 h-4 text-blue-500" />,
+      icon: <Activity className="w-4 h-4 text-blue-500 dark:text-blue-400" />,
     },
     {
       label: "Stationarity",
@@ -1038,8 +1038,8 @@ function SummaryCards({ data }: { data: TSData }) {
       }[data.stationarity?.verdict ?? "unknown"],
       sub: data.adf_pvalue != null ? `ADF p=${fmt(data.adf_pvalue, 4)}` : undefined,
       icon: data.stationarity?.verdict === "stationary"
-        ? <CheckCircle className="w-4 h-4 text-green-500" />
-        : <XCircle className="w-4 h-4 text-red-500" />,
+        ? <CheckCircle className="w-4 h-4 text-green-500 dark:text-green-400" />
+        : <XCircle className="w-4 h-4 text-red-500 dark:text-red-400" />,
     },
     {
       label: "Trend",
@@ -1053,19 +1053,19 @@ function SummaryCards({ data }: { data: TSData }) {
       sub: data.seasonality_tests?.acf_seasonal_strength != null
         ? `ACF@period=${fmt(data.seasonality_tests.acf_seasonal_strength)}`
         : undefined,
-      icon: <BarChart2 className="w-4 h-4 text-purple-500" />,
+      icon: <BarChart2 className="w-4 h-4 text-purple-500 dark:text-purple-400" />,
     },
     {
       label: "Anomalies",
       value: (data.anomalies_full?.total_anomalies ?? data.anomalies?.length ?? 0).toString(),
       sub: "multi-method",
-      icon: <AlertTriangle className={`w-4 h-4 ${((data.anomalies_full?.total_anomalies ?? 0) > 0) ? "text-amber-500" : "text-muted-foreground/60"}`} />,
+      icon: <AlertTriangle className={`w-4 h-4 ${((data.anomalies_full?.total_anomalies ?? 0) > 0) ? "text-amber-500 dark:text-amber-400" : "text-muted-foreground/60"}`} />,
     },
     {
       label: "Change points",
       value: (data.change_points?.change_points?.length ?? 0).toString(),
       sub: data.change_points?.method ?? undefined,
-      icon: <GitBranch className="w-4 h-4 text-orange-500" />,
+      icon: <GitBranch className="w-4 h-4 text-orange-500 dark:text-orange-400" />,
     },
   ];
 
@@ -1091,9 +1091,9 @@ function SummaryCards({ data }: { data: TSData }) {
 function ArimaHintsPanel({ hints }: { hints?: NonNullable<TSData["acf_pacf_full"]>["arima_hints"] }) {
   if (!hints) return null;
   return (
-    <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3">
-      <p className="text-xs font-semibold text-blue-800 mb-1">ARIMA Order Hints</p>
-      <p className="text-xs text-blue-700">{hints.note ?? "No hints available"}</p>
+    <div className="mt-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800/40 rounded-lg p-3">
+      <p className="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">ARIMA Order Hints</p>
+      <p className="text-xs text-blue-700 dark:text-blue-400">{hints.note ?? "No hints available"}</p>
       <div className="flex gap-3 mt-1.5">
         <Badge color="blue">p = {hints.suggested_p ?? 0}</Badge>
         <Badge color="blue">q = {hints.suggested_q ?? 0}</Badge>
@@ -1292,8 +1292,8 @@ export default function TimeSeriesPage() {
                 description="Could not compute time series analysis. Check that the selected columns are valid." 
               />
             ) : data.error ? (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                <p className="text-sm text-red-700 font-medium">Analysis error: {data.error}</p>
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4">
+                <p className="text-sm text-red-700 dark:text-red-400 font-medium">Analysis error: {data.error}</p>
               </div>
             ) : (
               <>

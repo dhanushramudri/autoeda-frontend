@@ -90,13 +90,13 @@ export default function QuickModelPage() {
         <Breadcrumb items={[{ label: "Datasets", href: "/workspaces" }, { label: "Quick Model" }]} />
 
         <div className="mt-4 mb-6 flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-            <FlaskConical className="w-5 h-5 text-amber-600" />
+          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center flex-shrink-0">
+            <FlaskConical className="w-5 h-5 text-amber-600 dark:text-amber-400" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
               Quick Model
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">EXPERIMENTAL</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">EXPERIMENTAL</span>
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               A zero-shot baseline via Google's TabFM — no training loop, just a number to beat.
@@ -105,9 +105,9 @@ export default function QuickModelPage() {
         </div>
 
         {/* Warning box */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 flex gap-3">
-          <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs text-amber-800 space-y-1">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6 flex gap-3">
+          <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-800 dark:text-amber-300 space-y-1">
             <p><strong>Research use only.</strong> TabFM's pretrained weights are under a non-commercial license — this is for internal capability evaluation, never for client deliverables or production paths.</p>
             <p><strong>Real constraints:</strong> classification targets are capped at 10 classes, and the model only ever sees ~100 training rows + 50 test rows (TabFM's own recommended context window) — this is not a full-dataset training run.</p>
             <p><strong>Slow on CPU.</strong> Loading the ~6.5GB model and running inference took ~18 minutes end-to-end in testing on a modest machine. Expect several minutes, not seconds.</p>
@@ -140,7 +140,7 @@ export default function QuickModelPage() {
               </button>
             </div>
             {startMutation.error && (
-              <p className="text-xs text-red-600 mt-2">
+              <p className="text-xs text-red-600 dark:text-red-400 mt-2">
                 {(startMutation.error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Failed to start"}
               </p>
             )}
@@ -151,7 +151,7 @@ export default function QuickModelPage() {
         {isRunning && (
           <div className="bg-card rounded-xl border border-border p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <Loader2 className="w-5 h-5 text-amber-500 animate-spin flex-shrink-0" />
+              <Loader2 className="w-5 h-5 text-amber-500 dark:text-amber-400 animate-spin flex-shrink-0" />
               <div>
                 <p className="text-sm font-semibold text-foreground">Running…</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{job?.message}</p>
@@ -168,10 +168,10 @@ export default function QuickModelPage() {
 
         {/* Failed state */}
         {isFailed && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center space-y-2">
-            <XCircle className="w-8 h-8 text-red-400 mx-auto" />
-            <p className="text-sm font-semibold text-red-700">Quick Model failed</p>
-            <p className="text-xs text-red-600 font-mono">{job?.message}</p>
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center space-y-2">
+            <XCircle className="w-8 h-8 text-red-400 dark:text-red-400 mx-auto" />
+            <p className="text-sm font-semibold text-red-700 dark:text-red-400">Quick Model failed</p>
+            <p className="text-xs text-red-600 dark:text-red-400 font-mono">{job?.message}</p>
             <button onClick={() => { setJobId(null); setJob(null); }} className="text-xs text-brand hover:underline mt-2">
               Try again
             </button>
@@ -181,7 +181,7 @@ export default function QuickModelPage() {
         {/* Results */}
         {isDone && result && (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl px-4 py-3">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
               <p className="text-sm font-medium">
                 Done in {result.elapsed_seconds.toFixed(1)}s — {result.task_type} baseline on target "{result.target}"
@@ -223,7 +223,7 @@ export default function QuickModelPage() {
                       <td className="px-4 py-2 font-mono text-foreground">{String(p.predicted)}</td>
                       <td className="px-4 py-2">
                         {String(p.actual) === String(p.predicted)
-                          ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                          ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
                           : <XCircle className="w-3.5 h-3.5 text-muted-foreground/60" />}
                       </td>
                     </tr>
@@ -247,8 +247,8 @@ export default function QuickModelPage() {
 
 function StatTile({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className={`bg-card border rounded-xl px-4 py-3 ${highlight ? "border-amber-300 bg-amber-50/50" : "border-border"}`}>
-      <div className={`text-lg font-bold tabular-nums ${highlight ? "text-amber-700" : "text-foreground"}`}>{value}</div>
+    <div className={`bg-card border rounded-xl px-4 py-3 ${highlight ? "border-amber-300 dark:border-amber-700 bg-amber-50/50 dark:bg-amber-950/40" : "border-border"}`}>
+      <div className={`text-lg font-bold tabular-nums ${highlight ? "text-amber-700 dark:text-amber-400" : "text-foreground"}`}>{value}</div>
       <div className="text-[10px] text-muted-foreground mt-0.5">{label}</div>
     </div>
   );

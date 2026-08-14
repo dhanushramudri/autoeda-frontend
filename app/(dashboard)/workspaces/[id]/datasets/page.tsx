@@ -104,11 +104,11 @@ function makeEntry(file: File): FileEntry {
 
 function FileIcon({ ext }: { ext: string }) {
   if (["xlsx", "xls"].includes(ext))
-    return <FileSpreadsheet className="w-5 h-5 text-emerald-500" />;
+    return <FileSpreadsheet className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />;
   if (ext === "json")
-    return <FileCode className="w-5 h-5 text-blue-500" />;
+    return <FileCode className="w-5 h-5 text-blue-500 dark:text-blue-400" />;
   if (ext === "parquet")
-    return <Database className="w-5 h-5 text-orange-500" />;
+    return <Database className="w-5 h-5 text-orange-500 dark:text-orange-400" />;
   return <FileText className="w-5 h-5 text-brand" />;
 }
 
@@ -147,8 +147,8 @@ function PreviewTable({ preview }: { preview: Preview }) {
 const STATUS_COLOR = {
   pending: "",
   uploading: "border-brand/30 bg-brand/5",
-  done: "border-emerald-200 bg-emerald-50/40",
-  error: "border-red-200 bg-red-50/40",
+  done: "border-emerald-200 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/40",
+  error: "border-red-200 dark:border-red-800 bg-red-50/40 dark:bg-red-950/40",
 };
 
 function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: () => void }) {
@@ -365,13 +365,13 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
 
                 {/* Status badge */}
                 {entry.status === "uploading" && <Loader2 className="w-4 h-4 text-brand animate-spin flex-shrink-0" />}
-                {entry.status === "done" && <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0" />}
-                {entry.status === "error" && <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
+                {entry.status === "done" && <CheckCircle className="w-4 h-4 text-emerald-500 dark:text-emerald-400 flex-shrink-0" />}
+                {entry.status === "error" && <AlertCircle className="w-4 h-4 text-red-400 dark:text-red-400 flex-shrink-0" />}
 
                 {entry.status === "pending" && (
                   <button
                     onClick={() => removeEntry(entry.id)}
-                    className="p-1 rounded-md hover:bg-red-50 text-muted-foreground/60 hover:text-red-400 transition flex-shrink-0"
+                    className="p-1 rounded-md hover:bg-red-50 dark:bg-red-950/40 text-muted-foreground/60 hover:text-red-400 dark:text-red-400 transition flex-shrink-0"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -452,7 +452,7 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
           ))}
 
           {allDone && (
-            <div className="flex items-center gap-2 justify-center py-3 text-sm text-emerald-600 font-medium">
+            <div className="flex items-center gap-2 justify-center py-3 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
               <CheckCircle className="w-4 h-4" /> All datasets uploaded successfully!
             </div>
           )}
@@ -502,10 +502,10 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
 // ── STATUS_ICON ───────────────────────────────────────────────────────────────
 
 const STATUS_ICON: Record<string, React.ReactNode> = {
-  ready: <CheckCircle className="w-4 h-4 text-emerald-500" />,
+  ready: <CheckCircle className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />,
   processing: <Loader2 className="w-4 h-4 text-brand animate-spin" />,
-  failed: <AlertCircle className="w-4 h-4 text-red-500" />,
-  pending: <Clock className="w-4 h-4 text-amber-500" />,
+  failed: <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400" />,
+  pending: <Clock className="w-4 h-4 text-amber-500 dark:text-amber-400" />,
 };
 
 // ── DatasetCard ───────────────────────────────────────────────────────────────
@@ -543,7 +543,7 @@ function DatasetCard({ dataset, workspaceId }: { dataset: Dataset; workspaceId: 
               if (window.confirm(`Delete dataset "${dataset.name}"?`)) deleteMutation.mutate();
             }}
             disabled={deleteMutation.isPending}
-            className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600"
+            className="opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg hover:bg-red-50 dark:bg-red-950/40 text-muted-foreground hover:text-red-600 dark:text-red-400"
           >
             {deleteMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
           </button>
@@ -622,7 +622,7 @@ function JoinModal({ workspaceId, datasets, onClose }: { workspaceId: string; da
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
-        {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
+        {error && <div className="mb-4 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">{error}</div>}
         <div className="space-y-3">
           {[["Dataset A", dsA, setDsA], ["Dataset B", dsB, setDsB]].map(([label, val, setter], idx) => (
             <div key={idx as number}>

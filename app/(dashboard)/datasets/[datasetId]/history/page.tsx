@@ -143,7 +143,7 @@ export default function HistoryPage() {
                             {item.b != null ? (item.pct ? `${item.b.toFixed(1)}%` : item.b.toLocaleString()) : "--"}
                           </span>
                           {d != null && d.delta !== 0 && (
-                            <span className={`text-xs flex items-center gap-0.5 ${d.better ? "text-emerald-600" : "text-red-500"}`}>
+                            <span className={`text-xs flex items-center gap-0.5 ${d.better ? "text-emerald-600 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
                               {d.better ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
                               {Math.abs(d.delta).toFixed(item.pct ? 1 : 0)}{item.pct ? "%" : ""}
                             </span>
@@ -183,7 +183,7 @@ export default function HistoryPage() {
                         <p className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(r.run_at), { addSuffix: true })}</p>
                       </td>
                       <td className="px-4 py-2.5 text-right">
-                        <span className={`text-xs font-bold ${r.quality_score == null ? "text-muted-foreground" : r.quality_score >= 80 ? "text-emerald-600" : r.quality_score >= 60 ? "text-amber-600" : "text-red-600"}`}>
+                        <span className={`text-xs font-bold ${r.quality_score == null ? "text-muted-foreground" : r.quality_score >= 80 ? "text-emerald-600 dark:text-emerald-400" : r.quality_score >= 60 ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400"}`}>
                           {r.quality_score ?? "--"}
                         </span>
                       </td>

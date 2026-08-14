@@ -272,7 +272,7 @@ export default function ChartsPage() {
                   </div>
                   <button
                     onClick={() => deleteChartMutation.mutate(chart.id)}
-                    className="p-1.5 hover:bg-red-50 rounded-lg text-muted-foreground/60 hover:text-red-500 transition"
+                    className="p-1.5 hover:bg-red-50 dark:bg-red-950/40 rounded-lg text-muted-foreground/60 hover:text-red-500 dark:text-red-400 transition"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

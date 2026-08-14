@@ -95,12 +95,12 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
       {filters.map((f) => (
         <div
           key={f.id}
-          className="flex items-center gap-1 bg-blue-50 border border-blue-200 rounded-full px-2.5 py-1 text-xs text-brand"
+          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-full px-2.5 py-1 text-xs text-brand"
         >
           <span className="font-medium">{f.column}</span>
-          <span className="text-blue-400">{OPERATORS.find((o) => o.value === f.operator)?.label}</span>
+          <span className="text-blue-400 dark:text-blue-400">{OPERATORS.find((o) => o.value === f.operator)?.label}</span>
           {f.value && <span>{f.value}</span>}
-          <button onClick={() => removeFilter(f.id)} className="hover:text-blue-900 ml-0.5">
+          <button onClick={() => removeFilter(f.id)} className="hover:text-blue-900 dark:text-blue-200 ml-0.5">
             <X className="w-3 h-3" />
           </button>
         </div>
@@ -218,7 +218,7 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
       {totalMatching !== null && totalRows !== null && (
         <span className={cn(
           "ml-auto text-xs font-medium px-2.5 py-1 rounded-full",
-          totalMatching < totalRows ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"
+          totalMatching < totalRows ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400" : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
         )}>
           Showing {totalMatching.toLocaleString()} of {totalRows.toLocaleString()} rows
         </span>
@@ -227,7 +227,7 @@ export function FilterBar({ datasetId, columns, onFilterChange }: FilterBarProps
       {filters.length > 0 && (
         <button
           onClick={() => { setFilters([]); setTotalMatching(null); setTotalRows(null); onFilterChange?.([], null); }}
-          className="text-xs text-red-500 hover:text-red-700"
+          className="text-xs text-red-500 dark:text-red-400 hover:text-red-700"
         >
           Clear all
         </button>

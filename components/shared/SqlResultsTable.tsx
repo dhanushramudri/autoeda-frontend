@@ -72,7 +72,7 @@ export function SqlResultsTable({ columns, rows, truncated, rowCount }: SqlResul
         {truncated && (
           <>
             <span>·</span>
-            <span className="text-amber-600 font-medium">Results truncated — increase limit to see more</span>
+            <span className="text-amber-600 dark:text-amber-400 font-medium">Results truncated — increase limit to see more</span>
           </>
         )}
       </div>

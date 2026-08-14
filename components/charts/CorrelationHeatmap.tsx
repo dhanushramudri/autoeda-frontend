@@ -302,9 +302,9 @@ function pBadge(p: number | null | undefined) {
   const label = p < 0.001 ? "p<0.001" : p < 0.01 ? "p<0.01" : p < 0.05 ? "p<0.05" : `p=${p.toFixed(3)}`;
   const cls =
     p < 0.001
-      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+      ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
       : p < 0.05
-      ? "bg-blue-50 text-blue-700 border-blue-200"
+      ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
       : "bg-muted text-muted-foreground border-border";
   return (
     <span className={cn("inline-block text-[9px] border rounded px-1 py-0.5 font-mono ml-1", cls)}>
@@ -442,13 +442,13 @@ function EmptyState({ message, warn, loading }: { message: string; warn?: boolea
       className={cn(
         "text-sm py-8 text-center rounded-xl flex items-center justify-center gap-2",
         warn
-          ? "text-amber-600 bg-amber-50"
+          ? "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40"
           : loading
-          ? "text-blue-500 bg-blue-50/50"
+          ? "text-blue-500 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/40"
           : "text-muted-foreground",
       )}
     >
-      {loading && <span className="w-3 h-3 border-2 border-blue-300 border-t-blue-500 rounded-full animate-spin" />}
+      {loading && <span className="w-3 h-3 border-2 border-blue-300 dark:border-blue-700 border-t-blue-500 rounded-full animate-spin" />}
       {message}
     </p>
   );

@@ -48,14 +48,14 @@ const TYPE_LABEL: Record<string, string> = {
 function StatusBadge({ status }: { status: string }) {
   if (status === "connected") {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
         <CheckCircle2 className="w-3 h-3" /> Connected
       </span>
     );
   }
   if (status === "failed") {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-700">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
         <XCircle className="w-3 h-3" /> Failed
       </span>
     );
@@ -171,7 +171,7 @@ export default function SourcesPage() {
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{src.description}</p>
                     )}
                     {src.status === "failed" && src.last_error && (
-                      <p className="mt-1 text-[10px] text-red-500 truncate" title={src.last_error}>
+                      <p className="mt-1 text-[10px] text-red-500 dark:text-red-400 truncate" title={src.last_error}>
                         <AlertCircle className="w-2.5 h-2.5 inline mr-0.5" />
                         {src.last_error.slice(0, 60)}...
                       </p>
@@ -201,7 +201,7 @@ export default function SourcesPage() {
                       onClick={() => {
                         if (confirm(`Delete "${src.name}"?`)) deleteMut.mutate(src.id);
                       }}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50 transition"
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 dark:text-red-400 hover:bg-red-50 dark:bg-red-950/40 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

@@ -79,10 +79,10 @@ function buildThreads(comments: FeedbackComment[]): ThreadData[] {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TYPE_STYLE: Record<string, string> = {
-  bug:     "bg-red-50 text-red-600 border-red-200",
-  feature: "bg-blue-50 text-blue-600 border-blue-200",
+  bug:     "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800",
+  feature: "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800",
   general: "bg-muted text-muted-foreground border-border",
-  other:   "bg-purple-50 text-purple-600 border-purple-200",
+  other:   "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800",
 };
 const TYPE_LABEL: Record<string, string> = {
   bug: "Bug", feature: "Feature Request", general: "General", other: "Other",
@@ -90,11 +90,11 @@ const TYPE_LABEL: Record<string, string> = {
 
 const STATUS_STYLE: Record<string, string> = {
   open:        "bg-muted text-muted-foreground",
-  in_review:   "bg-blue-100 text-blue-700",
-  in_progress: "bg-violet-100 text-violet-700",
-  planned:     "bg-amber-100 text-amber-700",
-  completed:   "bg-emerald-100 text-emerald-700",
-  closed:      "bg-red-50 text-red-600",
+  in_review:   "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
+  in_progress: "bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400",
+  planned:     "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+  completed:   "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
+  closed:      "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400",
 };
 const STATUS_LABEL: Record<string, string> = {
   open: "Open", in_review: "In Review", in_progress: "In Progress",
@@ -204,7 +204,7 @@ function CommentItem({
             className={cn(
               "flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition",
               comment.user_vote === "like"
-                ? "bg-emerald-50 text-emerald-600"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted",
             )}
           >
@@ -217,7 +217,7 @@ function CommentItem({
             className={cn(
               "flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition",
               comment.user_vote === "dislike"
-                ? "bg-red-50 text-red-500"
+                ? "bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted",
             )}
           >
@@ -247,7 +247,7 @@ function CommentItem({
                   <div className="absolute right-0 top-full mt-1 w-36 bg-card border border-border rounded-xl shadow-lg z-20 py-1 overflow-hidden">
                     <button
                       onClick={() => { onDelete(comment.id); setMenuOpen(false); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-500 dark:text-red-400 hover:bg-red-50 dark:bg-red-950/40 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       Delete
@@ -951,9 +951,9 @@ const ROADMAP_COLS = [
     label: "In Progress",
     statuses: ["in_review", "in_progress"],
     Icon: Zap,
-    iconClass: "text-blue-500",
-    labelClass: "text-blue-700",
-    countClass: "bg-blue-100 text-blue-700",
+    iconClass: "text-blue-500 dark:text-blue-400",
+    labelClass: "text-blue-700 dark:text-blue-400",
+    countClass: "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400",
     accentClass: "border-t-blue-500",
   },
   {
@@ -961,9 +961,9 @@ const ROADMAP_COLS = [
     label: "Done",
     statuses: ["completed", "closed"],
     Icon: CheckCircle2,
-    iconClass: "text-emerald-500",
-    labelClass: "text-emerald-700",
-    countClass: "bg-emerald-100 text-emerald-700",
+    iconClass: "text-emerald-500 dark:text-emerald-400",
+    labelClass: "text-emerald-700 dark:text-emerald-400",
+    countClass: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
     accentClass: "border-t-emerald-500",
   },
 ];

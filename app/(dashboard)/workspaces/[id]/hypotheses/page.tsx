@@ -16,8 +16,8 @@ import { HypothesisToolTrace } from "@/components/hypotheses/HypothesisToolResul
 import { Mascot } from "@/components/shared/Mascot";
 
 const CONF_COLOR: Record<string, string> = {
-  high: "bg-emerald-50 text-emerald-700",
-  medium: "bg-amber-50 text-amber-700",
+  high: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400",
+  medium: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400",
   low: "bg-muted text-muted-foreground",
 };
 
@@ -29,11 +29,11 @@ const SEV_DOT: Record<string, string> = {
 
 const STATUS_CFG: Record<HypothesisStatus, { icon: React.ReactNode; cls: string; label: string; text: string }> = {
   pending: { icon: <FlaskConical className="w-3.5 h-3.5 text-muted-foreground" />, cls: "bg-muted border-border", label: "Pending", text: "text-muted-foreground" },
-  validating: { icon: <Mascot className="w-4 h-4" />, cls: "bg-blue-50 border-blue-200", label: "Validating…", text: "text-blue-600" },
-  supported: { icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />, cls: "bg-emerald-50 border-emerald-200", label: "Supported", text: "text-emerald-700" },
-  refuted: { icon: <XCircle className="w-3.5 h-3.5 text-red-500" />, cls: "bg-red-50 border-red-200", label: "Refuted", text: "text-red-700" },
-  inconclusive: { icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />, cls: "bg-amber-50 border-amber-200", label: "Inconclusive", text: "text-amber-700" },
-  error: { icon: <XCircle className="w-3.5 h-3.5 text-red-500" />, cls: "bg-red-50 border-red-200", label: "Error", text: "text-red-700" },
+  validating: { icon: <Mascot className="w-4 h-4" />, cls: "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800", label: "Validating…", text: "text-blue-600 dark:text-blue-400" },
+  supported: { icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />, cls: "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800", label: "Supported", text: "text-emerald-700" },
+  refuted: { icon: <XCircle className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />, cls: "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800", label: "Refuted", text: "text-red-700" },
+  inconclusive: { icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />, cls: "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800", label: "Inconclusive", text: "text-amber-700" },
+  error: { icon: <XCircle className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />, cls: "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800", label: "Error", text: "text-red-700" },
 };
 
 interface StreamingToolCall {
@@ -81,7 +81,7 @@ function HypothesisRow({
             <span
               className={cn(
                 "text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wide",
-                h.origin === "ai" ? "bg-violet-50 text-violet-600" : "bg-muted text-muted-foreground"
+                h.origin === "ai" ? "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400" : "bg-muted text-muted-foreground"
               )}
             >
               {h.origin === "ai" ? "AI" : "You"}
@@ -137,7 +137,7 @@ function HypothesisRow({
           {h.status === "pending" && (
             <button
               onClick={() => onValidate(h.id)}
-              className="text-[11px] px-2 py-1 bg-card border border-border rounded-lg text-muted-foreground hover:border-blue-400 hover:text-blue-600 transition"
+              className="text-[11px] px-2 py-1 bg-card border border-border rounded-lg text-muted-foreground hover:border-blue-400 hover:text-blue-600 dark:text-blue-400 transition"
             >
               Validate
             </button>
@@ -328,7 +328,7 @@ export default function HypothesesPage() {
 
       {/* Generate control */}
       <div className="bg-card border border-border rounded-xl p-4 mb-5 flex items-center gap-3">
-        <Sparkles className="w-4 h-4 text-amber-400 flex-shrink-0" />
+        <Sparkles className="w-4 h-4 text-amber-400 dark:text-amber-400 flex-shrink-0" />
         <p className="text-xs text-muted-foreground flex-1">
           Investigate {scopedDatasetId ? "this dataset" : "the whole workspace"} and propose pre-verified hypotheses.
         </p>
@@ -354,7 +354,7 @@ export default function HypothesesPage() {
         <div className="mb-5 px-1"><LiveProgress tools={genProgress} /></div>
       )}
       {genError && !isGenerating && (
-        <div className="mb-5 flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+        <div className="mb-5 flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <span>{genError}</span>
         </div>

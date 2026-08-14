@@ -71,11 +71,11 @@ function CorrMethodLoadingIndicator({ methods }: { methods: CorrMethodLoadingSta
             className={cn(
               "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border",
               m.status === "done"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
                 : m.status === "error"
-                ? "bg-red-50 text-red-700 border-red-200"
+                ? "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
                 : m.status === "loading"
-                ? "bg-blue-50 text-blue-700 border-blue-200"
+                ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                 : "bg-muted text-muted-foreground border-border",
             )}
           >
@@ -151,18 +151,18 @@ function absVal(v: number | null | undefined): number {
 
 function corrColor(r: number): string {
   return r > 0.7
-    ? "text-blue-600"
+    ? "text-blue-600 dark:text-blue-400"
     : r > 0.4
-    ? "text-blue-500"
+    ? "text-blue-500 dark:text-blue-400"
     : r < -0.7
-    ? "text-red-600"
+    ? "text-red-600 dark:text-red-400"
     : r < -0.4
-    ? "text-red-500"
+    ? "text-red-500 dark:text-red-400"
     : "text-muted-foreground";
 }
 
 function effectColor(v: number): string {
-  return v >= 0.14 ? "text-purple-700" : v >= 0.06 ? "text-purple-500" : "text-muted-foreground";
+  return v >= 0.14 ? "text-purple-700" : v >= 0.06 ? "text-purple-500 dark:text-purple-400" : "text-muted-foreground";
 }
 
 
@@ -191,16 +191,16 @@ const INSIGHT_CONFIG: Record<
   { icon: React.ReactNode; bg: string; border: string; text: string }
 > = {
   warning: {
-    icon:   <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />,
-    bg:     "bg-amber-50",
-    border: "border-amber-100",
-    text:   "text-amber-900",
+    icon:   <AlertTriangle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" />,
+    bg:     "bg-amber-50 dark:bg-amber-950/40",
+    border: "border-amber-100 dark:border-amber-800/40",
+    text:   "text-amber-900 dark:text-amber-200",
   },
   info: {
-    icon:   <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />,
-    bg:     "bg-blue-50",
-    border: "border-blue-100",
-    text:   "text-blue-900",
+    icon:   <Info className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" />,
+    bg:     "bg-blue-50 dark:bg-blue-950/40",
+    border: "border-blue-100 dark:border-blue-800/40",
+    text:   "text-blue-900 dark:text-blue-200",
   },
   muted: {
     icon:   <Info className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />,
@@ -228,7 +228,7 @@ function CollapsibleInsights({ insights }: { insights?: Insight[] | null }) {
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center gap-2 px-4 py-3 bg-muted hover:bg-muted transition-colors text-left"
       >
-        <Lightbulb className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+        <Lightbulb className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 flex-shrink-0" />
         <span className="text-xs font-semibold text-foreground flex-1">
           Insights
           <span className="ml-1.5 font-normal text-muted-foreground">({insights.length})</span>
@@ -316,7 +316,7 @@ function ColumnSidebar({
         }
         <span className="font-mono truncate flex-1">{col}</span>
         {highCard && (
-          <span className="text-[9px] px-1 py-0.5 rounded bg-orange-50 text-orange-400 border border-orange-100 flex-shrink-0 mr-0.5">
+          <span className="text-[9px] px-1 py-0.5 rounded bg-orange-50 dark:bg-orange-950/40 text-orange-400 dark:text-orange-400 border border-orange-100 dark:border-orange-800/40 flex-shrink-0 mr-0.5">
             {cardinality}
           </span>
         )}
@@ -324,8 +324,8 @@ function ColumnSidebar({
           className={cn(
             "text-[9px] px-1 py-0.5 rounded font-medium flex-shrink-0",
             type === "num"
-              ? "bg-blue-50 text-blue-500"
-              : "bg-purple-50 text-purple-500",
+              ? "bg-blue-50 dark:bg-blue-950/40 text-blue-500 dark:text-blue-400"
+              : "bg-purple-50 dark:bg-purple-950/40 text-purple-500 dark:text-purple-400",
           )}
         >
           {type === "num" ? "N" : "C"}
@@ -369,7 +369,7 @@ function ColumnSidebar({
           </button>
           <button
             onClick={onSelectNone}
-            className="flex-1 text-[10px] py-1 border border-border rounded text-muted-foreground hover:border-red-200 hover:text-red-500 transition"
+            className="flex-1 text-[10px] py-1 border border-border rounded text-muted-foreground hover:border-red-200 dark:border-red-800 hover:text-red-500 dark:text-red-400 transition"
           >
             None
           </button>
@@ -431,9 +431,9 @@ function VifTable({
             className={cn(
               "flex items-center justify-between rounded-xl px-3 py-2.5 text-xs border",
               v.vif > 10
-                ? "bg-red-50 border-red-100"
+                ? "bg-red-50 dark:bg-red-950/40 border-red-100 dark:border-red-800/40"
                 : v.vif > 5
-                ? "bg-amber-50 border-amber-100"
+                ? "bg-amber-50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-800/40"
                 : "bg-muted border-border",
             )}
           >
@@ -441,7 +441,7 @@ function VifTable({
             <span
               className={cn(
                 "font-bold tabular-nums flex-shrink-0",
-                v.vif > 10 ? "text-red-600" : v.vif > 5 ? "text-amber-600" : "text-emerald-600",
+                v.vif > 10 ? "text-red-600 dark:text-red-400" : v.vif > 5 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400",
               )}
             >
               {v.vif.toFixed(2)}
@@ -521,7 +521,7 @@ function TopCatPairs({ pairs }: { pairs: CatPair[] }) {
               <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                 <div className="h-full rounded-full bg-purple-400" style={{ width: `${pair.cramers_v * 100}%` }} />
               </div>
-              <span className="text-xs font-semibold tabular-nums w-12 text-right text-purple-700">
+              <span className="text-xs font-semibold tabular-nums w-12 text-right text-purple-700 dark:text-purple-400">
                 {pair.cramers_v.toFixed(3)}
               </span>
             </div>
@@ -555,7 +555,7 @@ function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
             <div key={i} className="bg-muted rounded-xl px-3 py-2.5">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono text-muted-foreground truncate flex-1 min-w-0">
-                  <span className="text-purple-600">{pair.cat_col}</span>
+                  <span className="text-purple-600 dark:text-purple-400">{pair.cat_col}</span>
                   <span className="text-muted-foreground mx-1.5">→</span>
                   {pair.num_col}
                 </span>
@@ -575,7 +575,7 @@ function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
                 {pair.point_biserial != null && (
                   <span className="text-[10px] text-muted-foreground">
                     pb-r:{" "}
-                    <span className={cn("font-mono", pair.point_biserial > 0 ? "text-blue-500" : "text-red-500")}>
+                    <span className={cn("font-mono", pair.point_biserial > 0 ? "text-blue-500 dark:text-blue-400" : "text-red-500 dark:text-red-400")}>
                       {pair.point_biserial.toFixed(3)}
                     </span>
                   </span>
@@ -591,9 +591,9 @@ function TopMixedPairs({ pairs }: { pairs: MixedPair[] }) {
                     className={cn(
                       "text-[9px] border rounded px-1 py-0.5 font-mono",
                       pair.p_value < 0.001
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
                         : pair.p_value < 0.05
-                        ? "bg-blue-50 text-blue-700 border-blue-200"
+                        ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
                         : "bg-muted text-muted-foreground border-border",
                     )}
                   >
@@ -621,13 +621,13 @@ function ProfilePills({ numCols, catCols }: { numCols: string[]; catCols: string
   return (
     <div className="flex flex-wrap gap-2 mb-5">
       {numCols.length > 0 && (
-        <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+        <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-800/40">
           <Hash className="w-3 h-3" />
           {numCols.length} numeric
         </span>
       )}
       {catCols.length > 0 && (
-        <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+        <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 border border-purple-100 dark:border-purple-800/40">
           <Tag className="w-3 h-3" />
           {catCols.length} categorical
         </span>
@@ -886,8 +886,8 @@ export default function CorrelationsPage() {
               <div className="bg-card rounded-xl border border-border p-6">
 
                 {deselected.size > 0 && (
-                  <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                    <span className="text-xs text-blue-700">
+                  <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 dark:bg-blue-950/40 rounded-lg border border-blue-100 dark:border-blue-800/40">
+                    <span className="text-xs text-blue-700 dark:text-blue-400">
                       Showing{" "}
                       <strong>{visibleNumCols.length + visibleCatCols.length}</strong>{" "}
                       of <strong>{allCols.length}</strong> columns.

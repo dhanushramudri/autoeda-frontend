@@ -197,7 +197,7 @@ export default function CompareDatasets() {
                         {Object.entries(typeCounts).map(([type, count]) => (
                           <span
                             key={type}
-                            className="px-3 py-1 bg-blue-50 text-brand rounded-full text-xs font-medium"
+                            className="px-3 py-1 bg-blue-50 dark:bg-blue-950/40 text-brand rounded-full text-xs font-medium"
                           >
                             {type}: {count}
                           </span>

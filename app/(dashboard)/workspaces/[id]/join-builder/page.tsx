@@ -164,7 +164,7 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
         </button>
         <button
           onClick={() => data.onDelete(id)}
-          className="p-0.5 rounded-md hover:bg-red-50 text-muted-foreground/60 hover:text-red-500 transition"
+          className="p-0.5 rounded-md hover:bg-red-50 dark:bg-red-950/40 text-muted-foreground/60 hover:text-red-500 dark:text-red-400 transition"
         >
           <X className="w-3 h-3" />
         </button>
@@ -191,7 +191,7 @@ function DatasetNode({ id, data, selected }: NodeProps<NodeData>) {
             {filtered.slice(0, 30).map((col, idx) => (
               <button
                 key={col}
-                className="w-full text-left px-3 py-1.5 hover:bg-blue-50 group flex items-center gap-2 transition-colors"
+                className="w-full text-left px-3 py-1.5 hover:bg-blue-50 dark:bg-blue-950/40 group flex items-center gap-2 transition-colors"
                 style={{ borderBottom: idx < filtered.length - 1 ? "1px solid #f8fafc" : "none" }}
                 onClick={() => data.onSuggestKey(id, col)}
                 title={`Use "${col}" as join key`}
@@ -301,7 +301,7 @@ function JoinEdge({ id, sourceX, sourceY, targetX, targetY, data, selected, mark
           ))}
 
           {condCount === 0 && (
-            <span className="px-2 py-0.5 rounded-lg text-[9px] bg-amber-50/90 border border-amber-200 text-amber-600 flex items-center gap-1 backdrop-blur-sm">
+            <span className="px-2 py-0.5 rounded-lg text-[9px] bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center gap-1 backdrop-blur-sm">
               <AlertCircle className="w-2.5 h-2.5" /> set keys
             </span>
           )}
@@ -700,12 +700,12 @@ function JoinBuilderInner() {
             <div className="text-[9px] font-medium" style={{ color: "hsl(var(--primary) / 0.6)" }}>Tables</div>
           </div>
           <div className="flex-1 rounded-lg border px-2 py-1 text-center" style={{ backgroundColor: "#f5f3ff", borderColor: "#ddd6fe" }}>
-            <div className="text-sm font-bold text-purple-600">{edges.length}</div>
-            <div className="text-[9px] text-purple-400 font-medium">Joins</div>
+            <div className="text-sm font-bold text-purple-600 dark:text-purple-400">{edges.length}</div>
+            <div className="text-[9px] text-purple-400 dark:text-purple-400 font-medium">Joins</div>
           </div>
           <div className="flex-1 rounded-lg border px-2 py-1 text-center" style={{ backgroundColor: "#f0fdf4", borderColor: "#a7f3d0" }}>
-            <div className="text-sm font-bold text-green-600">{configuredEdges}</div>
-            <div className="text-[9px] text-green-400 font-medium">Configured</div>
+            <div className="text-sm font-bold text-green-600 dark:text-green-400">{configuredEdges}</div>
+            <div className="text-[9px] text-green-400 dark:text-green-400 font-medium">Configured</div>
           </div>
         </div>
 
@@ -851,8 +851,8 @@ function JoinBuilderInner() {
             {/* Ready indicator */}
             <div className="ml-1 flex items-center gap-1">
               {readyToRun
-                ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                : <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500 dark:text-green-400" />
+                : <AlertCircle className="w-3.5 h-3.5 text-amber-400 dark:text-amber-400" />
               }
               <span className="text-[9px] text-muted-foreground">{readyToRun ? "Ready" : "Configure joins"}</span>
             </div>
@@ -912,19 +912,19 @@ function JoinBuilderInner() {
                 minWidth: 320,
               }}
             >
-              <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+              <CheckCircle2 className="w-5 h-5 text-green-500 dark:text-green-400 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-[11px] font-bold text-green-800">Dataset saved!</p>
-                <p className="text-[10px] text-green-600 truncate">{savedDataset.name}</p>
+                <p className="text-[11px] font-bold text-green-800 dark:text-green-300">Dataset saved!</p>
+                <p className="text-[10px] text-green-600 dark:text-green-400 truncate">{savedDataset.name}</p>
               </div>
               <button
                 onClick={() => router.push(`/datasets/${savedDataset.dataset_id}/overview`)}
-                className="flex items-center gap-1 text-[10px] font-bold text-green-700 hover:text-green-900 transition-colors"
+                className="flex items-center gap-1 text-[10px] font-bold text-green-700 dark:text-green-400 hover:text-green-900 transition-colors"
               >
                 <ExternalLink className="w-3 h-3" /> Open
               </button>
-              <button onClick={() => setSavedDataset(null)} className="p-0.5 rounded hover:bg-green-100">
-                <X className="w-3.5 h-3.5 text-green-400" />
+              <button onClick={() => setSavedDataset(null)} className="p-0.5 rounded hover:bg-green-100 dark:bg-green-900/30">
+                <X className="w-3.5 h-3.5 text-green-400 dark:text-green-400" />
               </button>
             </div>
           )}
@@ -1075,7 +1075,7 @@ function JoinBuilderInner() {
             />
 
             {saveMutation.isError && (
-              <p className="mt-2 text-[10px] text-red-600 flex items-center gap-1">
+              <p className="mt-2 text-[10px] text-red-600 dark:text-red-400 flex items-center gap-1">
                 <AlertCircle className="w-3 h-3" />
                 {String((saveMutation.error as Error)?.message ?? "Save failed")}
               </p>
@@ -1218,7 +1218,7 @@ function JoinBuilderInner() {
                         </select>
                         <button
                           onClick={() => removeCondition(i)}
-                          className="p-1 rounded-lg hover:bg-red-50 text-muted-foreground/60 hover:text-red-500 transition flex-shrink-0"
+                          className="p-1 rounded-lg hover:bg-red-50 dark:bg-red-950/40 text-muted-foreground/60 hover:text-red-500 dark:text-red-400 transition flex-shrink-0"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -1246,7 +1246,7 @@ function JoinBuilderInner() {
 
               <button
                 onClick={() => { deleteEdge(selectedEdge.id); setSelectedEdgeId(null); }}
-                className="w-full text-[10px] px-3 py-2 text-red-500 border border-red-100 rounded-xl font-semibold hover:bg-red-50 transition flex items-center justify-center gap-1.5"
+                className="w-full text-[10px] px-3 py-2 text-red-500 dark:text-red-400 border border-red-100 dark:border-red-800/40 rounded-xl font-semibold hover:bg-red-50 dark:bg-red-950/40 transition flex items-center justify-center gap-1.5"
               >
                 <Trash2 className="w-3 h-3" /> Remove Join
               </button>

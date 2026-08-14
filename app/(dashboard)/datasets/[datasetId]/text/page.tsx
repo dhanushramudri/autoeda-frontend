@@ -63,9 +63,9 @@ interface TextResult {
 
 
 const LEVEL_CFG = {
-  danger: { cls: "bg-red-50 border-red-200 text-red-800", icon: <XCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" /> },
-  warning: { cls: "bg-amber-50 border-amber-200 text-amber-800", icon: <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" /> },
-  info: { cls: "bg-blue-50 border-blue-200 text-blue-800", icon: <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" /> },
+  danger: { cls: "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-800", icon: <XCircle className="w-4 h-4 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" /> },
+  warning: { cls: "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800", icon: <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5" /> },
+  info: { cls: "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-800", icon: <Info className="w-4 h-4 text-blue-500 dark:text-blue-400 flex-shrink-0 mt-0.5" /> },
 };
 
 function StatCard({ label, value, sub, color }: { label: string; value: string | number; sub?: string; color?: string }) {
@@ -240,7 +240,7 @@ export default function TextAnalysisPage() {
                     onClick={() => setCol(col)}
                     className={cn(
                       "w-full text-left px-3 py-2 rounded-lg text-xs transition truncate",
-                      col === activeCol ? "bg-blue-50 text-brand font-semibold" : "text-muted-foreground hover:bg-muted"
+                      col === activeCol ? "bg-blue-50 dark:bg-blue-950/40 text-brand font-semibold" : "text-muted-foreground hover:bg-muted"
                     )}
                     title={col}
                   >
@@ -298,10 +298,10 @@ export default function TextAnalysisPage() {
 
                   {/* PII */}
                   {hasPii && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <XCircle className="w-4 h-4 text-red-500" />
-                        <h3 className="text-sm font-bold text-red-800">Possible PII Detected</h3>
+                        <XCircle className="w-4 h-4 text-red-500 dark:text-red-400" />
+                        <h3 className="text-sm font-bold text-red-800 dark:text-red-300">Possible PII Detected</h3>
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         {([
@@ -309,9 +309,9 @@ export default function TextAnalysisPage() {
                           ["URLs", data.pii.urls],
                           ["Phone Numbers", data.pii.phone_numbers],
                         ] as const).map(([label, stat]) => (
-                          <div key={label} className="bg-card rounded-lg p-3 border border-red-100">
+                          <div key={label} className="bg-card rounded-lg p-3 border border-red-100 dark:border-red-800/40">
                             <p className="text-[10px] text-muted-foreground mb-1">{label}</p>
-                            <p className="text-base font-bold text-red-700">{stat.count.toLocaleString()}</p>
+                            <p className="text-base font-bold text-red-700 dark:text-red-400">{stat.count.toLocaleString()}</p>
                             {stat.samples.length > 0 && (
                               <p className="text-[10px] text-muted-foreground font-mono truncate mt-1" title={stat.samples.join(", ")}>
                                 e.g. {stat.samples[0]}
@@ -328,9 +328,9 @@ export default function TextAnalysisPage() {
                     <h3 className="text-sm font-semibold text-foreground mb-3">Sentiment Distribution</h3>
                     <div className="grid grid-cols-3 gap-3">
                       {([
-                        ["Positive", sd?.positive ?? 0, "text-emerald-600"],
+                        ["Positive", sd?.positive ?? 0, "text-emerald-600 dark:text-emerald-400"],
                         ["Neutral", sd?.neutral ?? 0, "text-muted-foreground"],
-                        ["Negative", sd?.negative ?? 0, "text-red-500"],
+                        ["Negative", sd?.negative ?? 0, "text-red-500 dark:text-red-400"],
                       ] as const).map(([label, value, color]) => (
                         <div key={label} className="text-center bg-muted rounded-lg p-3">
                           <p className="text-xs text-muted-foreground mb-1">{label}</p>
@@ -380,11 +380,11 @@ export default function TextAnalysisPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                     <div className="bg-card rounded-xl border border-border p-5">
                       <h3 className="text-sm font-semibold text-foreground mb-3">Top Bigrams</h3>
-                      <NgramChips items={data.bigrams} color="bg-blue-50 text-brand" />
+                      <NgramChips items={data.bigrams} color="bg-blue-50 dark:bg-blue-950/40 text-brand" />
                     </div>
                     <div className="bg-card rounded-xl border border-border p-5">
                       <h3 className="text-sm font-semibold text-foreground mb-3">Top Trigrams</h3>
-                      <NgramChips items={data.trigrams} color="bg-purple-50 text-purple-700" />
+                      <NgramChips items={data.trigrams} color="bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400" />
                     </div>
                   </div>
 

@@ -19,13 +19,13 @@ import {
 import type { ColumnProfile, QualityScore } from "@/types";
 
 const TYPE_COLORS: Record<string, string> = {
-  numeric: "bg-blue-100 text-brand",
-  categorical: "bg-purple-100 text-purple-700",
-  datetime: "bg-green-100 text-green-700",
-  boolean: "bg-amber-100 text-amber-700",
-  text: "bg-pink-100 text-pink-700",
+  numeric: "bg-blue-100 dark:bg-blue-900/30 text-brand",
+  categorical: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
+  datetime: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
+  boolean: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+  text: "bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400",
   id_like: "bg-muted text-muted-foreground",
-  constant: "bg-red-100 text-red-600",
+  constant: "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400",
 };
 
 function MiniBar({ pct, color = "bg-blue-400" }: { pct: number; color?: string }) {
@@ -37,7 +37,7 @@ function MiniBar({ pct, color = "bg-blue-400" }: { pct: number; color?: string }
 }
 
 function ColumnCard({ col, datasetId, onClick }: { col: ColumnProfile; datasetId: string; onClick: () => void }) {
-  const missingColor = col.missing_pct > 50 ? "text-red-600" : col.missing_pct > 20 ? "text-amber-600" : "text-emerald-600";
+  const missingColor = col.missing_pct > 50 ? "text-red-600 dark:text-red-400" : col.missing_pct > 20 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400";
   const missingBarColor = col.missing_pct > 50 ? "bg-red-400" : col.missing_pct > 20 ? "bg-amber-400" : "bg-emerald-400";
 
   return (
@@ -68,7 +68,7 @@ function ColumnCard({ col, datasetId, onClick }: { col: ColumnProfile; datasetId
         <span>{col.unique_count.toLocaleString()} unique</span>
         {col.mean != null && <span>Î¼={col.mean.toFixed(2)}</span>}
         {col.skewness != null && Math.abs(col.skewness) > 1 && (
-          <span className="text-amber-600 col-span-2">Skew: {col.skewness.toFixed(2)}</span>
+          <span className="text-amber-600 dark:text-amber-400 col-span-2">Skew: {col.skewness.toFixed(2)}</span>
         )}
       </div>
 
@@ -205,22 +205,22 @@ export default function DatasetOverviewPage() {
 
           <div className="bg-card rounded-xl border border-border p-5">
             <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-1.5">
-              <AlertTriangle className="w-4 h-4 text-amber-500" /> Issues
+              <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400" /> Issues
             </h2>
             {quality?.issues?.length ? (
               <div className="space-y-2">
                 {quality.issues.slice(0, 4).map((issue, idx) => (
                   <div key={idx} className={`text-xs p-2.5 rounded-lg border-l-3 ${
-                    issue.severity === "danger" ? "border-l-red-500 bg-red-50 text-red-800"
-                    : issue.severity === "warning" ? "border-l-amber-500 bg-amber-50 text-amber-800"
-                    : "border-l-blue-500 bg-blue-50 text-blue-800"
+                    issue.severity === "danger" ? "border-l-red-500 bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300"
+                    : issue.severity === "warning" ? "border-l-amber-500 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300"
+                    : "border-l-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-800 dark:text-blue-300"
                   }`} style={{ borderLeftWidth: "3px" }}>
                     {issue.description}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-emerald-600 flex items-center gap-1">
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                 <CheckCircle className="w-3.5 h-3.5" /> No issues detected
               </p>
             )}
@@ -233,7 +233,7 @@ export default function DatasetOverviewPage() {
             {quality?.suggestions?.length ? (
               <div className="space-y-1.5">
                 {quality.suggestions.slice(0, 4).map((s, idx) => (
-                  <div key={idx} className="text-xs p-2 bg-blue-50 rounded-lg text-blue-800">{s}</div>
+                  <div key={idx} className="text-xs p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg text-blue-800 dark:text-blue-300">{s}</div>
                 ))}
               </div>
             ) : (

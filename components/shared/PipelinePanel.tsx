@@ -125,7 +125,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
           {steps.length > 0 && (
             <button
               onClick={() => clearMutation.mutate()}
-              className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-500 transition"
+              className="p-1.5 rounded-lg hover:bg-red-50 dark:bg-red-950/40 text-muted-foreground hover:text-red-500 dark:text-red-400 transition"
               title="Clear all steps"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -153,7 +153,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
               onDrop={() => onDrop(idx)}
               onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
               className={`flex items-center gap-2 px-3 py-2.5 mx-2 mb-1 rounded-lg border cursor-grab transition ${
-                dragOverIdx === idx ? "border-blue-400 bg-blue-50" : "border-border hover:border-border bg-muted"
+                dragOverIdx === idx ? "border-blue-400 bg-blue-50 dark:bg-blue-950/40" : "border-border hover:border-border bg-muted"
               }`}
             >
               <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
@@ -169,7 +169,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
                   <p className="text-xs text-muted-foreground mt-0.5 ml-8 truncate">{step.column}</p>
                 )}
               </div>
-              <button onClick={() => removeStep(idx)} className="p-1 hover:bg-red-50 rounded text-muted-foreground/60 hover:text-red-400 flex-shrink-0">
+              <button onClick={() => removeStep(idx)} className="p-1 hover:bg-red-50 dark:bg-red-950/40 rounded text-muted-foreground/60 hover:text-red-400 dark:text-red-400 flex-shrink-0">
                 <Trash2 className="w-3 h-3" />
               </button>
             </div>
@@ -269,7 +269,7 @@ export function PipelinePanel({ datasetId, columns, onResult }: PipelinePanelPro
       {/* Footer */}
       <div className="border-t border-border p-3 space-y-2 flex-shrink-0">
         {resultMsg && (
-          <p className="text-xs text-emerald-600 font-medium text-center">{resultMsg}</p>
+          <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium text-center">{resultMsg}</p>
         )}
         {!addingStep && (
           <button

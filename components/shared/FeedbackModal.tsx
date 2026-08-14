@@ -229,7 +229,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                       onClick={() => setRating(rating === star ? null : star)}
                       onMouseEnter={() => setHover(star)} onMouseLeave={() => setHover(null)}>
                       <Star className={cn("w-5 h-5 transition",
-                        (hover ?? rating ?? 0) >= star ? "text-amber-400 fill-amber-400" : "text-muted-foreground/60")} />
+                        (hover ?? rating ?? 0) >= star ? "text-amber-400 dark:text-amber-400 fill-amber-400" : "text-muted-foreground/60")} />
                     </button>
                   ))}
                 </div>
@@ -269,7 +269,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
                           <span className="max-w-[120px] truncate">{file.name}</span>
                           <button type="button" onClick={() => removeFile(
                             selectedFiles.findIndex((sf) => sf.file === file)
-                          )} className="text-muted-foreground/60 hover:text-red-500 transition">
+                          )} className="text-muted-foreground/60 hover:text-red-500 dark:text-red-400 transition">
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
@@ -323,7 +323,7 @@ export function FeedbackModal({ open, onClose }: FeedbackModalProps) {
               <input ref={videoRef} type="file" accept={ACCEPTED_VIDEO} multiple className="hidden"
                 onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); }} />
 
-              {error && <p className="text-xs text-red-500">{error}</p>}
+              {error && <p className="text-xs text-red-500 dark:text-red-400">{error}</p>}
 
               {/* Footer */}
               <div className="flex justify-end gap-2 pt-1 pb-1">

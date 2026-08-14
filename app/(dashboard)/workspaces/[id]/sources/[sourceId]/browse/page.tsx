@@ -273,7 +273,7 @@ function DatabricksBrowser({
                 className={cn(
                   "w-full flex items-center gap-2 px-3 py-1.5 text-xs transition",
                   selectedTable === t.name
-                    ? "bg-blue-50 text-brand font-semibold"
+                    ? "bg-blue-50 dark:bg-blue-950/40 text-brand font-semibold"
                     : "text-muted-foreground hover:bg-muted"
                 )}
               >
@@ -359,19 +359,19 @@ function DatabricksBrowser({
                           icon={<Layers className="w-3.5 h-3.5" />}
                           label="Columns"
                           value={statsData.columns.length > 0 ? String(statsData.columns.length) : "—"}
-                          color="text-violet-600"
+                          color="text-violet-600 dark:text-violet-400"
                         />
                         <StatTile
                           icon={<HardDrive className="w-3.5 h-3.5" />}
                           label="Size"
                           value={fmtBytes(statsData.size_bytes)}
-                          color="text-emerald-600"
+                          color="text-emerald-600 dark:text-emerald-400"
                         />
                         <StatTile
                           icon={<Table2 className="w-3.5 h-3.5" />}
                           label="Files"
                           value={fmtNum(statsData.num_files)}
-                          color="text-amber-600"
+                          color="text-amber-600 dark:text-amber-400"
                         />
                         {statsData.format && (
                           <StatTile
@@ -396,7 +396,7 @@ function DatabricksBrowser({
                               <div key={col.name} className="grid grid-cols-3 px-3 py-1.5 text-xs hover:bg-muted">
                                 <span className="font-mono text-foreground truncate">{col.name}</span>
                                 <span className="text-muted-foreground font-mono truncate">{col.type}</span>
-                                <span className={cn("font-medium", col.nullable ? "text-amber-600" : "text-emerald-600")}>
+                                <span className={cn("font-medium", col.nullable ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
                                   {col.nullable ? "yes" : "no"}
                                 </span>
                               </div>
@@ -521,7 +521,7 @@ function DatabricksSqlEditor({
         <div className="w-px h-5 bg-muted mx-1" />
 
         <button onClick={copySql} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground text-xs transition">
-          {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
           {copied ? "Copied" : "Copy"}
         </button>
         <button onClick={() => setSql("")} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground text-xs transition">
@@ -531,7 +531,7 @@ function DatabricksSqlEditor({
         <div className="flex-1" />
 
         <div className="flex items-center gap-1.5">
-          <Zap className="w-3 h-3 text-orange-500" />
+          <Zap className="w-3 h-3 text-orange-500 dark:text-orange-400" />
           <span className="text-[11px] text-muted-foreground">Serverless Warehouse</span>
         </div>
       </div>
@@ -575,7 +575,7 @@ function DatabricksSqlEditor({
         {result && (
           <div className="flex items-center gap-3 px-4 py-2 bg-card border-b border-border flex-shrink-0">
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-emerald-600">{result.row_count.toLocaleString()}</span> rows
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">{result.row_count.toLocaleString()}</span> rows
             </span>
             {elapsedMs != null && (
               <span className="text-xs text-muted-foreground">· {elapsedMs < 1000 ? `${elapsedMs}ms` : `${(elapsedMs / 1000).toFixed(2)}s`}</span>
@@ -601,7 +601,7 @@ function DatabricksSqlEditor({
 
         {/* Error */}
         {error && (
-          <div className="mx-4 mt-3 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 font-mono whitespace-pre-wrap flex-shrink-0">
+          <div className="mx-4 mt-3 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-400 font-mono whitespace-pre-wrap flex-shrink-0">
             {error}
           </div>
         )}
@@ -742,7 +742,7 @@ function StandardBrowser({
                 onClick={() => handleSelectTable(table)}
                 className={`w-full flex items-center gap-2 px-3 py-2 text-xs transition ${
                   selectedTable === table
-                    ? "bg-blue-50 text-brand font-medium"
+                    ? "bg-blue-50 dark:bg-blue-950/40 text-brand font-medium"
                     : "text-muted-foreground hover:bg-muted"
                 }`}
               >
@@ -854,12 +854,12 @@ function runStatusMeta(run: { life_cycle_state: string | null; result_state: str
   const lcs = run.life_cycle_state;
   const rs = run.result_state;
   if (lcs === "TERMINATED") {
-    if (rs === "SUCCESS") return { label: "Success", color: "text-emerald-700 bg-emerald-50 border-emerald-200", icon: CheckCircle2 };
-    return { label: rs ? rs.replace(/_/g, " ").toLowerCase() : "Failed", color: "text-red-700 bg-red-50 border-red-200", icon: XCircle };
+    if (rs === "SUCCESS") return { label: "Success", color: "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800", icon: CheckCircle2 };
+    return { label: rs ? rs.replace(/_/g, " ").toLowerCase() : "Failed", color: "text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800", icon: XCircle };
   }
-  if (lcs === "RUNNING" || lcs === "TERMINATING") return { label: "Running", color: "text-brand bg-blue-50 border-blue-200", icon: Loader2 };
-  if (lcs === "PENDING" || lcs === "QUEUED" || lcs === "WAITING_FOR_RETRY" || lcs === "BLOCKED") return { label: "Pending", color: "text-amber-700 bg-amber-50 border-amber-200", icon: Clock3 };
-  if (lcs === "INTERNAL_ERROR" || lcs === "SKIPPED") return { label: "Error", color: "text-red-700 bg-red-50 border-red-200", icon: XCircle };
+  if (lcs === "RUNNING" || lcs === "TERMINATING") return { label: "Running", color: "text-brand bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800", icon: Loader2 };
+  if (lcs === "PENDING" || lcs === "QUEUED" || lcs === "WAITING_FOR_RETRY" || lcs === "BLOCKED") return { label: "Pending", color: "text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800", icon: Clock3 };
+  if (lcs === "INTERNAL_ERROR" || lcs === "SKIPPED") return { label: "Error", color: "text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800", icon: XCircle };
   return { label: lcs ?? "Unknown", color: "text-muted-foreground bg-muted border-border", icon: Clock3 };
 }
 
@@ -944,7 +944,7 @@ function JobRunsList({ workspaceId, sourceId, jobId }: { workspaceId: string; so
               <button
                 onClick={() => cancelRun(run.run_id)}
                 disabled={cancelling === run.run_id}
-                className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-red-200 text-red-600 hover:bg-red-50 text-[10px] font-medium transition disabled:opacity-50 flex-shrink-0"
+                className="flex items-center gap-1 px-2 py-0.5 rounded-md border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:bg-red-950/40 text-[10px] font-medium transition disabled:opacity-50 flex-shrink-0"
               >
                 {cancelling === run.run_id ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
                 Cancel
@@ -981,7 +981,7 @@ function RunWithParamsForm({
   }
 
   return (
-    <div className="px-4 py-3 bg-blue-50/40 border-b border-border space-y-2">
+    <div className="px-4 py-3 bg-blue-50/40 dark:bg-blue-950/40 border-b border-border space-y-2">
       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Notebook Parameters (optional)</p>
       {params.map((p, i) => (
         <div key={i} className="flex items-center gap-2">
@@ -998,7 +998,7 @@ function RunWithParamsForm({
             placeholder="value"
             className="flex-1 border border-border rounded-md px-2 py-1 text-xs font-mono focus:outline-none focus:border-brand"
           />
-          <button onClick={() => setParams((prev) => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground/60 hover:text-red-500">
+          <button onClick={() => setParams((prev) => prev.filter((_, idx) => idx !== i))} className="text-muted-foreground/60 hover:text-red-500 dark:text-red-400">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -1090,7 +1090,7 @@ function DatabricksJobsPanel({ workspaceId, sourceId }: { workspaceId: string; s
         )}
 
         {error && (
-          <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+          <div className="px-4 py-3 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-400">
             {(error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Failed to load jobs"}
           </div>
         )}
@@ -1123,7 +1123,7 @@ function DatabricksJobsPanel({ workspaceId, sourceId }: { workspaceId: string; s
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-semibold text-foreground truncate">{job.name}</p>
                         {activeCount > 0 && (
-                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-50 text-brand text-[9px] font-bold flex-shrink-0">
+                          <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-brand text-[9px] font-bold flex-shrink-0">
                             <Loader2 className="w-2.5 h-2.5 animate-spin" /> {activeCount} running
                           </span>
                         )}
@@ -1132,7 +1132,7 @@ function DatabricksJobsPanel({ workspaceId, sourceId }: { workspaceId: string; s
                         <p className="text-[11px] text-muted-foreground">ID {job.job_id}{job.creator ? ` · ${job.creator}` : ""}</p>
                         <span className={cn(
                           "flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md",
-                          job.schedule && !job.schedule.paused ? "bg-violet-50 text-violet-600" : "bg-muted text-muted-foreground"
+                          job.schedule && !job.schedule.paused ? "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400" : "bg-muted text-muted-foreground"
                         )}>
                           <Clock3 className="w-2.5 h-2.5" />
                           {job.schedule ? (job.schedule.paused ? "Schedule paused" : humanizeCron(job.schedule.cron)) : "Manual trigger only"}
@@ -1199,7 +1199,7 @@ function DeltaCell({ a, b, fmt = (v: number) => String(v) }: { a: number | null;
     <span className="flex items-center gap-1">
       <span className="text-muted-foreground">{fmt(a)}</span>
       <span className="text-muted-foreground/60">→</span>
-      <span className={cn("font-medium", changed ? (diff > 0 ? "text-emerald-600" : "text-red-600") : "text-foreground")}>{fmt(b)}</span>
+      <span className={cn("font-medium", changed ? (diff > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400") : "text-foreground")}>{fmt(b)}</span>
     </span>
   );
 }
@@ -1275,10 +1275,10 @@ function DatabricksTimeTravel({ workspaceId, sourceId }: { workspaceId: string; 
 
       <div className="p-6 max-w-5xl mx-auto space-y-4">
         {error && (
-          <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">{error}</div>
+          <div className="px-4 py-3 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-400">{error}</div>
         )}
         {historyError && (
-          <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+          <div className="px-4 py-3 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-400">
             {(historyError as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Failed to load history"}
           </div>
         )}
@@ -1338,15 +1338,15 @@ function DatabricksTimeTravel({ workspaceId, sourceId }: { workspaceId: string; 
                 <DeltaCell a={compareResult.row_count_a} b={compareResult.row_count_b} fmt={(v) => v.toLocaleString()} />
               </div>
               {compareResult.columns_added.length > 0 && (
-                <div className="bg-card border border-emerald-200 rounded-lg px-4 py-3">
-                  <p className="text-[10px] text-emerald-600 uppercase tracking-wider mb-1">Columns Added</p>
-                  <p className="text-xs font-mono text-emerald-700">{compareResult.columns_added.join(", ")}</p>
+                <div className="bg-card border border-emerald-200 dark:border-emerald-800 rounded-lg px-4 py-3">
+                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">Columns Added</p>
+                  <p className="text-xs font-mono text-emerald-700 dark:text-emerald-400">{compareResult.columns_added.join(", ")}</p>
                 </div>
               )}
               {compareResult.columns_removed.length > 0 && (
-                <div className="bg-card border border-red-200 rounded-lg px-4 py-3">
-                  <p className="text-[10px] text-red-600 uppercase tracking-wider mb-1">Columns Removed</p>
-                  <p className="text-xs font-mono text-red-700">{compareResult.columns_removed.join(", ")}</p>
+                <div className="bg-card border border-red-200 dark:border-red-800 rounded-lg px-4 py-3">
+                  <p className="text-[10px] text-red-600 dark:text-red-400 uppercase tracking-wider mb-1">Columns Removed</p>
+                  <p className="text-xs font-mono text-red-700 dark:text-red-400">{compareResult.columns_removed.join(", ")}</p>
                 </div>
               )}
             </div>
@@ -1367,11 +1367,11 @@ function DatabricksTimeTravel({ workspaceId, sourceId }: { workspaceId: string; 
                 </thead>
                 <tbody className="divide-y divide-border">
                   {compareResult.column_diffs.map((d) => (
-                    <tr key={d.column} className={cn(d.dtype_changed && "bg-amber-50/40")}>
+                    <tr key={d.column} className={cn(d.dtype_changed && "bg-amber-50/40 dark:bg-amber-950/40")}>
                       <td className="px-4 py-2 font-mono text-foreground">{d.column}</td>
                       <td className="px-3 py-2">
                         {d.dtype_changed ? (
-                          <span className="text-amber-700 font-medium">{d.dtype_a} → {d.dtype_b}</span>
+                          <span className="text-amber-700 dark:text-amber-400 font-medium">{d.dtype_a} → {d.dtype_b}</span>
                         ) : (
                           <span className="text-muted-foreground">{d.dtype_a}</span>
                         )}
@@ -1438,7 +1438,7 @@ export default function BrowseSourcePage() {
 
         {isDatabricks && (
           <>
-            <div className="ml-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-[11px] font-semibold text-orange-700">
+            <div className="ml-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 text-[11px] font-semibold text-orange-700 dark:text-orange-400">
               <Layers className="w-3 h-3" />
               Unity Catalog
             </div>

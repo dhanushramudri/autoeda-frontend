@@ -96,8 +96,8 @@ export function DistributionChart({ data, column }: Props) {
           <span
             className={
               normality.is_normal
-                ? "text-emerald-600 font-medium"
-                : "text-amber-600 font-medium"
+                ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                : "text-amber-600 dark:text-amber-400 font-medium"
             }
           >
             {normality.is_normal ? "Normal" : "Non-normal"}

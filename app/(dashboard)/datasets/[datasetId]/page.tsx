@@ -71,7 +71,7 @@ function AutoRefreshWidget({
       <button
         onClick={() => setOpen((v) => !v)}
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
-          isActive ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100" : "border-border bg-card text-muted-foreground hover:bg-muted"
+          isActive ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100" : "border-border bg-card text-muted-foreground hover:bg-muted"
         }`}
       >
         {liveSyncEnabled ? (
@@ -80,7 +80,7 @@ function AutoRefreshWidget({
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
           </span>
         ) : (
-          <RefreshCw className={`w-3.5 h-3.5 ${isActive ? "text-emerald-600" : "text-muted-foreground"}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${isActive ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`} />
         )}
         {liveSyncEnabled ? "Live Sync: On" : isActive ? current.label : "Auto-Refresh: Off"}
         <ChevronDown className="w-3 h-3 opacity-60" />
@@ -96,9 +96,9 @@ function AutoRefreshWidget({
               <button
                 onClick={() => liveSyncMut.mutate(!liveSyncEnabled)}
                 disabled={liveSyncMut.isPending}
-                className={`w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-muted transition ${liveSyncEnabled ? "text-emerald-700" : "text-muted-foreground"}`}
+                className={`w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-muted transition ${liveSyncEnabled ? "text-emerald-700 dark:text-emerald-400" : "text-muted-foreground"}`}
               >
-                {liveSyncEnabled ? <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-500" /> : <RefreshCw className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />}
+                {liveSyncEnabled ? <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-500 dark:text-emerald-400" /> : <RefreshCw className="w-4 h-4 mt-0.5 flex-shrink-0 text-muted-foreground" />}
                 <span>
                   <span className="text-xs font-semibold block">{liveSyncEnabled ? "On — watching Delta table" : "Turn on Live Sync"}</span>
                   <span className="text-[10px] text-muted-foreground block mt-0.5">Checks the Delta transaction log every ~20s (metadata only) — reloads automatically only when the table actually changes.</span>
@@ -193,8 +193,8 @@ function ExportToDatabricksModal({
       <div className="bg-card rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
-              <Upload className="w-4 h-4 text-orange-600" />
+            <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center">
+              <Upload className="w-4 h-4 text-orange-600 dark:text-orange-400" />
             </div>
             <h2 className="text-base font-bold text-foreground">Export to Databricks</h2>
           </div>
@@ -226,7 +226,7 @@ function ExportToDatabricksModal({
         {/* Success */}
         {isDone && jobStatus?.result_data && (
           <div className="flex flex-col items-center gap-3 py-6">
-            <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+            <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400" />
             <p className="text-sm font-semibold text-foreground">{jobStatus.result_data.rows_written.toLocaleString()} rows written</p>
             <p className="text-xs text-muted-foreground font-mono bg-muted px-3 py-1.5 rounded-lg">{jobStatus.result_data.fqtn}</p>
             <button onClick={onClose} className="mt-2 px-4 py-2 rounded-lg bg-brand text-white text-xs font-semibold hover:bg-[#2a0d8a] transition">
@@ -238,9 +238,9 @@ function ExportToDatabricksModal({
         {/* Failed */}
         {isFailed && (
           <div className="flex flex-col items-center gap-3 py-6">
-            <AlertCircle className="w-12 h-12 text-red-500" />
+            <AlertCircle className="w-12 h-12 text-red-500 dark:text-red-400" />
             <p className="text-sm font-semibold text-foreground">Export failed</p>
-            <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg font-mono text-center">{jobStatus?.message}</p>
+            <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-3 py-2 rounded-lg font-mono text-center">{jobStatus?.message}</p>
             <button onClick={onClose} className="mt-2 px-4 py-2 rounded-lg border border-border text-xs text-muted-foreground hover:bg-muted transition">Close</button>
           </div>
         )}
@@ -252,7 +252,7 @@ function ExportToDatabricksModal({
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1">Databricks Source</label>
                 {databricksSources.length === 0 ? (
-                  <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">No Databricks sources found.</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-3 py-2 rounded-lg">No Databricks sources found.</p>
                 ) : (
                   <div className="relative">
                     <select value={sourceId} onChange={(e) => setSourceId(Number(e.target.value))}
@@ -293,7 +293,7 @@ function ExportToDatabricksModal({
                 </div>
               )}
               {mut.error && (
-                <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">{(mut.error as Error).message}</p>
+                <p className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 px-3 py-2 rounded-lg">{(mut.error as Error).message}</p>
               )}
             </div>
             <div className="flex gap-2 mt-5">
@@ -369,7 +369,7 @@ export default function DatasetOverviewPage() {
 
         <div className="mt-4 mb-8">
         <div className="flex items-start gap-3">
-          <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center flex-shrink-0">
             <Database className="w-5 h-5 text-brand" />
           </div>
           <div className="flex-1">
@@ -387,7 +387,7 @@ export default function DatasetOverviewPage() {
               )}
               <button
                 onClick={() => setShowExport(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-orange-200 bg-orange-50 text-orange-700 text-xs font-semibold hover:bg-orange-100 transition"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 text-xs font-semibold hover:bg-orange-100 transition"
               >
                 <Upload className="w-3.5 h-3.5" />
                 Export to Databricks

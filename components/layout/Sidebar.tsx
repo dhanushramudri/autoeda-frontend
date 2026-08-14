@@ -261,7 +261,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
               alt="JMAN"
               className="h-5 w-auto object-contain mt-1 hidden dark:block"
             />
-<span className="leading-none select-none w-full text-right -mt-0.5 pr-10">
+<span className="leading-none select-none w-full text-right -mt-0.5 pr-10 dark:pr-14">
   <span className="text-[14px] font-serif font-bold text-sidebar-foreground">Auto</span>
   <span className="text-[12px] font-mono font-normal" style={{ color: "hsl(var(--primary))" }}>EDA</span>
 </span>
@@ -562,8 +562,8 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
               "flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors",
               sidebarOpen ? "justify-start" : "justify-center",
               pathname === "/feedback"
-                ? "bg-amber-50 text-amber-700"
-                : "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
+                : "text-amber-600 dark:text-amber-400 hover:text-amber-700 hover:bg-amber-50 dark:bg-amber-950/40"
             )}
             title="Feedback"
           >
@@ -609,7 +609,7 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-500 dark:text-red-400 hover:bg-red-50 dark:bg-red-950/40 dark:hover:bg-red-950/30 transition-colors"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   Sign out

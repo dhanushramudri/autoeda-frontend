@@ -378,7 +378,7 @@ export default function ArticleDetailPage() {
               {canModify && (
                 <button
                   onClick={remove}
-                  className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 text-red-500 text-xs font-medium rounded-lg hover:bg-red-50 transition"
+                  className="flex items-center gap-1.5 px-3 py-1.5 border border-red-200 dark:border-red-800 text-red-500 dark:text-red-400 text-xs font-medium rounded-lg hover:bg-red-50 dark:bg-red-950/40 transition"
                 >
                   <Trash2 className="w-3.5 h-3.5" /> Delete
                 </button>
@@ -389,7 +389,7 @@ export default function ArticleDetailPage() {
       </div>
 
       {(saveError || attachmentError) && (
-        <div className="mb-4 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+        <div className="mb-4 px-3 py-2 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-xs text-red-600 dark:text-red-400">
           {saveError || attachmentError}
         </div>
       )}
@@ -461,7 +461,7 @@ export default function ArticleDetailPage() {
         ) : (
           <div className="flex flex-wrap gap-2">
             {linkedDatasets.map((d) => (
-              <div key={d.id} className="relative flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-1.5">
+              <div key={d.id} className="relative flex items-center gap-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg px-3 py-1.5">
                 <Database className="w-3.5 h-3.5 text-brand" />
                 <span className="text-xs font-medium text-foreground">{d.name}</span>
                 {d.row_count != null && <span className="text-[10px] text-muted-foreground">{d.row_count.toLocaleString()} rows</span>}
@@ -474,7 +474,7 @@ export default function ArticleDetailPage() {
                       className="text-brand hover:text-[#2a0d8a] disabled:cursor-wait"
                     >
                       {downloadingDatasetId === d.id ? (
-                        <span className="w-3.5 h-3.5 inline-block border-[1.5px] border-blue-200 border-t-brand rounded-full animate-spin" />
+                        <span className="w-3.5 h-3.5 inline-block border-[1.5px] border-blue-200 dark:border-blue-800 border-t-brand rounded-full animate-spin" />
                       ) : (
                         <Download className="w-3.5 h-3.5" />
                       )}
@@ -486,7 +486,7 @@ export default function ArticleDetailPage() {
                       className="text-brand hover:text-[#2a0d8a] disabled:cursor-wait"
                     >
                       {importingId === d.id ? (
-                        <span className="w-3.5 h-3.5 inline-block border-[1.5px] border-blue-200 border-t-brand rounded-full animate-spin" />
+                        <span className="w-3.5 h-3.5 inline-block border-[1.5px] border-blue-200 dark:border-blue-800 border-t-brand rounded-full animate-spin" />
                       ) : (
                         <Import className="w-3.5 h-3.5" />
                       )}
@@ -518,7 +518,7 @@ export default function ArticleDetailPage() {
                   </>
                 )}
                 {editing && (
-                  <button onClick={() => setLinkedDatasets((prev) => prev.filter((x) => x.id !== d.id))} className="text-muted-foreground hover:text-red-500">
+                  <button onClick={() => setLinkedDatasets((prev) => prev.filter((x) => x.id !== d.id))} className="text-muted-foreground hover:text-red-500 dark:text-red-400">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 )}
@@ -527,7 +527,7 @@ export default function ArticleDetailPage() {
           </div>
         )}
         {importSuccess && (
-          <p className="mt-2 text-xs text-emerald-600">{importSuccess}</p>
+          <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-400">{importSuccess}</p>
         )}
       </div>
 
@@ -642,7 +642,7 @@ export default function ArticleDetailPage() {
                   <button
                     onClick={() => removeAttachment(att)}
                     disabled={isDeleting || isDownloading}
-                    className="text-muted-foreground/60 hover:text-red-500 flex-shrink-0 disabled:cursor-wait"
+                    className="text-muted-foreground/60 hover:text-red-500 dark:text-red-400 flex-shrink-0 disabled:cursor-wait"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>

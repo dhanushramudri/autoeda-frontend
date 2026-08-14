@@ -141,7 +141,7 @@ export default function CategoryArticlesPage() {
                   <div className="flex items-center justify-between gap-3 mt-3.5">
                     <div className="flex items-center gap-2 flex-wrap">
                       {a.datasets.map((d) => (
-                        <span key={d.id} className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-brand rounded-full text-[10px] font-medium">
+                        <span key={d.id} className="flex items-center gap-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-950/40 text-brand rounded-full text-[10px] font-medium">
                           <Database className="w-2.5 h-2.5" /> {d.name}
                         </span>
                       ))}

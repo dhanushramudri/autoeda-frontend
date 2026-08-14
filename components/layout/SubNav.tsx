@@ -50,7 +50,7 @@ export function SubNav({ datasetId }: SubNavProps) {
                           "flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-[13px] font-semibold whitespace-nowrap transition-colors border",
                           active
                             ? "bg-violet-600 text-white border-violet-600 shadow-sm"
-                            : "bg-violet-50 text-violet-700 border-violet-200 hover:bg-violet-100"
+                            : "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-800 hover:bg-violet-100"
                         )}
                       >
                         <Lightbulb className="w-3.5 h-3.5 flex-shrink-0" />

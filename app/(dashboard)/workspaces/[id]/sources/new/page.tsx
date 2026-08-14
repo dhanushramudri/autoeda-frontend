@@ -31,11 +31,11 @@ const STEP_IDX: Record<Step, number> = { pick_type: 0, configure: 1, test: 2, sa
 const GROUP_ORDER = ["Data Platforms", "Databases", "Cloud Storage", "Files", "APIs"];
 
 const GROUP_META: Record<string, { icon: React.ComponentType<{className?:string}>; color: string; bg: string }> = {
-  "Data Platforms":{ icon: Zap,      color: "text-orange-600", bg: "bg-orange-50" },
-  Databases:      { icon: Database,  color: "text-violet-600", bg: "bg-violet-50" },
-  "Cloud Storage":{ icon: Cloud,     color: "text-sky-600",    bg: "bg-sky-50" },
-  APIs:           { icon: Globe,     color: "text-emerald-600",bg: "bg-emerald-50" },
-  Files:          { icon: FileText,  color: "text-amber-600",  bg: "bg-amber-50" },
+  "Data Platforms":{ icon: Zap,      color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-50 dark:bg-orange-950/40" },
+  Databases:      { icon: Database,  color: "text-violet-600 dark:text-violet-400", bg: "bg-violet-50 dark:bg-violet-950/40" },
+  "Cloud Storage":{ icon: Cloud,     color: "text-sky-600 dark:text-sky-400",    bg: "bg-sky-50 dark:bg-sky-950/40" },
+  APIs:           { icon: Globe,     color: "text-emerald-600 dark:text-emerald-400",bg: "bg-emerald-50 dark:bg-emerald-950/40" },
+  Files:          { icon: FileText,  color: "text-amber-600 dark:text-amber-400",  bg: "bg-amber-50 dark:bg-amber-950/40" },
 };
 
 // -- Field definitions ----------------------------------------------------------
@@ -206,17 +206,17 @@ function Field({ fd, value, onChange }: {
   onChange: (v: string) => void;
 }) {
   const base = "w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition placeholder:text-muted-foreground/60";
-  const cls  = cn(base, fd.isCredential ? "border-amber-200 bg-amber-50/30" : "border-border bg-card");
+  const cls  = cn(base, fd.isCredential ? "border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/40" : "border-border bg-card");
 
   return (
     <div>
       <div className="flex items-center gap-1.5 mb-1.5">
         <label className="text-xs font-medium text-foreground">
           {fd.label}
-          {fd.required && <span className="text-red-500 ml-0.5">*</span>}
+          {fd.required && <span className="text-red-500 dark:text-red-400 ml-0.5">*</span>}
         </label>
         {fd.isCredential && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full font-medium">
+          <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-1.5 py-0.5 rounded-full font-medium">
             <Lock className="w-2.5 h-2.5" /> encrypted
           </span>
         )}
@@ -423,7 +423,7 @@ export default function NewSourcePage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="sm:col-span-2">
                       <label className="text-xs font-medium text-foreground mb-1.5 block">
-                        Source Name <span className="text-red-500">*</span>
+                        Source Name <span className="text-red-500 dark:text-red-400">*</span>
                       </label>
                       <input
                         type="text"
@@ -451,7 +451,7 @@ export default function NewSourcePage() {
                   <div className="flex items-center justify-between mb-4">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Connection Details</p>
                     {fieldDefs.some((f) => f.isCredential) && (
-                      <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded-full font-medium">
+                      <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-2 py-1 rounded-full font-medium">
                         <Shield className="w-3 h-3" /> Credentials are stored encrypted
                       </span>
                     )}
@@ -537,20 +537,20 @@ export default function NewSourcePage() {
                   {testResult && (
                     <div className={cn(
                       "rounded-xl p-5 border",
-                      testResult.ok ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"
+                      testResult.ok ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800" : "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800"
                     )}>
                       <div className="flex items-center gap-3 mb-3">
                         <div className={cn("w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                          testResult.ok ? "bg-emerald-100" : "bg-red-100")}>
+                          testResult.ok ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-red-100 dark:bg-red-900/30")}>
                           {testResult.ok
-                            ? <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                            : <XCircle className="w-5 h-5 text-red-500" />}
+                            ? <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            : <XCircle className="w-5 h-5 text-red-500 dark:text-red-400" />}
                         </div>
                         <div>
-                          <p className={cn("font-semibold text-sm", testResult.ok ? "text-emerald-800" : "text-red-800")}>
+                          <p className={cn("font-semibold text-sm", testResult.ok ? "text-emerald-800 dark:text-emerald-300" : "text-red-800 dark:text-red-300")}>
                             {testResult.ok ? "Connection successful" : "Connection failed"}
                           </p>
-                          <p className={cn("text-xs font-mono mt-0.5", testResult.ok ? "text-emerald-600" : "text-red-600")}>
+                          <p className={cn("text-xs font-mono mt-0.5", testResult.ok ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400")}>
                             {testResult.message}
                           </p>
                         </div>
@@ -600,7 +600,7 @@ export default function NewSourcePage() {
                     <p className={cn("text-xs font-medium", selectedMeta?.color)}>{selectedEntry?.label}</p>
                   </div>
                   {testResult?.ok && (
-                    <div className="ml-auto flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-100 px-3 py-1.5 rounded-full font-semibold">
+                    <div className="ml-auto flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full font-semibold">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Verified
                     </div>
                   )}
@@ -616,11 +616,11 @@ export default function NewSourcePage() {
                       ? testResult.ok ? "Passed ok" : "Failed"
                       : "Not tested"
                   } highlight={testResult?.ok ? "green" : testResult ? "red" : undefined} />
-                  <ReviewRow label="Credentials" value="Stored encrypted" icon={<Lock className="w-3 h-3 text-amber-500" />} />
+                  <ReviewRow label="Credentials" value="Stored encrypted" icon={<Lock className="w-3 h-3 text-amber-500 dark:text-amber-400" />} />
                 </div>
 
                 {saveMut.isError && (
-                  <div className="mx-6 mb-5 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
+                  <div className="mx-6 mb-5 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-700 dark:text-red-400">
                     Failed to save. Please try again.
                   </div>
                 )}
@@ -682,8 +682,8 @@ function ReviewRow({ label, value, highlight, icon }: {
       <span className="text-muted-foreground text-xs">{label}</span>
       <span className={cn(
         "font-medium text-xs flex items-center gap-1",
-        highlight === "green" ? "text-emerald-600"
-          : highlight === "red" ? "text-red-500"
+        highlight === "green" ? "text-emerald-600 dark:text-emerald-400"
+          : highlight === "red" ? "text-red-500 dark:text-red-400"
           : "text-foreground"
       )}>
         {icon}

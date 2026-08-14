@@ -46,15 +46,15 @@ function JobsPanel() {
 
   function statusIcon(status: string) {
     if (status === "running" || status === "pending") return <Loader2 className="w-3.5 h-3.5 text-brand animate-spin" />;
-    if (status === "completed") return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />;
-    if (status === "failed") return <AlertCircle className="w-3.5 h-3.5 text-red-500" />;
+    if (status === "completed") return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />;
+    if (status === "failed") return <AlertCircle className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />;
     return <Clock className="w-3.5 h-3.5 text-muted-foreground" />;
   }
 
   function statusColor(status: string) {
     if (status === "running" || status === "pending") return "text-brand";
-    if (status === "completed") return "text-emerald-600";
-    if (status === "failed") return "text-red-600";
+    if (status === "completed") return "text-emerald-600 dark:text-emerald-400";
+    if (status === "failed") return "text-red-600 dark:text-red-400";
     return "text-muted-foreground";
   }
 

@@ -89,9 +89,9 @@ function Pill({ label, value, color = C.primary }: { label: string; value: strin
 
 function Insight({ text, level = "warning" }: { text: string; level?: "warning" | "danger" | "info" }) {
   const map = {
-    warning: "bg-amber-50 border-amber-200 text-amber-700",
-    danger:  "bg-red-50 border-red-200 text-red-700",
-    info:    "bg-blue-50 border-blue-200 text-blue-700",
+    warning: "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400",
+    danger:  "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400",
+    info:    "bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400",
   };
   return (
     <div className={`flex items-start gap-1.5 text-[10px] px-2.5 py-1.5 rounded border mt-2 ${map[level]}`}>
@@ -579,14 +579,14 @@ function NormalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["norm
               <td className="px-3 py-2 text-muted-foreground">{r.p_value?.toFixed(4) ?? "--"}</td>
               <td className="px-3 py-2">
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  r.is_normal ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"
+                  r.is_normal ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400" : "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400"
                 }`}>
                   {r.is_normal === null ? "?" : r.is_normal ? "✓ Yes" : "✗ No"}
                 </span>
               </td>
               <td className={`px-3 py-2 font-semibold ${
-                Math.abs(r.skewness ?? 0) > 1 ? "text-red-600" :
-                Math.abs(r.skewness ?? 0) > 0.5 ? "text-amber-600" : "text-emerald-600"
+                Math.abs(r.skewness ?? 0) > 1 ? "text-red-600 dark:text-red-400" :
+                Math.abs(r.skewness ?? 0) > 0.5 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400"
               }`}>{r.skewness?.toFixed(3) ?? "--"}</td>
               <td className="px-3 py-2 text-muted-foreground">{r.kurtosis?.toFixed(3) ?? "--"}</td>
             </tr>
@@ -623,7 +623,7 @@ function OutlierTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["outlie
                         background: (r.outlier_pct ?? 0) > 10 ? C.danger : (r.outlier_pct ?? 0) > 5 ? C.warning : C.success,
                       }} />
                   </div>
-                  <span className={`font-semibold ${(r.outlier_pct ?? 0) > 10 ? "text-red-600" : (r.outlier_pct ?? 0) > 5 ? "text-amber-600" : "text-muted-foreground"}`}>
+                  <span className={`font-semibold ${(r.outlier_pct ?? 0) > 10 ? "text-red-600 dark:text-red-400" : (r.outlier_pct ?? 0) > 5 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}>
                     {r.outlier_pct?.toFixed(2) ?? "--"}%
                   </span>
                 </div>
@@ -640,10 +640,10 @@ function OutlierTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["outlie
 
 function CardinalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["cardinality"] }) {
   const FLAG: Record<string, { cls: string; label: string }> = {
-    id_like:         { cls: "bg-purple-100 text-purple-700",   label: "ID-like" },
+    id_like:         { cls: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",   label: "ID-like" },
     constant:        { cls: "bg-muted text-muted-foreground",     label: "Constant" },
-    binary:          { cls: "bg-sky-100 text-sky-700",         label: "Binary" },
-    low_cardinality: { cls: "bg-emerald-100 text-emerald-700", label: "Low-card" },
+    binary:          { cls: "bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400",         label: "Binary" },
+    low_cardinality: { cls: "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400", label: "Low-card" },
     normal:          { cls: "bg-card text-muted-foreground border border-border", label: "Normal" },
   };
   return (
@@ -679,7 +679,7 @@ function CardinalityTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["ca
 
 function MissingTable({ rows }: { rows: FullAnalysisResult["stat_cards"]["missing_bar"] }) {
   if (!rows.length) return (
-    <div className="flex items-center justify-center h-32 gap-2 text-emerald-600">
+    <div className="flex items-center justify-center h-32 gap-2 text-emerald-600 dark:text-emerald-400">
       <span className="text-lg">✓</span>
       <span className="text-sm font-semibold">No missing values — dataset is complete</span>
     </div>
@@ -770,9 +770,9 @@ function Sidebar({
   const [collapsed, setCollapsed] = useState(false);
 
   const TYPE_ICON: Record<string, React.ReactNode> = {
-    numeric:     <Hash className="w-2.5 h-2.5 text-blue-500" />,
-    categorical: <Type className="w-2.5 h-2.5 text-violet-500" />,
-    datetime:    <Clock className="w-2.5 h-2.5 text-cyan-500" />,
+    numeric:     <Hash className="w-2.5 h-2.5 text-blue-500 dark:text-blue-400" />,
+    categorical: <Type className="w-2.5 h-2.5 text-violet-500 dark:text-violet-400" />,
+    datetime:    <Clock className="w-2.5 h-2.5 text-cyan-500 dark:text-cyan-400" />,
   };
 
   const colType = selectedCol ? data.column_types[selectedCol] : null;
@@ -802,7 +802,7 @@ function Sidebar({
             title={t.label}
             className={`p-2 rounded-md transition ${
               activeTab === t.key
-                ? "bg-blue-50 text-blue-600"
+                ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
                 : "text-muted-foreground hover:bg-muted hover:text-muted-foreground"
             }`}>
             {t.icon}
@@ -830,10 +830,10 @@ function Sidebar({
           <button key={t.key} onClick={() => setActiveTab(t.key)}
             className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all ${
               activeTab === t.key
-                ? "bg-blue-50 border-r-2 border-blue-600 text-blue-700"
+                ? "bg-blue-50 dark:bg-blue-950/40 border-r-2 border-blue-600 text-blue-700 dark:text-blue-400"
                 : "text-muted-foreground hover:bg-muted"
             }`}>
-            <span className={activeTab === t.key ? "text-blue-600" : "text-muted-foreground"}>{t.icon}</span>
+            <span className={activeTab === t.key ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}>{t.icon}</span>
             <div>
               <p className="text-xs font-semibold">{t.label}</p>
               <p className="text-[9px] text-muted-foreground">{t.desc}</p>
@@ -870,7 +870,7 @@ function Sidebar({
               {cols.map((col) => (
                 <button key={col} onClick={() => setSelectedCol(col)}
                   className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-all ${
-                    selectedCol === col ? "bg-blue-50 text-blue-700" : "text-muted-foreground hover:bg-muted"
+                    selectedCol === col ? "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400" : "text-muted-foreground hover:bg-muted"
                   }`}>
                   <span className="flex-shrink-0">
                     {TYPE_ICON[type] ?? <Sigma className="w-2.5 h-2.5 text-muted-foreground" />}
@@ -1045,8 +1045,8 @@ export default function AnalysisPage() {
       <SubNav datasetId={datasetId} />
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-3">
-          <AlertTriangle className="w-8 h-8 text-red-400 mx-auto" />
-          <p className="text-red-500 font-semibold text-sm">Analysis failed</p>
+          <AlertTriangle className="w-8 h-8 text-red-400 dark:text-red-400 mx-auto" />
+          <p className="text-red-500 dark:text-red-400 font-semibold text-sm">Analysis failed</p>
           <p className="text-muted-foreground text-xs">{(error as Error).message}</p>
           <button onClick={() => refetch()}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700">
@@ -1271,7 +1271,7 @@ export default function AnalysisPage() {
               <div className="max-w-3xl space-y-5">
                 <div className="bg-card rounded-xl border border-border shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <GitMerge className="w-4 h-4 text-blue-600" />
+                    <GitMerge className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <h2 className="text-sm font-bold text-foreground">Bivariate Analysis</h2>
                   </div>
                   <p className="text-xs text-muted-foreground mb-4">Analyzing relationships between pairs of variables</p>
@@ -1288,7 +1288,7 @@ export default function AnalysisPage() {
                         className={`px-4 py-2 rounded-lg text-xs font-semibold border transition ${
                           bivType === t.key
                             ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                            : "bg-card text-muted-foreground border-border hover:border-blue-300 hover:bg-blue-50"
+                            : "bg-card text-muted-foreground border-border hover:border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:bg-blue-950/40"
                         }`}>
                         {t.label}
                       </button>
@@ -1356,7 +1356,7 @@ export default function AnalysisPage() {
                 {/* ── Custom Chart Builder ── */}
                 <div className="bg-card rounded-xl border border-border shadow-sm p-5">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <BarChart2 className="w-4 h-4 text-violet-600" />
+                    <BarChart2 className="w-4 h-4 text-violet-600 dark:text-violet-400" />
                     <h2 className="text-sm font-bold text-foreground">Custom Chart Builder</h2>
                   </div>
                   <p className="text-xs text-muted-foreground mb-4">Free-form X/Y chart from preview data (up to 500 rows)</p>
@@ -1370,7 +1370,7 @@ export default function AnalysisPage() {
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border capitalize transition ${
                           customType === t
                             ? "bg-violet-600 text-white border-violet-600 shadow-sm"
-                            : "bg-card text-muted-foreground border-border hover:border-violet-300 hover:bg-violet-50"
+                            : "bg-card text-muted-foreground border-border hover:border-violet-300 dark:border-violet-700 hover:bg-violet-50 dark:bg-violet-950/40"
                         }`}
                       >
                         {t}

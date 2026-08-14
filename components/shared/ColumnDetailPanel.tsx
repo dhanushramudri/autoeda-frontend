@@ -60,7 +60,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
 
   const stat = data?.stats;
   const missingPct = stat?.missing_pct ?? 0;
-  const missColor = missingPct > 50 ? "text-red-600" : missingPct > 20 ? "text-amber-600" : "text-emerald-600";
+  const missColor = missingPct > 50 ? "text-red-600 dark:text-red-400" : missingPct > 20 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400";
 
   const histData = data?.histogram
     ? data.histogram.bins.map((b, i) => ({ bin: b.toFixed(2), count: data.histogram!.counts[i] ?? 0 }))
@@ -106,7 +106,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
           )}
 
           {error && (
-            <div className="p-4 text-sm text-red-600">Failed to load column details.</div>
+            <div className="p-4 text-sm text-red-600 dark:text-red-400">Failed to load column details.</div>
           )}
 
           {data && stat && (
@@ -121,7 +121,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
                   ...(stat.median != null ? [{ label: "Median", value: stat.median.toFixed(4), icon: BarChart2 }] : []),
                   ...(stat.std != null ? [{ label: "Std Dev", value: stat.std.toFixed(4), icon: TrendingUp }] : []),
                   ...(stat.skewness != null ? [{ label: "Skewness", value: stat.skewness.toFixed(3), icon: TrendingUp }] : []),
-                  ...(stat.outlier_count != null ? [{ label: "Outliers", value: stat.outlier_count.toString(), icon: AlertTriangle, color: stat.outlier_count > 0 ? "text-amber-600" : "text-emerald-600" }] : []),
+                  ...(stat.outlier_count != null ? [{ label: "Outliers", value: stat.outlier_count.toString(), icon: AlertTriangle, color: stat.outlier_count > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400" }] : []),
                 ].map((s, i) => (
                   <div key={i} className="bg-muted rounded-lg p-2.5">
                     <p className="text-xs text-muted-foreground mb-0.5">{s.label}</p>
@@ -189,7 +189,7 @@ export function ColumnDetailPanel({ datasetId, columnName, onClose, onQuickActio
 
               {/* Suggested dtype */}
               {data.suggested_dtype && (
-                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800/40 rounded-lg p-3">
                   <p className="text-xs font-medium text-brand">Suggested dtype</p>
                   <p className="text-xs text-brand mt-0.5">
                     This column could be cast to <strong>{data.suggested_dtype}</strong>

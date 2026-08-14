@@ -19,7 +19,7 @@ export function MissingHeatmap({ data }: Props) {
 
   if (chartData.length === 0) {
     return (
-      <div className="py-8 text-center text-sm text-emerald-600 font-medium">
+      <div className="py-8 text-center text-sm text-emerald-600 dark:text-emerald-400 font-medium">
         No missing values found
       </div>
     );

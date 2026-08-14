@@ -52,8 +52,8 @@ export default function MembersPage() {
   });
 
   const ROLE_BADGE: Record<string, string> = {
-    admin: "bg-red-100 text-red-700",
-    analyst: "bg-blue-100 text-brand",
+    admin: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
+    analyst: "bg-blue-100 dark:bg-blue-900/30 text-brand",
     viewer: "bg-muted text-muted-foreground",
   };
 
@@ -83,7 +83,7 @@ export default function MembersPage() {
           </h2>
 
           {error && (
-            <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-3 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400 text-sm">
               {error}
             </div>
           )}
@@ -148,7 +148,7 @@ export default function MembersPage() {
               {user?.is_admin && member.user?.email !== user.email && (
                 <button
                   onClick={() => removeMutation.mutate(member.id)}
-                  className="p-1.5 text-muted-foreground hover:text-red-500 transition"
+                  className="p-1.5 text-muted-foreground hover:text-red-500 dark:text-red-400 transition"
                   title="Remove member"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

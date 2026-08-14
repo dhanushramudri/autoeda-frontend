@@ -72,7 +72,7 @@ export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
           </LineChart>
         </ResponsiveContainer>
         {data.anomalies && data.anomalies.length > 0 && (
-          <p className="text-xs text-red-500 mt-1">
+          <p className="text-xs text-red-500 dark:text-red-400 mt-1">
             {data.anomalies.length} anomalies detected (red dots)
           </p>
         )}
@@ -112,8 +112,8 @@ export function TimeSeriesChart({ data, timeCol, valueCol }: Props) {
           <span
             className={
               data.is_stationary
-                ? "text-emerald-600 font-medium"
-                : "text-amber-600 font-medium"
+                ? "text-emerald-600 dark:text-emerald-400 font-medium"
+                : "text-amber-600 dark:text-amber-400 font-medium"
             }
           >
             {data.is_stationary ? "Stationary" : "Non-stationary"}

@@ -253,7 +253,7 @@ export default function SqlEditorPage() {
               >
                 Results
                 {result && !result.error && (
-                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-blue-100 text-brand text-[10px]">
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-brand text-[10px]">
                     {result.row_count}
                   </span>
                 )}
@@ -302,9 +302,9 @@ export default function SqlEditorPage() {
                     </div>
                   )}
                   {result?.error && (
-                    <div className="m-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <p className="text-sm font-semibold text-red-700 mb-1">Query Error</p>
-                      <pre className="text-xs text-red-600 whitespace-pre-wrap font-mono">{result.error}</pre>
+                    <div className="m-4 p-4 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-lg">
+                      <p className="text-sm font-semibold text-red-700 dark:text-red-400 mb-1">Query Error</p>
+                      <pre className="text-xs text-red-600 dark:text-red-400 whitespace-pre-wrap font-mono">{result.error}</pre>
                     </div>
                   )}
                   {result && !result.error && result.columns.length > 0 && (
@@ -332,7 +332,7 @@ export default function SqlEditorPage() {
                     </div>
                   )}
                   {plan && (
-                    <pre className="m-4 p-4 bg-gray-900 text-green-400 rounded-lg text-xs font-mono overflow-auto whitespace-pre-wrap">
+                    <pre className="m-4 p-4 bg-gray-900 text-green-400 dark:text-green-400 rounded-lg text-xs font-mono overflow-auto whitespace-pre-wrap">
                       {plan}
                     </pre>
                   )}

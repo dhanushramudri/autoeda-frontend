@@ -26,10 +26,10 @@ function OutlierSummary({ result }: { result: Record<string, unknown> }) {
     <div className="rounded-xl border border-border bg-card p-3.5 space-y-2">
       {columns.map((c) => (
         <div key={c.name} className="flex items-center gap-3">
-          <ShieldAlert className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+          <ShieldAlert className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 flex-shrink-0" />
           <span className="text-xs font-medium text-foreground flex-1 truncate">{c.name}</span>
           <span className="text-xs text-muted-foreground">{c.outlier_count.toLocaleString()} rows</span>
-          <span className="text-xs font-semibold text-amber-600 w-12 text-right">{c.outlier_pct.toFixed(1)}%</span>
+          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 w-12 text-right">{c.outlier_pct.toFixed(1)}%</span>
         </div>
       ))}
     </div>
@@ -89,7 +89,7 @@ function StatTestSummary({ result }: { result: Record<string, unknown> }) {
     <div className="rounded-xl border border-border bg-card p-3.5 space-y-1.5">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold text-foreground">{String(result.label ?? result.test)}</span>
-        <span className={cn("ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full", significant ? "bg-violet-50 text-violet-700" : "bg-muted text-muted-foreground")}>
+        <span className={cn("ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full", significant ? "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400" : "bg-muted text-muted-foreground")}>
           p = {p.toFixed(4)}
         </span>
       </div>
@@ -126,7 +126,7 @@ function RelationshipsSummary({ result }: { result: Record<string, unknown> }) {
     <div className="rounded-xl border border-border bg-card p-3 space-y-2">
       {rels.map((r, i) => (
         <div key={i} className="flex items-start gap-2 text-xs">
-          <Link2 className="w-3.5 h-3.5 text-violet-400 flex-shrink-0 mt-0.5" />
+          <Link2 className="w-3.5 h-3.5 text-violet-400 dark:text-violet-400 flex-shrink-0 mt-0.5" />
           <div>
             <span className="font-medium text-foreground">{r.dataset_a}</span>
             <span className="text-muted-foreground"> ↔ </span>
@@ -241,7 +241,7 @@ export function HypothesisToolTrace({ trace }: { trace: ScoutToolCall[] }) {
       {previews.map((t, i) => <HypothesisToolResultPreview key={i} call={t} />)}
 
       {errors.map((t, i) => (
-        <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+        <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
           <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <span><strong>{t.tool}</strong>: {String((t.result as Record<string, unknown>)?.error)}</span>
         </div>
@@ -259,7 +259,7 @@ export function HypothesisToolTrace({ trace }: { trace: ScoutToolCall[] }) {
         <div className="space-y-1.5 pl-1">
           {trace.map((t, i) => (
             <div key={i} className="text-[11px] font-mono text-muted-foreground bg-muted rounded-lg px-2.5 py-1.5 border border-border">
-              <span className="text-violet-500">{t.tool}</span>
+              <span className="text-violet-500 dark:text-violet-400">{t.tool}</span>
               <span className="text-muted-foreground">({JSON.stringify(t.arguments)})</span>
             </div>
           ))}

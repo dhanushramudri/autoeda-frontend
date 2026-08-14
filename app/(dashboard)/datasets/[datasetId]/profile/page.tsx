@@ -46,22 +46,22 @@ const OUTLIER_LABELS: Record<OutlierMethod, string> = {
 };
 
 const TYPE_COLOR: Record<string, string> = {
-  numeric:     "bg-blue-100 text-brand",
-  categorical: "bg-purple-100 text-purple-700",
-  datetime:    "bg-green-100 text-green-700",
-  boolean:     "bg-amber-100 text-amber-700",
-  text:        "bg-rose-100 text-rose-700",
+  numeric:     "bg-blue-100 dark:bg-blue-900/30 text-brand",
+  categorical: "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400",
+  datetime:    "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
+  boolean:     "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
+  text:        "bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400",
   id_like:     "bg-muted text-muted-foreground",
-  constant:    "bg-red-100 text-red-700",
+  constant:    "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
 };
 
 const QUICK_TAGS = ["target", "feature", "id", "sensitive", "drop"] as const;
 const TAG_COLORS: Record<string, string> = {
-  target:    "bg-emerald-100 text-emerald-700",
-  feature:   "bg-blue-100 text-brand",
+  target:    "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400",
+  feature:   "bg-blue-100 dark:bg-blue-900/30 text-brand",
   id:        "bg-muted text-muted-foreground",
-  sensitive: "bg-red-100 text-red-700",
-  drop:      "bg-amber-100 text-amber-700",
+  sensitive: "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400",
+  drop:      "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
 };
 
 // ── Shared mini components ────────────────────────────────────────────────────
@@ -73,7 +73,7 @@ function MiniBar({ pct }: { pct: number }) {
       <div className="h-1.5 w-14 bg-muted rounded-full overflow-hidden flex-shrink-0">
         <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(pct, 100)}%` }} />
       </div>
-      <span className={cn("text-xs tabular-nums", pct > 20 ? "text-amber-600 font-medium" : "text-muted-foreground")}>
+      <span className={cn("text-xs tabular-nums", pct > 20 ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground")}>
         {pct.toFixed(1)}%
       </span>
     </div>
@@ -167,16 +167,16 @@ function OverviewTab({ data, allMeta, onSelectCol, onToggleTag, onExport }: Over
         <div className="bg-card border border-border rounded-xl p-4">
           <p className="text-xs text-muted-foreground mb-1">Rows</p>
           <p className="text-2xl font-bold text-foreground">{data.total_rows?.toLocaleString()}</p>
-          {data.sampled && <p className="text-[10px] text-amber-600 mt-0.5">Sampled · {data.sample_size?.toLocaleString()}</p>}
+          {data.sampled && <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">Sampled · {data.sample_size?.toLocaleString()}</p>}
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <p className="text-xs text-muted-foreground mb-1">Numeric Columns</p>
           <p className="text-2xl font-bold text-foreground">{numericCount}</p>
           <p className="text-[10px] text-muted-foreground mt-0.5">of {data.total_columns} total</p>
         </div>
-        <div className={cn("border rounded-xl p-4", missingColCnt > 0 ? "bg-amber-50 border-amber-100" : "bg-emerald-50 border-emerald-100")}>
+        <div className={cn("border rounded-xl p-4", missingColCnt > 0 ? "bg-amber-50 dark:bg-amber-950/40 border-amber-100 dark:border-amber-800/40" : "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-100 dark:border-emerald-800/40")}>
           <p className="text-xs text-muted-foreground mb-1">Columns w/ Missing</p>
-          <p className={cn("text-2xl font-bold", missingColCnt > 0 ? "text-amber-600" : "text-emerald-600")}>
+          <p className={cn("text-2xl font-bold", missingColCnt > 0 ? "text-amber-600 dark:text-amber-400" : "text-emerald-600 dark:text-emerald-400")}>
             {missingColCnt}
           </p>
           <p className="text-[10px] text-muted-foreground mt-0.5">{(data.duplicate_pct ?? 0).toFixed(1)}% duplicates</p>
@@ -234,7 +234,7 @@ function OverviewTab({ data, allMeta, onSelectCol, onToggleTag, onExport }: Over
               const tags  = meta?.tags ?? [];
               const isSensitive = tags.includes("sensitive");
               return (
-                <tr key={col.name} className="border-b border-border hover:bg-blue-50/30 transition-colors group">
+                <tr key={col.name} className="border-b border-border hover:bg-blue-50/30 dark:bg-blue-950/40 transition-colors group">
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-1.5">
                       {isSensitive && <span title="Sensitive" className="text-sm">🔒</span>}
@@ -257,7 +257,7 @@ function OverviewTab({ data, allMeta, onSelectCol, onToggleTag, onExport }: Over
                   <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{col.std != null ? col.std.toFixed(3) : "—"}</td>
                   <td className="px-4 py-2.5 font-mono text-xs">
                     {col.skewness != null ? (
-                      <span className={Math.abs(col.skewness) > 1 ? "text-amber-600 font-medium" : "text-muted-foreground"}>
+                      <span className={Math.abs(col.skewness) > 1 ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground"}>
                         {col.skewness.toFixed(3)}
                       </span>
                     ) : "—"}
@@ -363,11 +363,11 @@ function MissingTab({ datasetId, totalColumns }: { datasetId: string; totalColum
       </div>
 
       {missingCols.length === 0 ? (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-8 flex items-center gap-3">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+        <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl p-8 flex items-center gap-3">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-emerald-800">No missing values</p>
-            <p className="text-xs text-emerald-600 mt-0.5">This dataset has complete data in all columns.</p>
+            <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">No missing values</p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">This dataset has complete data in all columns.</p>
           </div>
         </div>
       ) : (
@@ -408,7 +408,7 @@ function MissingTab({ datasetId, totalColumns }: { datasetId: string; totalColum
                         <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                           <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(pct, 100)}%` }} />
                         </div>
-                        <span className={cn("text-xs tabular-nums", pct > 50 ? "text-red-600 font-semibold" : pct > 20 ? "text-amber-600" : "text-muted-foreground")}>
+                        <span className={cn("text-xs tabular-nums", pct > 50 ? "text-red-600 dark:text-red-400 font-semibold" : pct > 20 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground")}>
                           {pct.toFixed(2)}%
                         </span>
                       </div>
@@ -424,7 +424,7 @@ function MissingTab({ datasetId, totalColumns }: { datasetId: string; totalColum
                   key: "suggestion",
                   label: "Suggested Strategy",
                   render: (v) => v ? (
-                    <span className="text-xs text-brand bg-blue-50 px-2 py-0.5 rounded-full font-medium">{String(v)}</span>
+                    <span className="text-xs text-brand bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-full font-medium">{String(v)}</span>
                   ) : <span className="text-xs text-muted-foreground/60">—</span>,
                 },
               ]}
@@ -491,7 +491,7 @@ function DistributionsTab({ datasetId, numericCols }: { datasetId: string; numer
               className={cn(
                 "w-full text-left px-3 py-2 rounded-lg text-xs transition truncate",
                 col === activeCol
-                  ? "bg-blue-50 text-brand font-semibold"
+                  ? "bg-blue-50 dark:bg-blue-950/40 text-brand font-semibold"
                   : "text-muted-foreground hover:bg-muted",
               )}
             >
@@ -521,7 +521,7 @@ function DistributionsTab({ datasetId, numericCols }: { datasetId: string; numer
               {data.skewness != null && (
                 <span className={cn(
                   "text-xs px-2.5 py-1 rounded-full font-medium",
-                  Math.abs(data.skewness) > 1 ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700",
+                  Math.abs(data.skewness) > 1 ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
                 )}>
                   Skewness: {data.skewness.toFixed(3)}
                 </span>
@@ -534,7 +534,7 @@ function DistributionsTab({ datasetId, numericCols }: { datasetId: string; numer
               {data.normality?.is_normal != null && (
                 <span className={cn(
                   "text-xs px-2.5 py-1 rounded-full font-medium",
-                  data.normality.is_normal ? "bg-green-100 text-green-700" : "bg-amber-100 text-amber-700",
+                  data.normality.is_normal ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400",
                 )}>
                   {data.normality.is_normal ? "Normal distribution" : "Non-normal distribution"}
                 </span>
@@ -618,11 +618,11 @@ function OutliersTab({ datasetId, numericCols }: { datasetId: string; numericCol
           </div>
 
           {data.total_outliers === 0 ? (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-8 flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl p-8 flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-emerald-800">No outliers detected</p>
-                <p className="text-xs text-emerald-600 mt-0.5">Using {OUTLIER_LABELS[method]} method.</p>
+                <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">No outliers detected</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">Using {OUTLIER_LABELS[method]} method.</p>
               </div>
             </div>
           ) : data.columns && data.columns.length > 0 && (
@@ -657,7 +657,7 @@ function OutliersTab({ datasetId, numericCols }: { datasetId: string; numericCol
                           <div className="h-1.5 w-16 bg-muted rounded-full overflow-hidden">
                             <div className={cn("h-full rounded-full", barColor)} style={{ width: `${Math.min(pct * 5, 100)}%` }} />
                           </div>
-                          <span className={cn("text-xs tabular-nums", pct > 5 ? "text-amber-600 font-medium" : "text-muted-foreground")}>
+                          <span className={cn("text-xs tabular-nums", pct > 5 ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground")}>
                             {pct.toFixed(2)}%
                           </span>
                         </div>
@@ -789,7 +789,7 @@ export default function ProfilePage() {
           <p className="text-sm text-muted-foreground mt-0.5">
             {profileData.total_columns} columns · {profileData.total_rows?.toLocaleString()} rows
             {profileData.sampled && (
-              <span className="ml-2 px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full">Sampled</span>
+              <span className="ml-2 px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs rounded-full">Sampled</span>
             )}
           </p>
         </div>

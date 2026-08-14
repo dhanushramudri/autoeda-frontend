@@ -111,7 +111,7 @@ export default function LibraryPage() {
                 rows={2}
                 className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition resize-none"
               />
-              {error && <p className="text-xs text-red-600">{error}</p>}
+              {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
               <div className="flex justify-end gap-2">
                 <button onClick={() => setShowNew(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
                   Cancel

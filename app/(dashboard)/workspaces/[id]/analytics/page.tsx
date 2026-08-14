@@ -70,15 +70,15 @@ export default function WorkspaceAnalyticsPage() {
           {/* Callout cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             {analytics?.worst_quality && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-red-500 dark:text-red-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-red-800">Worst Quality Dataset</p>
-                  <p className="text-lg font-bold text-red-700 mt-0.5">{analytics.worst_quality.name}</p>
-                  <p className="text-xs text-red-600">Quality score: {analytics.worst_quality.quality_score ?? "N/A"}/100</p>
+                  <p className="text-sm font-semibold text-red-800 dark:text-red-300">Worst Quality Dataset</p>
+                  <p className="text-lg font-bold text-red-700 dark:text-red-400 mt-0.5">{analytics.worst_quality.name}</p>
+                  <p className="text-xs text-red-600 dark:text-red-400">Quality score: {analytics.worst_quality.quality_score ?? "N/A"}/100</p>
                   <button
                     onClick={() => router.push(`/datasets/${analytics!.worst_quality!.id}`)}
-                    className="mt-2 text-xs text-red-700 underline flex items-center gap-0.5"
+                    className="mt-2 text-xs text-red-700 dark:text-red-400 underline flex items-center gap-0.5"
                   >
                     View dataset <ChevronRight className="w-3 h-3" />
                   </button>
@@ -86,17 +86,17 @@ export default function WorkspaceAnalyticsPage() {
               </div>
             )}
             {analytics?.most_missing && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
-                <TrendingDown className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex items-start gap-3">
+                <TrendingDown className="w-5 h-5 text-amber-500 dark:text-amber-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-semibold text-amber-800">Most Missing Data</p>
-                  <p className="text-lg font-bold text-amber-700 mt-0.5">{analytics.most_missing.name}</p>
-                  <p className="text-xs text-amber-600">
+                  <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">Most Missing Data</p>
+                  <p className="text-lg font-bold text-amber-700 dark:text-amber-400 mt-0.5">{analytics.most_missing.name}</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400">
                     {analytics.most_missing.missing_pct != null ? `${analytics.most_missing.missing_pct.toFixed(1)}% missing` : "No data"}
                   </p>
                   <button
                     onClick={() => router.push(`/datasets/${analytics!.most_missing!.id}/missing`)}
-                    className="mt-2 text-xs text-amber-700 underline flex items-center gap-0.5"
+                    className="mt-2 text-xs text-amber-700 dark:text-amber-400 underline flex items-center gap-0.5"
                   >
                     View missing analysis <ChevronRight className="w-3 h-3" />
                   </button>
