@@ -59,44 +59,47 @@
   }
 
   .dark {
-    --background: 255 71% 7%;
-    --foreground: 0 0% 100%;
-    --primary: 255 81% 45%;
+    /* Neutral graphite chrome (background/card/sidebar/borders) with brand
+       accents (buttons, active states, focus rings) kept vivid — the accent
+       colors carry the brand identity, not the base surfaces. */
+    --background: 252 8% 9%;
+    --foreground: 0 0% 95%;
+    --primary: 255 70% 58%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 248 25% 18%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 248 25% 18%;
-    --muted-foreground: 248 19% 65%;
-    --accent: 248 25% 18%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 63% 31%;
+    --secondary: 252 8% 16%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 252 8% 16%;
+    --muted-foreground: 250 6% 63%;
+    --accent: 252 8% 17%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 55% 42%;
     --destructive-foreground: 0 0% 98%;
-    --border: 248 25% 18%;
-    --input: 248 25% 18%;
-    --ring: 248 19% 84%;
-    --brand: 255 81% 55%;
+    --border: 252 8% 19%;
+    --input: 252 8% 19%;
+    --ring: 255 65% 60%;
+    --brand: 255 70% 60%;
     --brand-foreground: 0 0% 100%;
-    --highlight: 338 100% 69%;
+    --highlight: 338 85% 65%;
     --highlight-foreground: 0 0% 100%;
-    --appColor1: 248 25% 17%;
-    --appColor2: 338 100% 69%;
-    --appColor3: 250 30% 12%;
+    --appColor1: 252 8% 15%;
+    --appColor2: 338 85% 65%;
+    --appColor3: 252 9% 12%;
     --appColor4: 0 0% 100%;
-    --appColor5: 0 0% 90%;
-    --appColor6: 255 81% 55%;
-    --appColor7: 187 82% 55%;
-    --appColor8: 176 73% 25%;
-    --appColor9: 255 71% 21%;
+    --appColor5: 0 0% 88%;
+    --appColor6: 255 70% 58%;
+    --appColor7: 187 70% 55%;
+    --appColor8: 176 60% 30%;
+    --appColor9: 252 8% 22%;
     --appColor10: 0 0% 100%;
-    --appColor11: 338 100% 69%;
-    --sidebar-background: 255 30% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 255 81% 55%;
+    --appColor11: 338 85% 65%;
+    --sidebar-background: 252 9% 7%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 255 70% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 255 55% 18%;
+    --sidebar-accent: 252 8% 15%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 255 40% 18%;
-    --sidebar-ring: 255 81% 55%;
+    --sidebar-border: 252 8% 16%;
+    --sidebar-ring: 255 70% 58%;
   }
 
   * {

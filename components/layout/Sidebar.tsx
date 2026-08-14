@@ -254,7 +254,12 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
             <img
               src="/jman_logo.svg"
               alt="JMAN"
-              className="h-5 w-auto object-contain mt-1"
+              className="h-5 w-auto object-contain mt-1 block dark:hidden"
+            />
+            <img
+              src="/jman_logo_white.png"
+              alt="JMAN"
+              className="h-5 w-auto object-contain mt-1 hidden dark:block"
             />
 <span className="leading-none select-none w-full text-right -mt-0.5 pr-10">
   <span className="text-[14px] font-serif font-bold text-sidebar-foreground">Auto</span>
