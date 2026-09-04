@@ -26,6 +26,8 @@ const SNIPPETS = [
   { label: "Group by", sql: "SELECT column_name, COUNT(*) AS cnt\nFROM df\nGROUP BY column_name\nORDER BY cnt DESC\nLIMIT 20" },
 ];
 
+console.log("health check");
+
 interface SqlResult {
   columns: string[];
   rows: unknown[][];
