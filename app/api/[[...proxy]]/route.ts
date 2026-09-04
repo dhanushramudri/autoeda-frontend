@@ -12,7 +12,7 @@ async function proxyHandler(request: NextRequest) {
     const apiPath = pathname;
 
     const backendHost = process.env.EC2_API_URL || "http://localhost:8000";
-    const ec2Url = backendHost.endsWith("/api/v1") ? backendHost : `${backendHost}/api/v1`;
+    const ec2Url = backendHost.replace(/\/$/, "");
     let fullUrl = `${ec2Url}${apiPath}${searchParams}`;
 
     console.log(`[Proxy] ${request.method} ${pathname}${searchParams} -> ${fullUrl}`);

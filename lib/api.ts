@@ -638,7 +638,7 @@ async function* streamSSE(path: string, body: unknown): AsyncGenerator<Record<st
 export const hypothesesApi = {
   list: (workspaceId: string, params?: { dataset_id?: string; status?: string }) =>
     api.get(`/workspaces/${workspaceId}/hypotheses`, { params }),
-  create: (workspaceId: string, data: { statement: string; dataset_id?: string }) =>
+  create: (workspaceId: string, data: { statement: string; dataset_id?: string; image_key?: string; image_content_type?: string }) =>
     api.post(`/workspaces/${workspaceId}/hypotheses`, data),
   delete: (workspaceId: string, hypothesisId: number) =>
     api.delete(`/workspaces/${workspaceId}/hypotheses/${hypothesisId}`),

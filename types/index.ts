@@ -729,6 +729,7 @@ export interface Hypothesis {
   severity: "info" | "warning" | "danger" | null;
   columns: string[];
   tool_trace: ScoutToolCall[];
+  image_url: string | null;
   created_at: string;
   updated_at: string;
   validated_at: string | null;

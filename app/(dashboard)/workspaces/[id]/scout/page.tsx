@@ -187,22 +187,27 @@ function ActionConfirmation({ icon: Icon, label }: { icon: React.ComponentType<{
   );
 }
 
+/** Only renders a clean tabular result or short printed output — a nested/
+ * scalar dict (the common shape for a custom "check a bunch of things at
+ * once" script) has no readable generic rendering, and the answer's prose
+ * already covers whatever it found; dumping raw JSON just added noise.
+ * Full detail is still available via the trace's "show raw proof" toggle. */
 function PythonResultSummary({ result }: { result: Record<string, unknown> }) {
   const value = result.result;
   const stdout = result.stdout as string | undefined;
+  const isTable = Array.isArray(value) && value.length > 0 && typeof value[0] === "object";
+  if (!isTable && !stdout) return null;
   return (
     <div className="rounded-xl border border-border bg-card p-3 space-y-2">
-      {Array.isArray(value) && value.length > 0 && typeof value[0] === "object" ? (
+      {isTable && (
         <DataTable
-          columns={Object.keys(value[0] as object).map((k) => ({ key: k, label: k }))}
+          columns={Object.keys((value as Record<string, unknown>[])[0] as object).map((k) => ({ key: k, label: k }))}
           data={value as Record<string, unknown>[]}
           compact
         />
-      ) : (
-        <pre className="text-xs font-mono text-foreground whitespace-pre-wrap break-all">{JSON.stringify(value, null, 2)}</pre>
       )}
       {stdout && (
-        <pre className="text-[11px] font-mono text-muted-foreground border-t border-border pt-2 whitespace-pre-wrap break-all">{stdout}</pre>
+        <pre className={cn("text-[11px] font-mono text-muted-foreground whitespace-pre-wrap break-all", isTable && "border-t border-border pt-2")}>{stdout}</pre>
       )}
     </div>
   );
@@ -210,14 +215,75 @@ function PythonResultSummary({ result }: { result: Record<string, unknown> }) {
 
 type Mode = "agent" | "chat";
 
+// -- Tool metadata: label/caption/group, and which tools are pure orientation
+// (no standalone evidentiary value — e.g. "which dataset am I looking at")
+// rather than actual findings. Orientation calls are tucked behind the proof
+// toggle instead of shown as primary content. Same design as
+// components/hypotheses/HypothesisToolResultPreview.tsx — kept as a
+// deliberate separate copy (see that file's header comment) but ported here
+// since Scout chat had the identical "shows everything, uncaptioned,
+// ungrouped" problem. -----------------------------------------------------
+
+type GroupKey = "tests" | "relationships" | "distributions" | "quality" | "timeseries" | "text" | "actions" | "custom";
+
+const GROUP_LABELS: Record<GroupKey, string> = {
+  tests: "Statistical Tests",
+  relationships: "Relationships & Predictive Signal",
+  distributions: "Distributions & Outliers",
+  quality: "Data Quality",
+  timeseries: "Time Series",
+  text: "Text Analysis",
+  actions: "Actions Taken",
+  custom: "Custom Analysis",
+};
+
+const GROUP_ORDER: GroupKey[] = ["tests", "relationships", "distributions", "quality", "timeseries", "text", "actions", "custom"];
+
+interface ToolMeta {
+  label: string;
+  description: string;
+  group?: GroupKey; // omit for orientation-only tools with no evidentiary card
+}
+
+const TOOL_META: Record<string, ToolMeta> = {
+  list_datasets: { label: "List datasets", description: "Looked up which datasets exist in this workspace." },
+  get_dataset_schema: { label: "Read schema", description: "Looked up this dataset's columns and types." },
+  search_columns: { label: "Search columns", description: "Searched for a column across datasets." },
+  get_known_relationships: { label: "Recall known relationships", description: "Checked for previously-discovered join keys between datasets." },
+
+  get_profile: { label: "Column Profile", description: "Per-column statistics — mean, std, skewness, missing %.", group: "custom" },
+  get_missing: { label: "Missing Values", description: "Which columns have missing data, and how much.", group: "quality" },
+  get_correlations: { label: "Correlation Matrix", description: "Pairwise statistical association between numeric columns.", group: "relationships" },
+  get_outliers: { label: "Outlier Detection", description: "Rows that fall far outside a column's typical range (IQR-based).", group: "distributions" },
+  get_feature_importance: { label: "Feature Importance", description: "Which columns best predict a chosen target column.", group: "relationships" },
+  get_shap_explanations: { label: "SHAP Feature Impact", description: "Per-feature direction and size of impact on the target.", group: "relationships" },
+  get_quality_score: { label: "Data Quality Score", description: "Composite score for completeness, consistency, and uniqueness.", group: "quality" },
+  evaluate_quality_rules: { label: "Quality Rule Check", description: "This dataset's configured data-quality rules, evaluated.", group: "quality" },
+  get_distribution: { label: "Distribution", description: "How values in a column are spread — histogram, quartiles, normality.", group: "distributions" },
+  get_text_analysis: { label: "Text Analysis", description: "Word frequency, sentiment, and quality signals for a text column.", group: "text" },
+  get_timeseries: { label: "Time Series Analysis", description: "Trend, seasonality, and stationarity of a time-based column.", group: "timeseries" },
+  run_statistical_test: { label: "Statistical Test", description: "A formal hypothesis test (t-test / ANOVA / chi-square) with a p-value.", group: "tests" },
+  run_sql: { label: "SQL Query", description: "A direct SQL query run against this dataset.", group: "custom" },
+  run_workspace_sql: { label: "Cross-Dataset SQL Query", description: "A SQL query joining data across datasets in this workspace.", group: "custom" },
+  run_python: { label: "Custom Analysis", description: "Custom Python code run directly against this dataset.", group: "custom" },
+  run_workspace_python: { label: "Custom Analysis (cross-dataset)", description: "Custom Python code run across multiple datasets.", group: "custom" },
+  preview_transform: { label: "Transform Preview", description: "A preview of what a cleaning/transform step would change.", group: "custom" },
+  add_quality_rule: { label: "Quality rule added", description: "Scout added a new data-quality rule.", group: "actions" },
+  save_chart: { label: "Chart saved", description: "Scout saved a chart for later.", group: "actions" },
+  create_segment: { label: "Segment saved", description: "Scout saved a named filter segment.", group: "actions" },
+  remember_relationship: { label: "Relationship remembered", description: "Scout recorded a join key for future conversations.", group: "actions" },
+};
+
+function metaFor(tool: string): ToolMeta {
+  return TOOL_META[tool] ?? { label: tool, description: "" };
+}
+
 // ── Tool-result -> chart mapping ───────────────────────────────────────────────
 // Reuses the same chart components the rest of the product already uses, so a
 // Scout answer about outliers/correlations/missing-data renders the exact same
 // visuals you'd see on the dedicated EDA pages — not a bespoke duplicate.
-function ToolResultPreview({ call }: { call: ScoutToolCall }) {
+function ToolResultBody({ call }: { call: ScoutToolCall }) {
   const r = call.result as Record<string, unknown>;
-  if (r?.error) return null;
-
   switch (call.tool) {
     case "get_missing":
       return (
@@ -329,40 +395,148 @@ function ToolResultPreview({ call }: { call: ScoutToolCall }) {
   }
 }
 
-function ToolTrace({ trace }: { trace: ScoutToolCall[] }) {
+/** Unchanged wrapper — still used as-is by StreamingBubble's live progress view,
+ * where showing every successful call as it happens is the point. */
+function ToolResultPreview({ call }: { call: ScoutToolCall }) {
+  const r = call.result as Record<string, unknown>;
+  if (r?.error) return null;
+  return <ToolResultBody call={call} />;
+}
+
+interface GroupedCall {
+  call: ScoutToolCall;
+  meta: ToolMeta;
+}
+
+function buildOverview(trace: ScoutToolCall[]): string {
+  const counts = new Map<string, number>();
+  for (const t of trace) {
+    const meta = metaFor(t.tool);
+    if (!meta.group) continue;
+    if ("error" in (t.result || {})) continue;
+    counts.set(meta.label, (counts.get(meta.label) ?? 0) + 1);
+  }
+  if (counts.size === 0) return "";
+  return Array.from(counts.entries())
+    .map(([label, n]) => (n > 1 ? `${label} ×${n}` : label))
+    .join(" · ");
+}
+
+/** One collapsed row per tool call in the raw-proof list — only the function
+ * name/arguments show by default; clicking it reveals the full result JSON,
+ * rather than dumping every call's full result inline at once. */
+function RawProofRow({ t }: { t: ScoutToolCall }) {
   const [open, setOpen] = useState(false);
-  if (!trace.length) return null;
-
-  const previews = trace.filter((t) => !("error" in (t.result || {})));
-  const errors = trace.filter((t) => "error" in (t.result || {}));
-
   return (
-    <div className="mt-2.5 space-y-2.5">
-      {previews.map((t, i) => <ToolResultPreview key={i} call={t} />)}
-
-      {errors.map((t, i) => (
-        <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
-          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-          <span><strong>{t.tool}</strong>: {String((t.result as Record<string, unknown>)?.error)}</span>
-        </div>
-      ))}
-
+    <div className="text-[11px] font-mono bg-muted rounded-lg border border-border overflow-hidden">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-muted-foreground transition"
+        className="w-full flex items-center gap-1.5 px-2.5 py-1.5 text-left hover:bg-border/40 transition"
       >
-        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-        {trace.length} tool {trace.length === 1 ? "call" : "calls"} used
+        {open ? <ChevronUp className="w-3 h-3 flex-shrink-0 text-muted-foreground" /> : <ChevronDown className="w-3 h-3 flex-shrink-0 text-muted-foreground" />}
+        <span className="text-violet-500 dark:text-violet-400 flex-shrink-0">{t.tool}</span>
+        <span className="text-muted-foreground truncate">({JSON.stringify(t.arguments)})</span>
+      </button>
+      {open && (
+        <div className="px-2.5 pb-2 pt-1.5 border-t border-border text-muted-foreground/80 whitespace-pre-wrap break-all">
+          {JSON.stringify(t.result, null, 2)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ToolTrace({ trace }: { trace: ScoutToolCall[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const [showProof, setShowProof] = useState(false);
+  if (!trace.length) return null;
+
+  const errors = trace.filter((t) => "error" in (t.result || {}));
+  const evidentiary = trace.filter((t) => !("error" in (t.result || {})) && metaFor(t.tool).group);
+  const orientationCount = trace.length - errors.length - evidentiary.length;
+
+  // De-dupe (byte-identical results) and drop anything whose body has
+  // nothing worth showing (e.g. a run_python result with no clean table).
+  const seen = new Set<string>();
+  const deduped: GroupedCall[] = [];
+  for (const call of evidentiary) {
+    const key = `${call.tool}:${JSON.stringify(call.result)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (ToolResultBody({ call }) === null) continue;
+    deduped.push({ call, meta: metaFor(call.tool) });
+  }
+
+  const groups = GROUP_ORDER.map((g) => ({
+    key: g,
+    label: GROUP_LABELS[g],
+    items: deduped.filter((d) => d.meta.group === g),
+  })).filter((g) => g.items.length > 0);
+
+  const overview = buildOverview(trace);
+  if (groups.length === 0 && errors.length === 0) return null;
+
+  return (
+    <div className="mt-2.5">
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition"
+      >
+        {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        Details
       </button>
 
-      {open && (
-        <div className="space-y-1.5 pl-1">
-          {trace.map((t, i) => (
-            <div key={i} className="text-[11px] font-mono text-muted-foreground bg-muted rounded-lg px-2.5 py-1.5 border border-border">
-              <span className="text-violet-500 dark:text-violet-400">{t.tool}</span>
-              <span className="text-muted-foreground">({JSON.stringify(t.arguments)})</span>
+      {expanded && (
+        <div className="mt-2.5 space-y-4">
+          {overview && (
+            <p className="text-[11px] text-muted-foreground">
+              <span className="font-semibold text-foreground">Checked: </span>{overview}
+            </p>
+          )}
+
+          {groups.map((g) => (
+            <div key={g.key}>
+              {groups.length > 1 && (
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-brand mb-1.5">{g.label}</p>
+              )}
+              <div className="space-y-2.5">
+                {g.items.map(({ call, meta }, i) => (
+                  <div key={i}>
+                    {meta.description && groups.length > 1 && (
+                      <p className="text-[11px] text-muted-foreground mb-1">{meta.description}</p>
+                    )}
+                    <ToolResultBody call={call} />
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
+
+          {errors.length > 0 && (
+            <div className="space-y-1.5">
+              {errors.map((t, i) => (
+                <div key={i} className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
+                  <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  <span><strong>{t.tool}</strong> hit an issue and was retried: {String((t.result as Record<string, unknown>)?.error)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <button
+            onClick={() => setShowProof((v) => !v)}
+            className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-muted-foreground transition"
+          >
+            {showProof ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            {trace.length} tool call{trace.length === 1 ? "" : "s"} total
+            {orientationCount > 0 && ` (${orientationCount} orientation, not shown above)`} — show raw proof
+          </button>
+
+          {showProof && (
+            <div className="space-y-1.5 pl-1">
+              {trace.map((t, i) => <RawProofRow key={i} t={t} />)}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -836,7 +1010,7 @@ export default function ScoutPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-56px)] flex bg-card">
+    <div className="h-full flex bg-card overflow-hidden">
       <ConversationRail workspaceId={workspaceId} activeId={activeId} onSelect={setActiveId} />
       <div className="flex-1 flex flex-col min-w-0">
       <style jsx global>{`
@@ -913,7 +1087,7 @@ export default function ScoutPage() {
             )}
           </div>
         ) : (
-          <div className="max-w-3xl mx-auto space-y-5">
+          <div className="max-w-5xl mx-auto space-y-5">
             {messages.map((m) => (
               <MessageBubble key={m.id} msg={m} onEdit={handleEditClick} editDisabled={isSending} />
             ))}
@@ -925,7 +1099,7 @@ export default function ScoutPage() {
 
       {/* Input bar */}
       <div className="border-t border-border px-6 py-4 flex-shrink-0">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {editingId !== null && (
             <div className="flex items-center justify-between mb-2 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-700 dark:text-amber-400">
               <span className="flex items-center gap-1.5"><Pencil className="w-3 h-3" /> Editing message — sending will replace it and everything after it</span>
@@ -1013,7 +1187,7 @@ export default function ScoutPage() {
                   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
                 }}
                 placeholder={mode === "agent" ? "Ask Scout to investigate something…" : "Ask a quick question…"}
-                className="flex-1 text-sm outline-none placeholder:text-muted-foreground resize-none leading-relaxed py-0.5"
+                className="flex-1 text-sm outline-none placeholder:text-muted-foreground resize-none leading-relaxed py-0.5 bg-transparent"
                 rows={1}
                 disabled={isSending}
               />
