@@ -492,7 +492,7 @@ export default function HypothesesPage() {
               min={1}
               max={10}
               value={genCount}
-              onChange={(e) => setGenCount(Math.max(1, Math.min(10, Number(e.target.value) || 6)))}
+              onChange={(e) => setGenCount(Math.max(1, Math.min(10, Number(e.target.value) || 3)))}
               className="w-11 text-xs font-medium border border-border rounded-lg py-2 text-center bg-transparent focus:outline-none focus:border-brand transition-colors flex-shrink-0"
               disabled={isGenerating}
             />
