@@ -11,6 +11,11 @@ COPY . .
 # environment (client calls always go through this app's own /api proxy
 # route, which reads EC2_API_URL server-side at request time instead).
 ENV NEXT_PUBLIC_API_URL=/api
+# The EC2 deployment has real AWS credentials configured server-side, so
+# dataset uploads use the S3 presign path (needed to get past the ~4.5MB
+# body-size cap a proxy in front of this app may enforce). Local dev has
+# no AWS setup, so this stays unset (falsy) there — see lib/api.ts.
+ENV NEXT_PUBLIC_USE_S3_UPLOADS=true
 RUN npm run build
 
 FROM node:20-alpine AS runner

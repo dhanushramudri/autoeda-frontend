@@ -212,6 +212,33 @@
 .ai-markdown a { color: hsl(var(--primary)); text-decoration: underline; text-decoration-color: hsl(var(--primary) / 0.3); }
 .ai-markdown hr { border: none; border-top: 1px solid #e5e7eb; margin: 10px 0; }
 
+/* JMAN-branded report rendering (Auto EDA) — mirrors the downloadable .docx
+   template's actual heading styles (Heading 1 = dark indigo "chapter" title,
+   Heading 3 = rose "subsection" — see report_builder.py's README/docstring
+   for where these colors come from). The Markdown here only ever produces
+   one H1 (the run title) and one H2 per analysis item, so h2 takes the
+   rose "subsection" treatment to match the doc's per-item pink subtitles.
+   Layered on top of .ai-markdown (same element carries both classes);
+   rules here win by appearing later in the cascade. */
+.jman-report h1 { font-size: 22px; font-weight: 700; color: #19105B; margin: 0 0 6px; }
+.jman-report h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FF6196;
+  margin: 30px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #F2EEFB;
+}
+.jman-report h2:first-child { margin-top: 0; }
+.jman-report p { font-size: 13.5px; line-height: 1.65; color: #1D1C1C; margin: 0 0 14px; }
+.jman-report strong { color: #3411A3; }
+.jman-report img { margin: 6px 0 16px; border-radius: 8px; border: 1px solid #ECE7FA; }
+.jman-report table { font-size: 13px; margin: 8px 0 18px; border: 1px solid #ECE7FA; }
+.jman-report th, .jman-report td { border-color: #ECE7FA; padding: 7px 12px; }
+.jman-report thead th { background: #19105B; color: #fff; font-weight: 600; }
+.jman-report tbody tr:nth-child(even) { background: #FBF9FE; }
+.jman-report code { background: #F2EEFB; color: #3411A3; }
+
 @keyframes mascot-antenna-left {
   0%, 100% { transform: rotate(-4deg); }
   50% { transform: rotate(6deg); }

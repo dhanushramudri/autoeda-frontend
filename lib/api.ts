@@ -99,15 +99,36 @@ export const datasetsApi = {
     api.post(`/workspaces/${workspaceId}/datasets`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     }),
-  // Uploads the file straight to S3 via a presigned URL, bypassing this app's
-  // own request body entirely — the Vercel proxy in front of the API caps
-  // bodies at ~4.5MB, which any real dataset file can easily exceed.
+  // When NEXT_PUBLIC_USE_S3_UPLOADS=true (set for the real deployments —
+  // see Dockerfile / Vercel env vars), uploads the file straight to S3 via
+  // a presigned URL, bypassing this app's own request body entirely: the
+  // Vercel proxy in front of the API caps bodies at ~4.5MB, which any real
+  // dataset file can easily exceed. Local dev has no AWS credentials to
+  // presign against (and no Vercel body-size cap to work around, since
+  // `next dev` proxies the request itself), so by default it posts the
+  // file directly to the backend instead — see `create` above, which
+  // stores bytes straight into the dataset row.
   createViaUpload: async (
     workspaceId: string,
     file: File,
     meta: { name: string; source_type: string; description?: string; config_json?: string },
     onProgress?: (pct: number) => void
   ) => {
+    if (process.env.NEXT_PUBLIC_USE_S3_UPLOADS !== "true") {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("name", meta.name);
+      fd.append("source_type", meta.source_type);
+      if (meta.description) fd.append("description", meta.description);
+      if (meta.config_json) fd.append("config_json", meta.config_json);
+      return api.post(`/workspaces/${workspaceId}/datasets`, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: onProgress
+          ? (e) => onProgress(e.total ? Math.round((e.loaded / e.total) * 100) : 0)
+          : undefined,
+      });
+    }
+
     const presign = await api.post(`/workspaces/${workspaceId}/datasets/presign-upload`, {
       filename: file.name,
       content_type: file.type || "application/octet-stream",
@@ -650,4 +671,40 @@ export const hypothesesApi = {
     streamSSE(`/workspaces/${workspaceId}/hypotheses/generate/stream`, data),
   streamValidate: (workspaceId: string, hypothesisId: number) =>
     streamSSE(`/workspaces/${workspaceId}/hypotheses/${hypothesisId}/validate/stream`, {}),
+};
+
+// Auto EDA (workspace-level, autonomous agentic worklist + growing Markdown report)
+export const autoEdaApi = {
+  listRuns: (workspaceId: string, datasetId?: string) =>
+    api.get(`/workspaces/${workspaceId}/auto-eda/runs`, { params: datasetId ? { dataset_id: datasetId } : undefined }),
+  getRun: (workspaceId: string, runId: number) =>
+    api.get(`/workspaces/${workspaceId}/auto-eda/runs/${runId}`),
+  deleteRun: (workspaceId: string, runId: number) =>
+    api.delete(`/workspaces/${workspaceId}/auto-eda/runs/${runId}`),
+  downloadRun: (workspaceId: string, runId: number, format: "md" | "docx" = "md") =>
+    api.get(`/workspaces/${workspaceId}/auto-eda/runs/${runId}/download`, { params: { format }, responseType: "blob" }),
+  // Runs to completion server-side as a background task (independent of any
+  // HTTP connection) — the frontend polls listRuns/getRun for progress
+  // rather than holding one long-lived SSE connection open, since a full
+  // run can take many minutes and would otherwise get killed by the /api
+  // proxy route's underlying Node request timeout. Can cover multiple
+  // datasets at once (e.g. every dataset in the workspace).
+  startRun: (workspaceId: string, datasetIds: (string | number)[], businessContext?: string, reportTitle?: string) =>
+    api
+      .post(`/workspaces/${workspaceId}/auto-eda/run`, {
+        dataset_ids: datasetIds.map(Number),
+        business_context: businessContext?.trim() || undefined,
+        report_title: reportTitle?.trim() || undefined,
+      })
+      .then((r) => r.data as { run_id: number }),
+  pauseRun: (workspaceId: string, runId: number) =>
+    api.post(`/workspaces/${workspaceId}/auto-eda/runs/${runId}/pause`),
+  resumeRun: (workspaceId: string, runId: number) =>
+    api.post(`/workspaces/${workspaceId}/auto-eda/runs/${runId}/resume`),
+  approveRun: (workspaceId: string, runId: number) =>
+    api.post(`/workspaces/${workspaceId}/auto-eda/runs/${runId}/approve`),
+  listChatMessages: (workspaceId: string, runId: number) =>
+    api.get(`/workspaces/${workspaceId}/auto-eda/runs/${runId}/chat`),
+  sendChatMessage: (workspaceId: string, runId: number, content: string) =>
+    api.post(`/workspaces/${workspaceId}/auto-eda/runs/${runId}/chat`, { content }),
 };

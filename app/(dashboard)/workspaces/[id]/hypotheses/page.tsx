@@ -10,10 +10,11 @@ import { cn } from "@/lib/utils";
 import type { Hypothesis, HypothesisStatus, ScoutToolCall } from "@/types";
 import {
   FlaskConical, Loader2, X, CheckCircle2, XCircle, AlertTriangle,
-  Sparkles, Database, Layers, ChevronRight, MessageSquarePlus, ArrowRight, Paperclip,
+  Sparkles, Database, Layers, ChevronRight, MessageSquarePlus, ArrowRight, Paperclip, Microscope,
 } from "lucide-react";
 import { HypothesisToolTrace } from "@/components/hypotheses/HypothesisToolResultPreview";
 import { Mascot } from "@/components/shared/Mascot";
+import { AutoEdaPanel } from "@/components/auto-eda/AutoEdaPanel";
 
 const CONF_COLOR: Record<string, string> = {
   high: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400",
@@ -234,6 +235,7 @@ export default function HypothesesPage() {
   const qc = useQueryClient();
 
   const scopedDatasetId = searchParams.get("dataset_id") ?? undefined;
+  const [tab, setTab] = useState<"hypotheses" | "auto-eda">("hypotheses");
   const [draft, setDraft] = useState("");
   const [genCount, setGenCount] = useState(6);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -457,13 +459,39 @@ export default function HypothesesPage() {
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.12)" }}>
-              <FlaskConical className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
+              {tab === "hypotheses" ? (
+                <FlaskConical className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
+              ) : (
+                <Microscope className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
+              )}
             </div>
-            <h1 className="text-xl font-bold text-foreground">Hypotheses</h1>
+            <h1 className="text-xl font-bold text-foreground">{tab === "hypotheses" ? "Hypotheses" : "Auto EDA"}</h1>
+          </div>
+          <div className="flex items-center gap-1 bg-muted border border-border rounded-lg p-0.5">
+            <button
+              onClick={() => setTab("hypotheses")}
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition",
+                tab === "hypotheses" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <FlaskConical className="w-3.5 h-3.5" /> Hypotheses
+            </button>
+            <button
+              onClick={() => setTab("auto-eda")}
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition",
+                tab === "auto-eda" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Microscope className="w-3.5 h-3.5" /> Auto EDA
+            </button>
           </div>
         </div>
         <p className="text-sm text-muted-foreground mb-1">
-          Every verdict here is backed by a real computation Scout ran against your data — not a guess.
+          {tab === "hypotheses"
+            ? "Every verdict here is backed by a real computation Scout ran against your data — not a guess."
+            : "An autonomous EDA agent: it plans its own worklist, runs every analysis for real, and writes up the findings."}
         </p>
         {scopedDatasetId && (
           <div className="flex items-center gap-2 mb-3 mt-2">
@@ -478,6 +506,8 @@ export default function HypothesesPage() {
         )}
         {!scopedDatasetId && <div className="mb-3" />}
 
+        {tab === "hypotheses" && (
+        <>
         <div className="flex items-start gap-3">
           {/* Generate control */}
           <div className="flex items-center gap-3 flex-shrink-0 w-[380px] bg-card border border-border rounded-2xl pl-4 pr-2 py-2 shadow-sm transition-colors hover:border-brand/30">
@@ -595,8 +625,18 @@ export default function HypothesesPage() {
             })}
           </div>
         )}
+        </>
+        )}
       </div>
 
+      {tab === "auto-eda" ? (
+        <AutoEdaPanel
+          workspaceId={workspaceId}
+          scopedDatasetId={scopedDatasetId}
+          datasets={workspaceDatasets ?? (dataset ? [{ id: String(dataset.id), name: dataset.name }] : [])}
+        />
+      ) : (
+      <>
       {/* Master-detail body — fills remaining height, each pane scrolls independently */}
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground/60"><Loader2 className="w-5 h-5 animate-spin" /></div>
@@ -658,6 +698,8 @@ export default function HypothesesPage() {
             </p>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

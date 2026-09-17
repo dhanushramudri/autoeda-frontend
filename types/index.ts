@@ -734,3 +734,36 @@ export interface Hypothesis {
   updated_at: string;
   validated_at: string | null;
 }
+
+// -- Auto EDA (workspace-level, autonomous agentic worklist + growing report) --
+export type AutoEdaWorklistStatus = "pending" | "running" | "done" | "error" | "skipped";
+
+export interface AutoEdaWorklistItem {
+  kind: string;
+  title: string;
+  args: Record<string, unknown>;
+  status: AutoEdaWorklistStatus;
+  dataset_id?: number;
+}
+
+export interface AutoEdaRun {
+  id: number;
+  workspace_id: number;
+  dataset_ids: number[];
+  status: "pending" | "planned" | "running" | "pausing" | "paused" | "completed" | "error";
+  title: string | null;
+  business_context: string | null;
+  markdown: string | null;
+  worklist: AutoEdaWorklistItem[];
+  error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AutoEdaChatMessage {
+  id: number;
+  run_id: number;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+}

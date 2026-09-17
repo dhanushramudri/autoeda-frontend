@@ -85,4 +85,9 @@ export const queryKeys = {
   hypotheses: {
     list: (workspaceId: string, datasetId?: string) => ["hypotheses", "list", workspaceId, datasetId] as const,
   },
+  autoEda: {
+    runs: (workspaceId: string, datasetId?: string) => ["auto-eda", "runs", workspaceId, datasetId] as const,
+    run: (workspaceId: string, runId: number) => ["auto-eda", "run", workspaceId, runId] as const,
+    chat: (workspaceId: string, runId: number) => ["auto-eda", "chat", workspaceId, runId] as const,
+  },
 };
