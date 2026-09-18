@@ -239,6 +239,12 @@
 .jman-report tbody tr:nth-child(even) { background: #FBF9FE; }
 .jman-report code { background: #F2EEFB; color: #3411A3; }
 
+/* Persistent highlight for a text selection while the "Ask AI" popover is
+   open — plain window selection disappears the moment focus moves into the
+   popover's input, so the selected range gets wrapped in this span instead
+   (see AutoEdaPanel's handleContentMouseUp/clearHighlight). */
+.ai-selection-highlight { background: rgba(52, 17, 163, 0.16); border-radius: 3px; }
+
 @keyframes mascot-antenna-left {
   0%, 100% { transform: rotate(-4deg); }
   50% { transform: rotate(6deg); }

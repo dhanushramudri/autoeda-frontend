@@ -707,4 +707,17 @@ export const autoEdaApi = {
     api.get(`/workspaces/${workspaceId}/auto-eda/runs/${runId}/chat`),
   sendChatMessage: (workspaceId: string, runId: number, content: string) =>
     api.post(`/workspaces/${workspaceId}/auto-eda/runs/${runId}/chat`, { content }),
+  // Direct raw-markdown save — the canvas's plain edit mode, no AI involved.
+  updateMarkdown: (workspaceId: string, runId: number, markdown: string) =>
+    api.patch(`/workspaces/${workspaceId}/auto-eda/runs/${runId}`, { markdown }),
+  // Rewrites exactly the highlighted excerpt per a free-text instruction —
+  // the canvas's "select text, ask AI" editing mode. Returns the full
+  // updated markdown so the caller can just replace state with it directly.
+  aiEditSelection: (workspaceId: string, runId: number, selectedText: string, instruction: string) =>
+    api
+      .post(`/workspaces/${workspaceId}/auto-eda/runs/${runId}/ai-edit`, {
+        selected_text: selectedText,
+        instruction,
+      })
+      .then((r) => r.data as { markdown: string; replacement: string }),
 };

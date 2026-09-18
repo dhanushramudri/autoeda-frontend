@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import TurndownService from "turndown";
+import { gfm } from "turndown-plugin-gfm";
 import { autoEdaApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { Markdown } from "@/components/shared/Markdown";
@@ -10,8 +12,9 @@ import { cn } from "@/lib/utils";
 import type { AutoEdaRun, AutoEdaWorklistItem } from "@/types";
 import {
   Loader2, Sparkles, Download, Trash2, CheckCircle2, XCircle, Circle,
-  AlertTriangle, Database, ChevronDown, FileSearch, Layers, MinusCircle,
-  Pause, Play,
+  AlertTriangle, Database, ChevronDown, ChevronLeft, ChevronRight, FileSearch,
+  Layers, MinusCircle, Pause, Play, Pencil, Check, X, Wand2, Send,
+  Bold, Italic, Underline, List, ListOrdered, Heading1, Heading2, Heading3, Undo2, Redo2,
 } from "lucide-react";
 
 // Progress lives entirely in the DB (a background task drives the run,
@@ -19,6 +22,15 @@ import {
 // "live", not a persistent connection. 2.5s keeps it feeling responsive
 // without hammering the API during a run that can take many minutes.
 const POLL_INTERVAL_MS = 2500;
+
+// Reused for the "Edit" mode's Save step: the report is edited as rendered
+// HTML (so it visually matches the read view exactly, no separate raw-
+// markdown look), then converted back to Markdown on save since that's the
+// run's actual storage format (also what the .docx/.md export builds from).
+// gfm adds table support, which turndown's core doesn't handle on its own —
+// and this report is full of tables.
+const turndownService = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced" });
+turndownService.use(gfm);
 
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -145,6 +157,24 @@ function DatasetSelector({
   );
 }
 
+function EditToolbarBtn({
+  title, onClick, children,
+}: { title: string; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      // preventDefault on mousedown (not click) keeps the contentEditable
+      // region's current selection intact — clicking a normal button would
+      // steal focus first and collapse whatever text was selected.
+      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
+    >
+      {children}
+    </button>
+  );
+}
+
 export function AutoEdaPanel({
   workspaceId, scopedDatasetId, datasets,
 }: {
@@ -163,6 +193,19 @@ export function AutoEdaPanel({
   const [isApproving, setIsApproving] = useState(false);
   const [businessContext, setBusinessContext] = useState("");
   const [reportTitle, setReportTitle] = useState("");
+  const [listCollapsed, setListCollapsed] = useState(false);
+  const [worklistCollapsed, setWorklistCollapsed] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [initialEditHtml, setInitialEditHtml] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [selection, setSelection] = useState<{ text: string; top: number; left: number } | null>(null);
+  const [aiInstruction, setAiInstruction] = useState("");
+  const [aiEditLoading, setAiEditLoading] = useState(false);
+  const [aiEditError, setAiEditError] = useState<string | null>(null);
+  const canvasBodyRef = useRef<HTMLDivElement>(null);
+  const markdownViewRef = useRef<HTMLDivElement>(null);
+  const editableRef = useRef<HTMLDivElement>(null);
+  const highlightElRef = useRef<HTMLElement | null>(null);
 
   // Scoped to one dataset: always exactly that one. Unscoped: default to
   // every dataset in the workspace the first time the list loads, but
@@ -202,6 +245,141 @@ export function AutoEdaPanel({
   }, [datasets]);
 
   const invalidateRuns = () => qc.invalidateQueries({ queryKey: queryKeys.autoEda.runs(workspaceId, runsFilterId) });
+
+  // Removes the temporary highlight span a selection leaves behind, restoring
+  // the original DOM (its text nodes move back to where the span was).
+  // Safe to call even if the span was already detached (e.g. the run's
+  // markdown changed and the view re-rendered from scratch underneath it).
+  const clearHighlight = () => {
+    const el = highlightElRef.current;
+    highlightElRef.current = null;
+    if (!el || !el.parentNode) return;
+    const parent = el.parentNode;
+    while (el.firstChild) parent.insertBefore(el.firstChild, el);
+    parent.removeChild(el);
+    parent.normalize();
+  };
+
+  const dismissSelection = () => {
+    clearHighlight();
+    setSelection(null);
+    setAiInstruction("");
+    setAiEditError(null);
+  };
+
+  // Switching runs mid-edit/mid-selection would otherwise leak a stale draft
+  // or a floating "Ask AI" popover pointing at the previous report's text.
+  useEffect(() => {
+    setEditMode(false);
+    dismissSelection();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRunId]);
+
+  // A click anywhere outside the report canvas should dismiss a lingering
+  // selection popover — clicks inside the canvas (recomputing or clearing
+  // the selection) are already handled by its own onMouseUp.
+  useEffect(() => {
+    if (!selection) return;
+    function onDocMouseDown(e: MouseEvent) {
+      if (canvasBodyRef.current && !canvasBodyRef.current.contains(e.target as Node)) {
+        dismissSelection();
+      }
+    }
+    document.addEventListener("mousedown", onDocMouseDown);
+    return () => document.removeEventListener("mousedown", onDocMouseDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selection]);
+
+  const setRunMarkdownLocally = (runId: number, markdown: string) => {
+    qc.setQueryData(queryKeys.autoEda.runs(workspaceId, runsFilterId), (old: AutoEdaRun[] | undefined) =>
+      old?.map((r) => (r.id === runId ? { ...r, markdown } : r))
+    );
+  };
+
+  const handleToggleEdit = () => {
+    if (!selectedRun) return;
+    dismissSelection();
+    // Seed the editable region from the CURRENTLY RENDERED view's own HTML —
+    // captured once, kept out of further re-renders (see the contentEditable
+    // div's dangerouslySetInnerHTML below) so the browser owns it while
+    // editing, the same way any contentEditable region has to work with React.
+    setInitialEditHtml(markdownViewRef.current?.innerHTML ?? "");
+    setEditMode(true);
+  };
+
+  const handleCancelEdit = () => setEditMode(false);
+
+  const handleSaveEdit = async () => {
+    if (!selectedRun || !editableRef.current) return;
+    setSavingEdit(true);
+    try {
+      const newMarkdown = turndownService.turndown(editableRef.current.innerHTML);
+      await autoEdaApi.updateMarkdown(workspaceId, selectedRun.id, newMarkdown);
+      setRunMarkdownLocally(selectedRun.id, newMarkdown);
+      setEditMode(false);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const runEditCmd = (cmd: string, value?: string) => {
+    document.execCommand(cmd, false, value);
+  };
+
+  const handleContentMouseUp = () => {
+    const sel = window.getSelection();
+    const text = sel?.toString().trim() ?? "";
+    if (!text || !sel || sel.rangeCount === 0 || !markdownViewRef.current || !canvasBodyRef.current) {
+      dismissSelection();
+      return;
+    }
+    const range = sel.getRangeAt(0);
+    if (!markdownViewRef.current.contains(range.commonAncestorContainer)) {
+      dismissSelection();
+      return;
+    }
+    clearHighlight();
+    const rect = range.getBoundingClientRect();
+    const containerRect = canvasBodyRef.current.getBoundingClientRect();
+
+    // Wrap the selected range in a persistent highlight — plain window
+    // selection disappears the moment focus moves into the prompt input
+    // below, and the point is for the highlighted text to stay visibly
+    // marked while the user is describing the change. surroundContents can
+    // throw if the range crosses a partial element boundary (e.g. half of a
+    // bolded phrase) — that's a purely visual nicety, so just skip it then.
+    try {
+      const span = document.createElement("span");
+      span.className = "ai-selection-highlight";
+      range.surroundContents(span);
+      highlightElRef.current = span;
+    } catch {
+      highlightElRef.current = null;
+    }
+
+    setSelection({
+      text,
+      top: rect.top - containerRect.top + canvasBodyRef.current.scrollTop - 12,
+      left: Math.min(Math.max(rect.left - containerRect.left + rect.width / 2, 140), containerRect.width - 140),
+    });
+    setAiInstruction("");
+    setAiEditError(null);
+  };
+
+  const handleAiEdit = async () => {
+    if (!selectedRun || !selection || !aiInstruction.trim()) return;
+    setAiEditLoading(true);
+    setAiEditError(null);
+    try {
+      const { markdown } = await autoEdaApi.aiEditSelection(workspaceId, selectedRun.id, selection.text, aiInstruction.trim());
+      setRunMarkdownLocally(selectedRun.id, markdown);
+      dismissSelection();
+    } catch {
+      setAiEditError("Couldn't apply that — the text may have changed since you selected it.");
+    } finally {
+      setAiEditLoading(false);
+    }
+  };
 
   const handleRun = async () => {
     if (selectedIds.length === 0) return;
@@ -276,36 +454,38 @@ export function AutoEdaPanel({
   return (
     <div className="flex-1 min-h-0 flex flex-col">
       {/* Toolbar */}
-      <div className="flex-shrink-0 px-1 pb-4">
-        <div className="mb-3">
-          <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">
-            Report title <span className="font-normal normal-case text-muted-foreground/70">(optional — defaults to the workspace name)</span>
-          </label>
-          <input
-            type="text"
-            value={reportTitle}
-            onChange={(e) => setReportTitle(e.target.value)}
-            disabled={isStarting}
-            placeholder="e.g. Apax Portfolio Retention Analysis"
-            className="w-full text-xs bg-card border border-border rounded-xl px-3 py-2 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
-          />
-        </div>
-        <div className="mb-3">
-          <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">
-            Business context <span className="font-normal normal-case text-muted-foreground/70">(optional, but recommended)</span>
-          </label>
-          <textarea
-            value={businessContext}
-            onChange={(e) => setBusinessContext(e.target.value)}
-            disabled={isStarting}
-            placeholder="e.g. We want to understand what's driving churn and identify at-risk high-value customers. Focus on revenue, tenure, and support-ticket patterns."
-            rows={2}
-            className="w-full text-xs bg-card border border-border rounded-xl px-3 py-2 resize-none focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
-          />
-          <p className="text-[11px] text-muted-foreground/70 mt-1">
-            Tell it what you&apos;re trying to figure out — it&apos;ll prioritize the analyses most relevant to that
-            instead of mechanically covering every column.
-          </p>
+      <div className="flex-shrink-0 px-6 pt-5 pb-5 space-y-4">
+        <div className="bg-card border border-border rounded-2xl p-4 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-4">
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">
+              Report title <span className="font-normal normal-case text-muted-foreground/70">(optional — defaults to the workspace name)</span>
+            </label>
+            <input
+              type="text"
+              value={reportTitle}
+              onChange={(e) => setReportTitle(e.target.value)}
+              disabled={isStarting}
+              placeholder="e.g. Apax Portfolio Retention Analysis"
+              className="w-full text-xs bg-background border border-foreground/15 shadow-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">
+              Business context <span className="font-normal normal-case text-muted-foreground/70">(optional, but recommended)</span>
+            </label>
+            <textarea
+              value={businessContext}
+              onChange={(e) => setBusinessContext(e.target.value)}
+              disabled={isStarting}
+              placeholder="e.g. We want to understand what's driving churn and identify at-risk high-value customers. Focus on revenue, tenure, and support-ticket patterns."
+              rows={2}
+              className="w-full text-xs bg-background border border-foreground/15 shadow-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
+            />
+            <p className="text-[11px] text-muted-foreground/70 mt-1">
+              Tell it what you&apos;re trying to figure out — it&apos;ll prioritize the analyses most relevant to that
+              instead of mechanically covering every column.
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2.5">
           {!isScoped && (
@@ -325,7 +505,7 @@ export function AutoEdaPanel({
           </button>
         </div>
         {startError && (
-          <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
+          <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
             <span>{startError}</span>
           </div>
@@ -334,174 +514,322 @@ export function AutoEdaPanel({
 
       {/* Body */}
       <div className="flex-1 min-h-0 flex border-t border-border">
-        {/* Left: past runs list */}
-        <div className="w-[320px] flex-shrink-0 border-r border-border overflow-y-auto scrollbar-thin px-4 py-4 space-y-2">
-          {runsLoading ? (
-            <div className="flex items-center justify-center py-8"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" /></div>
-          ) : runs && runs.length > 0 ? (
-            runs.map((r) => {
-              const running = r.status === "pending" || r.status === "running" || r.status === "pausing";
-              const done = r.worklist.filter((i) => i.status === "done").length;
-              const multiLabel = runDatasetLabel(r);
-              return (
-                <button
-                  key={r.id}
-                  onClick={() => setSelectedRunId(r.id)}
-                  className={cn(
-                    "w-full text-left border rounded-xl p-3 transition-all group relative",
-                    selectedRunId === r.id ? "border-brand ring-1 ring-brand/40 bg-card shadow-sm" : "border-border hover:border-brand/40 hover:bg-muted/30"
-                  )}
-                >
-                  <p className="text-xs font-medium text-foreground truncate mb-1.5 pr-4">{r.title ?? `Run #${r.id}`}</p>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span
+        {/* Column 1: past runs list — collapsible */}
+        {listCollapsed ? (
+          <button
+            onClick={() => setListCollapsed(false)}
+            title="Expand past runs"
+            className="w-10 flex-shrink-0 border-r border-border flex flex-col items-center pt-3 gap-2 hover:bg-muted/40 transition-colors"
+          >
+            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            <FileSearch className="w-3.5 h-3.5 text-muted-foreground/50" />
+          </button>
+        ) : (
+          <div className="w-[300px] flex-shrink-0 border-r border-border flex flex-col min-h-0">
+            <div className="flex-shrink-0 flex items-center justify-between px-4 pt-3 pb-1">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Past runs</span>
+              <button
+                onClick={() => setListCollapsed(true)}
+                title="Collapse"
+                className="p-1 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-4 pb-4 pt-2 space-y-2">
+              {runsLoading ? (
+                <div className="flex items-center justify-center py-8"><Loader2 className="w-4 h-4 animate-spin text-muted-foreground/60" /></div>
+              ) : runs && runs.length > 0 ? (
+                runs.map((r) => {
+                  const running = r.status === "pending" || r.status === "running" || r.status === "pausing";
+                  const done = r.worklist.filter((i) => i.status === "done").length;
+                  const multiLabel = runDatasetLabel(r);
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={() => setSelectedRunId(r.id)}
                       className={cn(
-                        "flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wide",
-                        r.status === "completed"
-                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
-                          : r.status === "error"
-                          ? "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400"
-                          : r.status === "paused"
-                          ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
-                          : r.status === "planned"
-                          ? "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400"
-                          : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400"
+                        "w-full text-left border rounded-xl p-3 transition-all group relative",
+                        selectedRunId === r.id ? "border-brand ring-1 ring-brand/40 bg-card shadow-sm" : "border-border hover:border-brand/40 hover:bg-muted/30"
                       )}
                     >
-                      {running && <Loader2 className="w-2.5 h-2.5 animate-spin" />}
-                      {r.status}
-                    </span>
-                    {multiLabel && (
-                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
-                        <Layers className="w-2.5 h-2.5" />
-                        {multiLabel}
-                      </span>
-                    )}
-                    <span className="text-[10px] text-muted-foreground/70 tabular-nums">
-                      {running ? `${done}/${r.worklist.length} steps` : `${r.worklist.length} steps`}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1">{relativeTime(r.created_at)}</p>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(r.id); }}
-                    className="absolute top-2.5 right-2.5 p-1 text-muted-foreground/40 hover:text-red-500 transition-colors rounded opacity-0 group-hover:opacity-100"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </button>
-              );
-            })
-          ) : (
-            <div className="flex flex-col items-center text-center py-12 px-3">
-              <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center mb-3">
-                <FileSearch className="w-4 h-4 text-muted-foreground/60" />
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                No runs yet — click <span className="font-medium text-foreground">Run Auto EDA</span> above to get started.
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Right: report */}
-        <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin px-8 py-6">
-          {selectedRun ? (
-            <>
-              {selectedRun.worklist.length > 0 && (
-                <div className="mb-6 max-w-2xl">
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-brand">
-                        {isPlanned ? "Proposed worklist" : "Worklist"}
-                      </p>
-                      {isRunning && selectedRun.status !== "pausing" && <Loader2 className="w-3 h-3 animate-spin text-brand" />}
-                      {selectedRun.status === "pausing" && <span className="text-[10px] text-amber-600 dark:text-amber-400">pausing…</span>}
-                    </div>
-                    {isPlanned && (
-                      <button
-                        onClick={() => handleApprove(selectedRun.id)}
-                        disabled={isApproving}
-                        className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-lg text-white bg-brand hover:opacity-90 transition disabled:opacity-50"
-                      >
-                        {isApproving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
-                        Approve & Run
-                      </button>
-                    )}
-                    {(isRunning || isPaused) && (
-                      <button
-                        onClick={() => (isPaused ? handleResume(selectedRun.id) : handlePause(selectedRun.id))}
-                        disabled={isPausing || isResuming || selectedRun.status === "pausing"}
-                        className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg border border-border bg-card text-muted-foreground hover:border-brand/40 hover:text-brand transition-colors disabled:opacity-50"
-                      >
-                        {isPausing || isResuming ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : isPaused ? (
-                          <Play className="w-3 h-3" />
-                        ) : (
-                          <Pause className="w-3 h-3" />
+                      <p className="text-xs font-medium text-foreground truncate mb-1.5 pr-4">{r.title ?? `Run #${r.id}`}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className={cn(
+                            "flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded uppercase tracking-wide",
+                            r.status === "completed"
+                              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400"
+                              : r.status === "error"
+                              ? "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400"
+                              : r.status === "paused"
+                              ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
+                              : r.status === "planned"
+                              ? "bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-400"
+                              : "bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400"
+                          )}
+                        >
+                          {running && <Loader2 className="w-2.5 h-2.5 animate-spin" />}
+                          {r.status}
+                        </span>
+                        {multiLabel && (
+                          <span className="flex items-center gap-1 text-[10px] text-muted-foreground px-1.5 py-0.5 rounded bg-muted">
+                            <Layers className="w-2.5 h-2.5" />
+                            {multiLabel}
+                          </span>
                         )}
-                        {isPaused ? "Resume" : "Pause"}
+                        <span className="text-[10px] text-muted-foreground/70 tabular-nums">
+                          {running ? `${done}/${r.worklist.length} steps` : `${r.worklist.length} steps`}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">{relativeTime(r.created_at)}</p>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(r.id); }}
+                        className="absolute top-2.5 right-2.5 p-1 text-muted-foreground/40 hover:text-red-500 transition-colors rounded opacity-0 group-hover:opacity-100"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3 h-3" />
                       </button>
-                    )}
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center text-center py-12 px-3">
+                  <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center mb-3">
+                    <FileSearch className="w-4 h-4 text-muted-foreground/60" />
                   </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    No runs yet — click <span className="font-medium text-foreground">Run Auto EDA</span> above to get started.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Column 2: worklist — collapsible, separate from the report canvas */}
+        {selectedRun && selectedRun.worklist.length > 0 && (
+          worklistCollapsed ? (
+            <button
+              onClick={() => setWorklistCollapsed(false)}
+              title="Expand worklist"
+              className="w-10 flex-shrink-0 border-r border-border flex flex-col items-center pt-3 gap-2 hover:bg-muted/40 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              <Layers className="w-3.5 h-3.5 text-muted-foreground/50" />
+            </button>
+          ) : (
+            <div className="w-[360px] flex-shrink-0 border-r border-border flex flex-col min-h-0">
+              <div className="flex-shrink-0 px-4 pt-3 pb-2 border-b border-border">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-brand">
+                      {isPlanned ? "Proposed worklist" : "Worklist"}
+                    </p>
+                    {isRunning && selectedRun.status !== "pausing" && <Loader2 className="w-3 h-3 animate-spin text-brand" />}
+                    {selectedRun.status === "pausing" && <span className="text-[10px] text-amber-600 dark:text-amber-400">pausing…</span>}
+                  </div>
+                  <button
+                    onClick={() => setWorklistCollapsed(true)}
+                    title="Collapse"
+                    className="p-1 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted transition-colors flex-shrink-0"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                {isPlanned && (
+                  <p className="text-[11px] text-muted-foreground mb-1.5">
+                    Review the plan — use the chat to adjust it (e.g. &ldquo;skip the categorical
+                    breakdowns&rdquo;), then approve to run it.
+                  </p>
+                )}
+                <div className="flex items-center gap-2">
                   {isPlanned && (
-                    <p className="text-[11px] text-muted-foreground mb-2">
-                      Review the plan below — use the chat to adjust it (e.g. &ldquo;skip the categorical
-                      breakdowns&rdquo;), then approve to run it.
-                    </p>
+                    <button
+                      onClick={() => handleApprove(selectedRun.id)}
+                      disabled={isApproving}
+                      className="flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-lg text-white bg-brand hover:opacity-90 transition disabled:opacity-50"
+                    >
+                      {isApproving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Play className="w-3 h-3" />}
+                      Approve & Run
+                    </button>
                   )}
-                  <div className="border border-border rounded-xl divide-y divide-border px-3 bg-card/40">
-                    {selectedRun.worklist.map((item, i) => <WorklistItemRow key={i} item={item} index={i} />)}
+                  {(isRunning || isPaused) && (
+                    <button
+                      onClick={() => (isPaused ? handleResume(selectedRun.id) : handlePause(selectedRun.id))}
+                      disabled={isPausing || isResuming || selectedRun.status === "pausing"}
+                      className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg border border-border bg-card text-muted-foreground hover:border-brand/40 hover:text-brand transition-colors disabled:opacity-50"
+                    >
+                      {isPausing || isResuming ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : isPaused ? (
+                        <Play className="w-3 h-3" />
+                      ) : (
+                        <Pause className="w-3 h-3" />
+                      )}
+                      {isPaused ? "Resume" : "Pause"}
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-4 py-2 divide-y divide-border">
+                {selectedRun.worklist.map((item, i) => <WorklistItemRow key={i} item={item} index={i} />)}
+              </div>
+            </div>
+          )
+        )}
+
+        {/* Column 3: report canvas */}
+        <div className="flex-1 min-w-0 flex flex-col min-h-0 p-4">
+          {selectedRun ? (
+            <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+              {selectedRun.markdown && (
+                <div className="flex-shrink-0 flex items-center justify-between gap-3 px-6 py-3 border-b border-border bg-background/60">
+                  <p className="text-[11px] font-bold tracking-wide text-jman-trypan">
+                    JMAN GROUP · AUTOMATED EDA REPORT
+                  </p>
+                  {!isRunning && (
+                    <div className="flex gap-2 flex-shrink-0">
+                      {editMode ? (
+                        <>
+                          <button
+                            onClick={handleCancelEdit}
+                            disabled={savingEdit}
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-card border border-border rounded-lg text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                          >
+                            <X className="w-3.5 h-3.5" /> Cancel
+                          </button>
+                          <button
+                            onClick={handleSaveEdit}
+                            disabled={savingEdit}
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg text-white bg-brand hover:opacity-90 transition-colors disabled:opacity-50"
+                          >
+                            {savingEdit ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Save
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={handleToggleEdit}
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-card border border-border rounded-lg text-muted-foreground hover:border-jman-rose/50 hover:text-jman-trypan transition-colors"
+                          >
+                            <Pencil className="w-3.5 h-3.5" /> Edit
+                          </button>
+                          <button
+                            onClick={() => handleDownload(selectedRun, "docx")}
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-card border border-border rounded-lg text-muted-foreground hover:border-jman-rose/50 hover:text-jman-trypan transition-colors"
+                          >
+                            <Download className="w-3.5 h-3.5" /> Download .docx
+                          </button>
+                          <button
+                            onClick={() => handleDownload(selectedRun, "md")}
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-card border border-border rounded-lg text-muted-foreground hover:border-jman-rose/50 hover:text-jman-trypan transition-colors"
+                          >
+                            <Download className="w-3.5 h-3.5" /> Download .md
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {editMode && (
+                <div className="flex-shrink-0 flex items-center gap-0.5 px-4 py-1.5 border-b border-border bg-muted/30">
+                  <EditToolbarBtn title="Bold" onClick={() => runEditCmd("bold")}><Bold className="w-3.5 h-3.5" /></EditToolbarBtn>
+                  <EditToolbarBtn title="Italic" onClick={() => runEditCmd("italic")}><Italic className="w-3.5 h-3.5" /></EditToolbarBtn>
+                  <EditToolbarBtn title="Underline" onClick={() => runEditCmd("underline")}><Underline className="w-3.5 h-3.5" /></EditToolbarBtn>
+                  <div className="w-px h-4 bg-border mx-1" />
+                  <EditToolbarBtn title="Heading 1" onClick={() => runEditCmd("formatBlock", "H1")}><Heading1 className="w-3.5 h-3.5" /></EditToolbarBtn>
+                  <EditToolbarBtn title="Heading 2" onClick={() => runEditCmd("formatBlock", "H2")}><Heading2 className="w-3.5 h-3.5" /></EditToolbarBtn>
+                  <EditToolbarBtn title="Heading 3" onClick={() => runEditCmd("formatBlock", "H3")}><Heading3 className="w-3.5 h-3.5" /></EditToolbarBtn>
+                  <div className="w-px h-4 bg-border mx-1" />
+                  <EditToolbarBtn title="Bullet list" onClick={() => runEditCmd("insertUnorderedList")}><List className="w-3.5 h-3.5" /></EditToolbarBtn>
+                  <EditToolbarBtn title="Numbered list" onClick={() => runEditCmd("insertOrderedList")}><ListOrdered className="w-3.5 h-3.5" /></EditToolbarBtn>
+                  <div className="w-px h-4 bg-border mx-1" />
+                  <EditToolbarBtn title="Undo" onClick={() => runEditCmd("undo")}><Undo2 className="w-3.5 h-3.5" /></EditToolbarBtn>
+                  <EditToolbarBtn title="Redo" onClick={() => runEditCmd("redo")}><Redo2 className="w-3.5 h-3.5" /></EditToolbarBtn>
+                </div>
+              )}
+
+              <div
+                ref={canvasBodyRef}
+                onMouseUp={!isRunning && !editMode ? handleContentMouseUp : undefined}
+                className="relative flex-1 min-h-0 overflow-y-auto scrollbar-thin px-6 py-5"
+              >
+                {selectedRun.status === "error" && selectedRun.error && (
+                  <div className="mb-4 max-w-3xl flex items-start gap-2 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-400">
+                    <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                    <span>{selectedRun.error}</span>
                   </div>
-                </div>
-              )}
+                )}
 
-              {selectedRun.id != null && (
-                <div className="mb-6 max-w-2xl">
-                  <AutoEdaChat workspaceId={workspaceId} runId={selectedRun.id} active={canSteer} />
-                </div>
-              )}
+                {editMode ? (
+                  // Uncontrolled on purpose — set once from the view's own
+                  // rendered HTML, then the browser (not React) owns this
+                  // subtree's children until Save reads them back out.
+                  <div
+                    ref={editableRef}
+                    contentEditable
+                    suppressContentEditableWarning
+                    dangerouslySetInnerHTML={{ __html: initialEditHtml }}
+                    className="jman-report text-sm leading-relaxed max-w-none min-h-[60vh] rounded-xl border border-foreground/15 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 px-4 py-3"
+                  />
+                ) : selectedRun.markdown ? (
+                  <div ref={markdownViewRef}>
+                    <Markdown content={selectedRun.markdown} className="jman-report text-sm leading-relaxed max-w-none" />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Warming up — the first result should appear shortly.
+                  </div>
+                )}
 
-              {selectedRun.status === "error" && selectedRun.error && (
-                <div className="mb-4 max-w-2xl flex items-start gap-2 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-xs text-red-700 dark:text-red-400">
-                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                  <span>{selectedRun.error}</span>
-                </div>
-              )}
-
-              {selectedRun.markdown ? (
-                <div className="max-w-5xl">
-                  <div className="flex items-center justify-between gap-3 mb-4">
-                    <p className="text-[11px] font-bold tracking-wide text-jman-trypan">
-                      JMAN GROUP · AUTOMATED EDA REPORT
-                    </p>
-                    {!isRunning && (
-                      <div className="flex gap-2 flex-shrink-0">
+                {selection && !editMode && (
+                  <div
+                    className="absolute z-20 -translate-x-1/2 -translate-y-full"
+                    style={{ top: selection.top, left: selection.left }}
+                  >
+                    <div className="flex flex-col gap-2 bg-card border border-brand/30 rounded-xl shadow-xl p-3 w-72">
+                      <div className="flex items-center gap-1.5">
+                        <Wand2 className="w-3.5 h-3.5 text-brand flex-shrink-0" />
+                        <span className="text-xs font-semibold text-foreground">AI Selective Regeneration</span>
+                      </div>
+                      <input
+                        autoFocus
+                        value={aiInstruction}
+                        onChange={(e) => setAiInstruction(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAiEdit();
+                          if (e.key === "Escape") dismissSelection();
+                        }}
+                        placeholder="Rewrite this to sound more professional…"
+                        disabled={aiEditLoading}
+                        className="w-full text-xs bg-background border border-border rounded-lg px-2.5 py-2 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60"
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-muted-foreground">Press Enter to submit</span>
                         <button
-                          onClick={() => handleDownload(selectedRun, "docx")}
-                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-card border border-border rounded-lg text-muted-foreground hover:border-jman-rose/50 hover:text-jman-trypan transition-colors"
+                          onClick={handleAiEdit}
+                          disabled={aiEditLoading || !aiInstruction.trim()}
+                          className="flex items-center gap-1 text-[10px] font-semibold text-brand hover:opacity-80 disabled:opacity-40 transition"
                         >
-                          <Download className="w-3.5 h-3.5" /> Download .docx
-                        </button>
-                        <button
-                          onClick={() => handleDownload(selectedRun, "md")}
-                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-card border border-border rounded-lg text-muted-foreground hover:border-jman-rose/50 hover:text-jman-trypan transition-colors"
-                        >
-                          <Download className="w-3.5 h-3.5" /> Download .md
+                          {aiEditLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Send className="w-3 h-3" /> Enter</>}
                         </button>
                       </div>
-                    )}
+                      {aiEditError && (
+                        <p className="text-[10px] text-red-500">{aiEditError}</p>
+                      )}
+                    </div>
                   </div>
-                  <Markdown content={selectedRun.markdown} className="jman-report text-sm leading-relaxed" />
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Warming up — the first result should appear shortly.
-                </div>
+                )}
+              </div>
+
+              {selectedRun.id != null && (
+                <AutoEdaChat workspaceId={workspaceId} runId={selectedRun.id} active={canSteer} docked />
               )}
-            </>
+            </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center">
               <div className="w-10 h-10 rounded-2xl bg-muted flex items-center justify-center mb-3">

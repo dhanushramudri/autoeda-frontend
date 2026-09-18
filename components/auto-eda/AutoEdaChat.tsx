@@ -11,13 +11,17 @@ import { Loader2, MessageSquare, Send } from "lucide-react";
 const POLL_MS = 3000;
 
 export function AutoEdaChat({
-  workspaceId, runId, active,
+  workspaceId, runId, active, docked,
 }: {
   workspaceId: string;
   runId: number;
   /** Whether this run can currently accept a steering instruction
    * (pending/running/pausing/paused) — a finished run only shows history. */
   active: boolean;
+  /** Pinned to the bottom of the report canvas rather than floating inline
+   * in the scrolling content — flush, no rounded corners/side borders, and
+   * a message list that grows to fit instead of a fixed max-height. */
+  docked?: boolean;
 }) {
   const qc = useQueryClient();
   const [draft, setDraft] = useState("");
@@ -48,13 +52,19 @@ export function AutoEdaChat({
   };
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden bg-card/40">
-      <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border bg-muted/40">
+    <div className={cn(
+      "bg-card/40 flex-shrink-0",
+      docked ? "border-t border-border" : "border border-border rounded-xl overflow-hidden"
+    )}>
+      <div className={cn(
+        "flex items-center gap-1.5 px-3 py-2",
+        docked ? "border-b border-border/60" : "border-b border-border bg-muted/40"
+      )}>
         <MessageSquare className="w-3.5 h-3.5 text-brand flex-shrink-0" />
         <span className="text-[11px] font-semibold uppercase tracking-wide text-brand">Steer this run</span>
       </div>
 
-      <div className="max-h-52 overflow-y-auto scrollbar-thin px-3 py-2.5 space-y-2">
+      <div className={cn("overflow-y-auto scrollbar-thin px-3 py-2.5 space-y-2", docked ? "max-h-32" : "max-h-52")}>
         {messages && messages.length > 0 ? (
           messages.map((m) => (
             <div key={m.id} className={cn("flex", m.role === "user" ? "justify-end" : "justify-start")}>
