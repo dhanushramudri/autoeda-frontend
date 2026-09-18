@@ -10,11 +10,10 @@ import { cn } from "@/lib/utils";
 import type { Hypothesis, HypothesisStatus, ScoutToolCall } from "@/types";
 import {
   FlaskConical, Loader2, X, CheckCircle2, XCircle, AlertTriangle,
-  Sparkles, Database, Layers, ChevronRight, MessageSquarePlus, ArrowRight, Paperclip, Microscope,
+  Sparkles, Database, Layers, ChevronRight, MessageSquarePlus, ArrowRight, Paperclip, Square,
 } from "lucide-react";
 import { HypothesisToolTrace } from "@/components/hypotheses/HypothesisToolResultPreview";
 import { Mascot } from "@/components/shared/Mascot";
-import { AutoEdaPanel } from "@/components/auto-eda/AutoEdaPanel";
 
 const CONF_COLOR: Record<string, string> = {
   high: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400",
@@ -122,11 +121,12 @@ function HypothesisListItem({
 // -- Right pane: full detail for the selected hypothesis --------------------
 
 function HypothesisDetail({
-  h, onValidate, streaming, datasetLabel,
+  h, onValidate, onStop, stopping, datasetLabel,
 }: {
   h: Hypothesis;
   onValidate: (id: number) => void;
-  streaming?: StreamingToolCall[];
+  onStop: (id: number) => void;
+  stopping?: boolean;
   datasetLabel: string | null;
 }) {
   const cfg = STATUS_CFG[h.status];
@@ -186,10 +186,24 @@ function HypothesisDetail({
               Validate now
             </button>
           )}
+          {isValidating && (
+            <button
+              onClick={() => onStop(h.id)}
+              disabled={stopping}
+              className="ml-auto flex items-center gap-1.5 text-xs px-3 py-1.5 bg-card border border-border rounded-lg text-muted-foreground hover:border-red-400 hover:text-red-600 dark:hover:text-red-400 transition disabled:opacity-50"
+              title="Stop this investigation — takes effect as soon as the current step finishes"
+            >
+              {stopping ? <Loader2 className="w-3 h-3 animate-spin" /> : <Square className="w-3 h-3" />}
+              Stop
+            </button>
+          )}
         </div>
 
-        {isValidating && streaming && (
-          <div className="mb-5"><LiveProgress tools={streaming} /></div>
+        {/* Not a live per-step trace anymore — the investigation runs as a
+            background task independent of this page, so all we know from
+            here is that it's still going (see the page's polling query). */}
+        {isValidating && (
+          <div className="mb-5"><LiveProgress tools={[]} /></div>
         )}
 
         {h.verdict && (
@@ -235,13 +249,11 @@ export default function HypothesesPage() {
   const qc = useQueryClient();
 
   const scopedDatasetId = searchParams.get("dataset_id") ?? undefined;
-  const [tab, setTab] = useState<"hypotheses" | "auto-eda">("hypotheses");
   const [draft, setDraft] = useState("");
   const [genCount, setGenCount] = useState(6);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [genProgress, setGenProgress] = useState<StreamingToolCall[]>([]);
   const [genError, setGenError] = useState<string | null>(null);
-  const [validating, setValidating] = useState<Record<number, StreamingToolCall[]>>({});
+  const [stoppingId, setStoppingId] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<HypothesisStatus | "all">("all");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const draftRef = useRef<HTMLTextAreaElement>(null);
@@ -300,9 +312,17 @@ export default function HypothesesPage() {
     enabled: !!scopedDatasetId,
   });
 
+  // Polling (not a live stream) is what makes "validating" status keep
+  // updating — a background task on the server drives the actual
+  // investigation independent of this page being open, so it survives
+  // navigating away and back (see routers/hypotheses.py's _run_validate_bg).
   const { data: hypotheses, isLoading } = useQuery({
     queryKey: queryKeys.hypotheses.list(workspaceId, scopedDatasetId),
     queryFn: () => hypothesesApi.list(workspaceId, scopedDatasetId ? { dataset_id: scopedDatasetId } : undefined).then((r) => r.data as Hypothesis[]),
+    refetchInterval: (query) => {
+      const data = query.state.data as Hypothesis[] | undefined;
+      return data?.some((h) => h.status === "validating") || isGenerating ? 2500 : false;
+    },
   });
 
   // Dataset names, only needed to label groups in the unscoped (workspace-wide) view.
@@ -337,67 +357,60 @@ export default function HypothesesPage() {
     onSuccess: invalidate,
   });
 
+  // Fire-and-forget: the actual investigation runs as a server-side
+  // background task (see routers/hypotheses.py), so it keeps going whether
+  // or not this page stays open. Polling (above) is what reflects its
+  // progress, not a stream tied to this request.
   const handleValidate = async (id: number) => {
-    setValidating((prev) => ({ ...prev, [id]: [] }));
     qc.setQueryData<Hypothesis[] | undefined>(queryKeys.hypotheses.list(workspaceId, scopedDatasetId), (prev) =>
       prev?.map((h) => (h.id === id ? { ...h, status: "validating" } : h))
     );
     try {
-      for await (const event of hypothesesApi.streamValidate(workspaceId, id)) {
-        if (event.type === "tool_call") {
-          setValidating((prev) => ({ ...prev, [id]: [...(prev[id] ?? []), { tool: event.tool as string, arguments: event.arguments as Record<string, unknown> }] }));
-        } else if (event.type === "tool_result") {
-          setValidating((prev) => {
-            const tools = [...(prev[id] ?? [])];
-            const idx = tools.map((t) => !t.result).lastIndexOf(true);
-            if (idx >= 0) tools[idx] = { ...tools[idx], result: event.result as Record<string, unknown> };
-            return { ...prev, [id]: tools };
-          });
-        } else if (event.type === "result" || event.type === "error" || event.type === "persisted") {
-          if (event.type !== "persisted") continue;
-          break;
-        }
-      }
-    } catch {
-      // fall through to invalidate, which will reflect whatever the server persisted (or didn't)
+      await hypothesesApi.validate(workspaceId, id);
     } finally {
-      setValidating((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
       invalidate();
     }
   };
 
-  const handleGenerate = async () => {
-    setIsGenerating(true);
-    setGenProgress([]);
-    setGenError(null);
+  const handleStop = async (id: number) => {
+    setStoppingId(id);
     try {
-      for await (const event of hypothesesApi.streamGenerate(workspaceId, { dataset_id: scopedDatasetId, count: genCount })) {
-        if (event.type === "tool_call") {
-          setGenProgress((prev) => [...prev, { tool: event.tool as string, arguments: event.arguments as Record<string, unknown> }]);
-        } else if (event.type === "tool_result") {
-          setGenProgress((prev) => {
-            const tools = [...prev];
-            const idx = tools.map((t) => !t.result).lastIndexOf(true);
-            if (idx >= 0) tools[idx] = { ...tools[idx], result: event.result as Record<string, unknown> };
-            return tools;
-          });
-        } else if (event.type === "error") {
-          setGenError(event.message as string);
-        } else if (event.type === "persisted") {
-          break;
-        }
-      }
-    } catch {
-      // invalidate below reflects whatever made it to the server
+      await hypothesesApi.stop(workspaceId, id);
     } finally {
-      setIsGenerating(false);
-      setGenProgress([]);
+      setStoppingId(null);
       invalidate();
     }
+  };
+
+  // Generation has no persisted "in progress" row to poll against the way a
+  // single hypothesis's status does, so this is a best-effort local
+  // indicator: it clears itself after a generous timeout, or as soon as the
+  // count of hypotheses actually grows. If you navigate away mid-generation
+  // this indicator is lost, but the generation itself keeps running
+  // server-side — new hypotheses just show up next time you look.
+  const handleGenerate = async () => {
+    setIsGenerating(true);
+    setGenError(null);
+    const startCount = hypotheses?.length ?? 0;
+    try {
+      await hypothesesApi.generate(workspaceId, { dataset_id: scopedDatasetId, count: genCount });
+    } catch {
+      setGenError("Couldn't start generation — please try again.");
+      setIsGenerating(false);
+      return;
+    }
+    const stopAt = Date.now() + 90_000;
+    const poll = setInterval(async () => {
+      const fresh = await qc.fetchQuery({
+        queryKey: queryKeys.hypotheses.list(workspaceId, scopedDatasetId),
+        queryFn: () => hypothesesApi.list(workspaceId, scopedDatasetId ? { dataset_id: scopedDatasetId } : undefined).then((r) => r.data as Hypothesis[]),
+      });
+      if (fresh.length > startCount || Date.now() > stopAt) {
+        clearInterval(poll);
+        setIsGenerating(false);
+        invalidate();
+      }
+    }, 3000);
   };
 
   const clearScope = () => router.push(`/workspaces/${workspaceId}/hypotheses`);
@@ -459,39 +472,13 @@ export default function HypothesesPage() {
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: "hsl(var(--primary) / 0.12)" }}>
-              {tab === "hypotheses" ? (
-                <FlaskConical className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
-              ) : (
-                <Microscope className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
-              )}
+              <FlaskConical className="w-4 h-4" style={{ color: "hsl(var(--primary))" }} />
             </div>
-            <h1 className="text-xl font-bold text-foreground">{tab === "hypotheses" ? "Hypotheses" : "Auto EDA"}</h1>
-          </div>
-          <div className="flex items-center gap-1 bg-muted border border-border rounded-lg p-0.5">
-            <button
-              onClick={() => setTab("hypotheses")}
-              className={cn(
-                "flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition",
-                tab === "hypotheses" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <FlaskConical className="w-3.5 h-3.5" /> Hypotheses
-            </button>
-            <button
-              onClick={() => setTab("auto-eda")}
-              className={cn(
-                "flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md transition",
-                tab === "auto-eda" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Microscope className="w-3.5 h-3.5" /> Auto EDA
-            </button>
+            <h1 className="text-xl font-bold text-foreground">Hypotheses</h1>
           </div>
         </div>
         <p className="text-sm text-muted-foreground mb-1">
-          {tab === "hypotheses"
-            ? "Every verdict here is backed by a real computation Scout ran against your data — not a guess."
-            : "An autonomous EDA agent: it plans its own worklist, runs every analysis for real, and writes up the findings."}
+          Every verdict here is backed by a real computation Scout ran against your data — not a guess.
         </p>
         {scopedDatasetId && (
           <div className="flex items-center gap-2 mb-3 mt-2">
@@ -506,37 +493,40 @@ export default function HypothesesPage() {
         )}
         {!scopedDatasetId && <div className="mb-3" />}
 
-        {tab === "hypotheses" && (
-        <>
         <div className="flex items-start gap-3">
           {/* Generate control */}
-          <div className="flex items-center gap-3 flex-shrink-0 w-[380px] bg-card border border-border rounded-2xl pl-4 pr-2 py-2 shadow-sm transition-colors hover:border-brand/30">
-            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+          <div className="flex flex-col gap-1.5 flex-shrink-0 w-[380px]">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-brand px-1">Auto-Generate</p>
+            <div className="flex items-center gap-3 bg-card border border-border rounded-2xl pl-4 pr-2 py-2 shadow-sm transition-colors hover:border-brand/30">
+              <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+              </div>
+              <p className="text-xs text-muted-foreground flex-1 leading-snug">
+                Investigate {scopedDatasetId ? "this dataset" : "the whole workspace"} and propose pre-verified hypotheses.
+              </p>
+              <input
+                type="number"
+                min={1}
+                max={10}
+                value={genCount}
+                onChange={(e) => setGenCount(Math.max(1, Math.min(10, Number(e.target.value) || 3)))}
+                className="w-11 text-xs font-medium border border-border rounded-lg py-2 text-center bg-transparent focus:outline-none focus:border-brand transition-colors flex-shrink-0"
+                disabled={isGenerating}
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white rounded-xl disabled:opacity-50 transition hover:opacity-90 flex-shrink-0 bg-brand"
+              >
+                {isGenerating ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Investigating…</> : <><Sparkles className="w-3.5 h-3.5" />Generate</>}
+              </button>
             </div>
-            <p className="text-xs text-muted-foreground flex-1 leading-snug">
-              Investigate {scopedDatasetId ? "this dataset" : "the whole workspace"} and propose pre-verified hypotheses.
-            </p>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={genCount}
-              onChange={(e) => setGenCount(Math.max(1, Math.min(10, Number(e.target.value) || 3)))}
-              className="w-11 text-xs font-medium border border-border rounded-lg py-2 text-center bg-transparent focus:outline-none focus:border-brand transition-colors flex-shrink-0"
-              disabled={isGenerating}
-            />
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-white rounded-xl disabled:opacity-50 transition hover:opacity-90 flex-shrink-0 bg-brand"
-            >
-              {isGenerating ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Investigating…</> : <><Sparkles className="w-3.5 h-3.5" />Generate</>}
-            </button>
           </div>
 
           {/* Add input — auto-grows with content, optional image attachment */}
-          <div className="flex-1 bg-card border border-border rounded-2xl px-2 pt-2 pb-2 shadow-sm transition-colors focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/10">
+          <div className="flex-1 flex flex-col gap-1.5">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-brand px-1">Add Hypothesis</p>
+            <div className="bg-card border border-border rounded-2xl px-2 pt-2 pb-2 shadow-sm transition-colors focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/10">
             {attachedImage && (
               <div className="flex items-center gap-2 pl-2 pb-2 mb-1 border-b border-border">
                 <img src={attachedImage.previewUrl} alt="" className="w-10 h-10 rounded-lg object-cover border border-border flex-shrink-0" />
@@ -587,11 +577,12 @@ export default function HypothesesPage() {
               </button>
             </div>
             {uploadError && <p className="text-[11px] text-red-500 dark:text-red-400 pl-2 pt-1.5">{uploadError}</p>}
+            </div>
           </div>
         </div>
 
         {isGenerating && (
-          <div className="mt-3 px-1"><LiveProgress tools={genProgress} /></div>
+          <div className="mt-3 px-1"><LiveProgress tools={[]} /></div>
         )}
         {genError && !isGenerating && (
           <div className="mt-3 flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-700 dark:text-amber-400">
@@ -625,18 +616,8 @@ export default function HypothesesPage() {
             })}
           </div>
         )}
-        </>
-        )}
       </div>
 
-      {tab === "auto-eda" ? (
-        <AutoEdaPanel
-          workspaceId={workspaceId}
-          scopedDatasetId={scopedDatasetId}
-          datasets={workspaceDatasets ?? (dataset ? [{ id: String(dataset.id), name: dataset.name }] : [])}
-        />
-      ) : (
-      <>
       {/* Master-detail body — fills remaining height, each pane scrolls independently */}
       {isLoading ? (
         <div className="flex-1 flex items-center justify-center text-muted-foreground/60"><Loader2 className="w-5 h-5 animate-spin" /></div>
@@ -663,7 +644,7 @@ export default function HypothesesPage() {
                       active={h.id === selectedId}
                       onSelect={() => setSelectedId(h.id)}
                       onDelete={(id) => deleteMutation.mutate(id)}
-                      isValidating={!!validating[h.id]}
+                      isValidating={h.status === "validating"}
                     />
                   ))}
                 </div>
@@ -677,7 +658,8 @@ export default function HypothesesPage() {
               <HypothesisDetail
                 h={selected}
                 onValidate={handleValidate}
-                streaming={validating[selected.id]}
+                onStop={handleStop}
+                stopping={stoppingId === selected.id}
                 datasetLabel={selectedDatasetLabel}
               />
             ) : (
@@ -698,8 +680,6 @@ export default function HypothesesPage() {
             </p>
           </div>
         </div>
-      )}
-      </>
       )}
     </div>
   );

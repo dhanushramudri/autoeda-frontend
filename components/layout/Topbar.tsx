@@ -134,7 +134,17 @@ export function Topbar() {
 
   const handleSwitchWorkspace = (id: string) => {
     setCurrentWorkspace(id);
-    router.push(`/workspaces/${id}/datasets`);
+    // Stay on the same kind of page in the new workspace (e.g.
+    // /workspaces/2/hypotheses -> /workspaces/5/hypotheses) instead of
+    // always dumping the user back on the dataset list. A dataset-detail
+    // URL (/workspaces/2/datasets/55/profile) has no valid equivalent in a
+    // different workspace — that specific dataset doesn't exist there —
+    // so that one case still falls back to the plain datasets list.
+    const parts = pathname.split("/").filter(Boolean); // ["workspaces", oldId, section, ...rest]
+    const section = parts[2];
+    const isDatasetDetail = section === "datasets" && parts.length > 3;
+    const target = section && !isDatasetDetail ? `/workspaces/${id}/${section}` : `/workspaces/${id}/datasets`;
+    router.push(target);
     setWsOpen(false);
   };
 

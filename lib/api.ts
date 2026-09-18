@@ -667,6 +667,10 @@ export const hypothesesApi = {
     api.post(`/workspaces/${workspaceId}/hypotheses/generate`, data),
   validate: (workspaceId: string, hypothesisId: number) =>
     api.post(`/workspaces/${workspaceId}/hypotheses/${hypothesisId}/validate`),
+  // Best-effort stop for an in-flight investigation — see routers/hypotheses.py's
+  // stop_validation for why this is "eventual, not instant."
+  stop: (workspaceId: string, hypothesisId: number) =>
+    api.post(`/workspaces/${workspaceId}/hypotheses/${hypothesisId}/stop`),
   streamGenerate: (workspaceId: string, data: { dataset_id?: string; count?: number }) =>
     streamSSE(`/workspaces/${workspaceId}/hypotheses/generate/stream`, data),
   streamValidate: (workspaceId: string, hypothesisId: number) =>

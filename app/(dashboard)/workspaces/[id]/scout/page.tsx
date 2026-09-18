@@ -1189,7 +1189,10 @@ export default function ScoutPage() {
                 placeholder={mode === "agent" ? "Ask Scout to investigate something…" : "Ask a quick question…"}
                 className="flex-1 text-sm outline-none placeholder:text-muted-foreground resize-none leading-relaxed py-0.5 bg-transparent"
                 rows={1}
-                disabled={isSending}
+                // Drafting the next message while Scout is still answering is
+                // allowed now — only actually sending is still gated on
+                // isSending (handleSend's own guard), so Enter is a no-op
+                // mid-stream rather than firing a second concurrent turn.
               />
             </div>
             {isSending ? (
