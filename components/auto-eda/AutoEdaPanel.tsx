@@ -32,6 +32,11 @@ const POLL_INTERVAL_MS = 2500;
 const turndownService = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced" });
 turndownService.use(gfm);
 
+// Worklist column width is user-resizable by dragging its right edge.
+const WORKLIST_MIN_WIDTH = 260;
+const WORKLIST_MAX_WIDTH = 600;
+const WORKLIST_DEFAULT_WIDTH = 360;
+
 function relativeTime(iso: string): string {
   const diffMs = Date.now() - new Date(iso).getTime();
   const mins = Math.round(diffMs / 60000);
@@ -193,8 +198,11 @@ export function AutoEdaPanel({
   const [isApproving, setIsApproving] = useState(false);
   const [businessContext, setBusinessContext] = useState("");
   const [reportTitle, setReportTitle] = useState("");
+  const [setupCollapsed, setSetupCollapsed] = useState(false);
   const [listCollapsed, setListCollapsed] = useState(false);
   const [worklistCollapsed, setWorklistCollapsed] = useState(false);
+  const [worklistWidth, setWorklistWidth] = useState(WORKLIST_DEFAULT_WIDTH);
+  const [isDraggingWorklist, setIsDraggingWorklist] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [initialEditHtml, setInitialEditHtml] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
@@ -206,6 +214,10 @@ export function AutoEdaPanel({
   const markdownViewRef = useRef<HTMLDivElement>(null);
   const editableRef = useRef<HTMLDivElement>(null);
   const highlightElRef = useRef<HTMLElement | null>(null);
+  const worklistContainerRef = useRef<HTMLDivElement>(null);
+  const isResizingRef = useRef(false);
+  const pendingWidthRef = useRef(WORKLIST_DEFAULT_WIDTH);
+  const rafIdRef = useRef<number | null>(null);
 
   // Scoped to one dataset: always exactly that one. Unscoped: default to
   // every dataset in the workspace the first time the list loads, but
@@ -289,6 +301,65 @@ export function AutoEdaPanel({
     return () => document.removeEventListener("mousedown", onDocMouseDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection]);
+
+  // Drag-to-resize for the worklist column.
+  //
+  // Perf note: this deliberately does NOT call setWorklistWidth on every
+  // mousemove. This panel renders a large markdown report (tables, charts)
+  // in column 3 — re-rendering that on every pixel of drag movement is what
+  // made earlier versions of this feel laggy. Instead:
+  //   1. The width is written straight to the DOM via the ref, throttled to
+  //      one update per animation frame (requestAnimationFrame) — cheap,
+  //      no React re-render.
+  //   2. React state (`worklistWidth`) is only updated once, on mouseup, so
+  //      the "real" width is still correct for anything else that reads it
+  //      (e.g. if the column re-mounts for another reason).
+  //   3. `isDraggingWorklist` toggles pointer-events off on the report
+  //      canvas for the duration of the drag, so its own mouseup/selection
+  //      handling doesn't do extra work while the user is resizing.
+  useEffect(() => {
+    function onMove(e: MouseEvent) {
+      if (!isResizingRef.current || !worklistContainerRef.current) return;
+      const rect = worklistContainerRef.current.getBoundingClientRect();
+      const newWidth = Math.min(WORKLIST_MAX_WIDTH, Math.max(WORKLIST_MIN_WIDTH, e.clientX - rect.left));
+      pendingWidthRef.current = newWidth;
+      if (rafIdRef.current == null) {
+        rafIdRef.current = requestAnimationFrame(() => {
+          rafIdRef.current = null;
+          if (worklistContainerRef.current) {
+            worklistContainerRef.current.style.width = `${pendingWidthRef.current}px`;
+          }
+        });
+      }
+    }
+    function onUp() {
+      if (!isResizingRef.current) return;
+      isResizingRef.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      if (rafIdRef.current != null) {
+        cancelAnimationFrame(rafIdRef.current);
+        rafIdRef.current = null;
+      }
+      setWorklistWidth(pendingWidthRef.current);
+      setIsDraggingWorklist(false);
+    }
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, []);
+
+  const startWorklistResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    isResizingRef.current = true;
+    pendingWidthRef.current = worklistWidth;
+    setIsDraggingWorklist(true);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
 
   const setRunMarkdownLocally = (runId: number, markdown: string) => {
     qc.setQueryData(queryKeys.autoEda.runs(workspaceId, runsFilterId), (old: AutoEdaRun[] | undefined) =>
@@ -455,38 +526,68 @@ export function AutoEdaPanel({
     <div className="flex-1 min-h-0 flex flex-col">
       {/* Toolbar */}
       <div className="flex-shrink-0 px-6 pt-5 pb-5 space-y-4">
-        <div className="bg-card border border-border rounded-2xl p-4 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-4">
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">
-              Report title <span className="font-normal normal-case text-muted-foreground/70">(optional — defaults to the workspace name)</span>
-            </label>
-            <input
-              type="text"
-              value={reportTitle}
-              onChange={(e) => setReportTitle(e.target.value)}
-              disabled={isStarting}
-              placeholder="e.g. Apax Portfolio Retention Analysis"
-              className="w-full text-xs bg-background border border-foreground/15 shadow-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
-            />
-          </div>
-          <div>
-            <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5 block">
-              Business context <span className="font-normal normal-case text-muted-foreground/70">(optional, but recommended)</span>
-            </label>
-            <textarea
-              value={businessContext}
-              onChange={(e) => setBusinessContext(e.target.value)}
-              disabled={isStarting}
-              placeholder="e.g. We want to understand what's driving churn and identify at-risk high-value customers. Focus on revenue, tenure, and support-ticket patterns."
-              rows={2}
-              className="w-full text-xs bg-background border border-foreground/15 shadow-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
-            />
-            <p className="text-[11px] text-muted-foreground/70 mt-1">
-              Tell it what you&apos;re trying to figure out — it&apos;ll prioritize the analyses most relevant to that
-              instead of mechanically covering every column.
-            </p>
-          </div>
+        {/* Report setup — collapsible so it doesn't eat vertical space once
+            title/context are already set. Header stays visible either way. */}
+        <div className="bg-card border border-border rounded-2xl overflow-hidden transition-all">
+          <button
+            type="button"
+            onClick={() => setSetupCollapsed((c) => !c)}
+            className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-muted/30 transition-colors"
+          >
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan flex-shrink-0">
+              Report setup
+            </span>
+            <div className="flex items-center gap-2 min-w-0">
+              {setupCollapsed && (reportTitle || businessContext) && (
+                <span className="text-[11px] text-muted-foreground truncate max-w-[420px]">
+                  {reportTitle || "Untitled report"}
+                  {businessContext ? ` · ${businessContext}` : ""}
+                </span>
+              )}
+              <ChevronDown
+                className={cn(
+                  "w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 flex-shrink-0",
+                  !setupCollapsed && "rotate-180"
+                )}
+              />
+            </div>
+          </button>
+          {!setupCollapsed && (
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-4 px-4 pb-4 pt-1">
+              <div>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan mb-1.5 block">
+                  Report title <span className="font-normal normal-case text-muted-foreground/70">(optional — defaults to the workspace name)</span>
+                </label>
+                <input
+                  type="text"
+                  value={reportTitle}
+                  onChange={(e) => setReportTitle(e.target.value)}
+                  disabled={isStarting}
+                  placeholder="e.g. Apax Portfolio Retention Analysis"
+                  className="w-full text-xs bg-background border border-foreground/15 shadow-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan mb-1.5 block">
+                  Business context <span className="font-normal normal-case text-muted-foreground/70">(optional, but recommended)</span>
+                </label>
+                <textarea
+                  value={businessContext}
+                  onChange={(e) => setBusinessContext(e.target.value)}
+                  disabled={isStarting}
+                  placeholder="e.g. We want to understand what's driving churn and identify at-risk high-value customers. Focus on revenue, tenure, and support-ticket patterns."
+                  rows={2}
+                  className="w-full text-xs bg-background border border-foreground/15 shadow-sm rounded-xl px-3 py-2.5 resize-none focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
+                />
+                <p className="text-[11px] text-muted-foreground/70 mt-1">
+                  Tell it what you&apos;re trying to figure out — it&apos;ll prioritize the analyses most relevant to that
+                  instead of mechanically covering every column.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
+
         <div className="flex items-center gap-2.5">
           {!isScoped && (
             <DatasetSelector
@@ -607,7 +708,7 @@ export function AutoEdaPanel({
           </div>
         )}
 
-        {/* Column 2: worklist — collapsible, separate from the report canvas */}
+        {/* Column 2: worklist — collapsible, resizable, separate from the report canvas */}
         {selectedRun && selectedRun.worklist.length > 0 && (
           worklistCollapsed ? (
             <button
@@ -619,7 +720,14 @@ export function AutoEdaPanel({
               <Layers className="w-3.5 h-3.5 text-muted-foreground/50" />
             </button>
           ) : (
-            <div className="w-[360px] flex-shrink-0 border-r border-border flex flex-col min-h-0">
+            <div
+              ref={worklistContainerRef}
+              style={{ width: worklistWidth }}
+              className={cn(
+                "flex-shrink-0 border-r border-border flex flex-col min-h-0 relative",
+                isDraggingWorklist && "select-none"
+              )}
+            >
               <div className="flex-shrink-0 px-4 pt-3 pb-2 border-b border-border">
                 <div className="flex items-center justify-between gap-2 mb-1">
                   <div className="flex items-center gap-2">
@@ -675,12 +783,32 @@ export function AutoEdaPanel({
               <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin px-4 py-2 divide-y divide-border">
                 {selectedRun.worklist.map((item, i) => <WorklistItemRow key={i} item={item} index={i} />)}
               </div>
+
+              {/* Drag handle — sits on the right edge, widens visually on
+                  hover so it's easy to grab without a large permanent
+                  footprint. Highlighted while actively dragging too. */}
+              <div
+                onMouseDown={startWorklistResize}
+                title="Drag to resize"
+                className={cn(
+                  "absolute top-0 right-0 h-full w-1.5 -mr-0.5 cursor-col-resize transition-colors z-10",
+                  isDraggingWorklist ? "bg-brand/60" : "hover:bg-brand/40"
+                )}
+              />
             </div>
           )
         )}
 
         {/* Column 3: report canvas */}
-        <div className="flex-1 min-w-0 flex flex-col min-h-0 p-4">
+        <div
+          className={cn(
+            "flex-1 min-w-0 flex flex-col min-h-0 p-4",
+            // Disabled during a worklist drag so this column's own mouseup /
+            // text-selection handling doesn't do extra work on every
+            // mousemove while the user is resizing the column next to it.
+            isDraggingWorklist && "pointer-events-none"
+          )}
+        >
           {selectedRun ? (
             <div className="flex-1 min-h-0 flex flex-col rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
               {selectedRun.markdown && (

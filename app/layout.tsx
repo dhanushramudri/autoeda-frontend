@@ -36,7 +36,7 @@ export default function RootLayout({
               y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
           })(window, document, "clarity", "script", "x9lv4smmrl");`}
         </Script>
-        <PromoTicker />
+        {/* <PromoTicker /> */}
         <Providers>{children}</Providers>
       </body>
     </html>
