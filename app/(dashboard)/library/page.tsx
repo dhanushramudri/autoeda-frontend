@@ -8,6 +8,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { iconForCategory, colorForCategory } from "@/lib/docCategoryStyle";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageSpinner } from "@/components/shared/LoadingBar";
+import { CoeNav } from "@/components/coe/CoeNav";
 import { BookOpen, Plus, FileText, X, ArrowRight } from "lucide-react";
 
 interface Category {
@@ -52,7 +53,10 @@ export default function LibraryPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="flex h-full min-h-full">
+      <CoeNav />
+      <div className="flex-1 min-w-0 overflow-y-auto scrollbar-thin">
+      <div className="max-w-6xl mx-auto">
       {/* Hero */}
       <div className="relative overflow-hidden rounded-b-3xl mb-8 px-8 pt-10 pb-12 bg-gradient-to-br from-[#3b1fa3] via-[#4d2bc9] to-[#6d3ff0]">
         <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
@@ -90,100 +94,102 @@ export default function LibraryPage() {
 
       <div className="px-8 pb-10">
         {showNew && (
-          <div className="mb-6 bg-card border border-border rounded-2xl p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-foreground">New Category</h3>
-              <button onClick={() => setShowNew(false)} className="text-muted-foreground hover:text-muted-foreground">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Churn, Forecasting, Revenue Prediction"
-                className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition"
-                autoFocus
-              />
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="What kind of datasets/use cases belong here? (optional)"
-                rows={2}
-                className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition resize-none"
-              />
-              {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
-              <div className="flex justify-end gap-2">
-                <button onClick={() => setShowNew(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
-                  Cancel
-                </button>
-                <button
-                  onClick={createCategory}
-                  disabled={saving || !name.trim()}
-                  className="px-4 py-2 bg-brand text-white text-xs font-semibold rounded-xl hover:bg-[#2a0d8a] transition disabled:opacity-50"
-                >
-                  {saving ? "Creating..." : "Create"}
+            <div className="mb-6 bg-card border border-border rounded-2xl p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-foreground">New Category</h3>
+                <button onClick={() => setShowNew(false)} className="text-muted-foreground hover:text-muted-foreground">
+                  <X className="w-4 h-4" />
                 </button>
               </div>
+              <div className="space-y-3">
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Churn, Forecasting, Revenue Prediction"
+                  className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition"
+                  autoFocus
+                />
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="What kind of datasets/use cases belong here? (optional)"
+                  rows={2}
+                  className="w-full px-3.5 py-2.5 text-sm border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:border-brand transition resize-none"
+                />
+                {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+                <div className="flex justify-end gap-2">
+                  <button onClick={() => setShowNew(false)} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">
+                    Cancel
+                  </button>
+                  <button
+                    onClick={createCategory}
+                    disabled={saving || !name.trim()}
+                    className="px-4 py-2 bg-brand text-white text-xs font-semibold rounded-xl hover:bg-[#2a0d8a] transition disabled:opacity-50"
+                  >
+                    {saving ? "Creating..." : "Create"}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {isLoading ? (
-          <PageSpinner />
-        ) : !categories || categories.length === 0 ? (
-          <EmptyState
-            icon={<BookOpen className="w-12 h-12" />}
-            title="No categories yet"
-            description="Create the first one — e.g. Churn, Forecasting, or Revenue Prediction — to start organizing your delivery playbooks."
-            action={
-              <button
-                onClick={() => setShowNew(true)}
-                className="px-4 py-2 bg-brand text-white text-sm font-semibold rounded-lg hover:bg-[#2a0d8a] transition"
-              >
-                Create a category
-              </button>
-            }
-          />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {categories.map((cat, i) => {
-              const Icon = iconForCategory(cat.name);
-              const color = colorForCategory(i);
-              return (
+          {isLoading ? (
+            <PageSpinner />
+          ) : !categories || categories.length === 0 ? (
+            <EmptyState
+              icon={<BookOpen className="w-12 h-12" />}
+              title="No categories yet"
+              description="Create the first one — e.g. Churn, Forecasting, or Revenue Prediction — to start organizing your delivery playbooks."
+              action={
                 <button
-                  key={cat.id}
-                  onClick={() => router.push(`/library/${cat.id}`)}
-                  className="text-left bg-card border border-border rounded-2xl p-5 transition-all duration-200 group hover:-translate-y-1 hover:shadow-xl"
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = color.ring)}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}
+                  onClick={() => setShowNew(true)}
+                  className="px-4 py-2 bg-brand text-white text-sm font-semibold rounded-lg hover:bg-[#2a0d8a] transition"
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
-                      style={{ backgroundColor: color.soft }}
-                    >
-                      <Icon className="w-5 h-5" style={{ color: color.solid }} />
-                    </div>
-                    <span
-                      className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold"
-                      style={{ backgroundColor: color.soft, color: color.solid }}
-                    >
-                      <FileText className="w-3 h-3" /> {cat.article_count}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-bold text-foreground group-hover:text-brand transition">{cat.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 min-h-[2.5em]">
-                    {cat.description || "No description yet."}
-                  </p>
-                  <div className="flex items-center gap-1 mt-3 text-xs font-semibold opacity-0 group-hover:opacity-100 transition" style={{ color: color.solid }}>
-                    Browse playbooks <ArrowRight className="w-3.5 h-3.5" />
-                  </div>
+                  Create a category
                 </button>
-              );
-            })}
+              }
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {categories.map((cat, i) => {
+                const Icon = iconForCategory(cat.name);
+                const color = colorForCategory(i);
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => router.push(`/library/${cat.id}`)}
+                    className="text-left bg-card border border-border rounded-2xl p-5 transition-all duration-200 group hover:-translate-y-1 hover:shadow-xl"
+                    onMouseEnter={(e) => (e.currentTarget.style.borderColor = color.ring)}
+                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div
+                        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                        style={{ backgroundColor: color.soft }}
+                      >
+                        <Icon className="w-5 h-5" style={{ color: color.solid }} />
+                      </div>
+                      <span
+                        className="flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold"
+                        style={{ backgroundColor: color.soft, color: color.solid }}
+                      >
+                        <FileText className="w-3 h-3" /> {cat.article_count}
+                      </span>
+                    </div>
+                    <h3 className="text-base font-bold text-foreground group-hover:text-brand transition">{cat.name}</h3>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2 min-h-[2.5em]">
+                      {cat.description || "No description yet."}
+                    </p>
+                    <div className="flex items-center gap-1 mt-3 text-xs font-semibold opacity-0 group-hover:opacity-100 transition" style={{ color: color.solid }}>
+                      Browse playbooks <ArrowRight className="w-3.5 h-3.5" />
+                    </div>
+                  </button>
+                );
+              })}
           </div>
         )}
+      </div>
+    </div>
       </div>
     </div>
   );

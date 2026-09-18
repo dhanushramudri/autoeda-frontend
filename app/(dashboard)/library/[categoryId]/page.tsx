@@ -11,11 +11,14 @@ import { PageSpinner } from "@/components/shared/LoadingBar";
 import { FileText, Plus, Database, Paperclip, ArrowRight } from "lucide-react";
 
 interface LinkedDataset { id: number; name: string; row_count?: number | null }
+type ArticleStatus = "draft" | "active" | "retired";
 interface Article {
   id: number;
   title: string;
   summary?: string | null;
   content_preview?: string;
+  status: ArticleStatus;
+  tags: string[];
   created_by_name?: string | null;
   updated_by_name?: string | null;
   updated_at: string;
@@ -23,6 +26,12 @@ interface Article {
   attachment_count: number;
 }
 interface Category { id: number; name: string; description?: string | null; article_count: number }
+
+const STATUS_CFG: Record<ArticleStatus, { label: string; cls: string }> = {
+  draft: { label: "Draft", cls: "bg-muted text-muted-foreground" },
+  active: { label: "Active", cls: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400" },
+  retired: { label: "Retired", cls: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400" },
+};
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -69,7 +78,7 @@ export default function CategoryArticlesPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div>
       <div className="px-8 pt-6">
         <Breadcrumb
           items={[
@@ -121,7 +130,7 @@ export default function CategoryArticlesPage() {
             }
           />
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {articles.map((a) => {
               const preview = a.summary || a.content_preview || "";
               return (
@@ -132,8 +141,22 @@ export default function CategoryArticlesPage() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-sm font-bold text-foreground group-hover:text-brand transition">{a.title}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-foreground group-hover:text-brand transition">{a.title}</h3>
+                        <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wide flex-shrink-0 ${STATUS_CFG[a.status].cls}`}>
+                          {STATUS_CFG[a.status].label}
+                        </span>
+                      </div>
                       {preview && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{preview}</p>}
+                      {a.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {a.tags.map((t) => (
+                            <span key={t} className="px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-muted text-muted-foreground">
+                              #{t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <ArrowRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-brand flex-shrink-0 transition mt-0.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5" />
                   </div>

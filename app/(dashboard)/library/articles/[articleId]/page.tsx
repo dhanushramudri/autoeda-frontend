@@ -43,12 +43,15 @@ function ToolbarBtn({
 interface LinkedDataset { id: number; name: string; row_count?: number | null; column_count?: number | null; workspace_id: number }
 interface Attachment { id: number; filename: string; file_size_bytes: number; uploaded_by_name?: string | null }
 interface Category { id: number; name: string }
+type ArticleStatus = "draft" | "active" | "retired";
 interface Article {
   id: number;
   category_id: number;
   title: string;
   summary?: string | null;
   content: string;
+  status: ArticleStatus;
+  tags: string[];
   created_by: number;
   created_by_name?: string | null;
   updated_by_name?: string | null;
@@ -56,6 +59,12 @@ interface Article {
   datasets: LinkedDataset[];
   attachments: Attachment[];
 }
+
+const STATUS_CFG: Record<ArticleStatus, { label: string; cls: string }> = {
+  draft: { label: "Draft", cls: "bg-muted text-muted-foreground" },
+  active: { label: "Active", cls: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400" },
+  retired: { label: "Retired", cls: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400" },
+};
 interface DatasetSearchResult { id: number; name: string; workspace_id: number; row_count?: number | null }
 
 const MAX_ATTACHMENT_MB = 100;
@@ -89,6 +98,9 @@ export default function ArticleDetailPage() {
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [status, setStatus] = useState<ArticleStatus>("draft");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [linkedDatasets, setLinkedDatasets] = useState<LinkedDataset[]>([]);
   const [datasetQuery, setDatasetQuery] = useState("");
   const [datasetResults, setDatasetResults] = useState<DatasetSearchResult[]>([]);
@@ -142,6 +154,8 @@ export default function ArticleDetailPage() {
     setTitle(article.title);
     setSummary(article.summary ?? "");
     setCategoryId(article.category_id);
+    setStatus(article.status);
+    setTags(article.tags);
     setLinkedDatasets(article.datasets);
     editor?.commands.setContent(article.content || "");
   }, [article, editing, editor]);
@@ -159,6 +173,13 @@ export default function ArticleDetailPage() {
 
   const canModify = !!user && (user.is_admin || String(article?.created_by) === user.id);
 
+  const addTag = () => {
+    const t = tagInput.trim().toLowerCase();
+    if (!t || tags.includes(t)) { setTagInput(""); return; }
+    setTags((prev) => [...prev, t]);
+    setTagInput("");
+  };
+
   const setLink = () => {
     const url = window.prompt("Enter URL:");
     if (!url) return;
@@ -175,6 +196,8 @@ export default function ArticleDetailPage() {
         title: title.trim() || "Untitled playbook",
         summary: summary.trim(),
         content: editor?.getHTML() ?? "",
+        status,
+        tags,
         dataset_ids: linkedDatasets.map((d) => d.id),
       });
       queryClient.setQueryData(queryKeys.docs.article(id), res.data);
@@ -300,12 +323,12 @@ export default function ArticleDetailPage() {
     }
   };
 
-  if (isLoading || !article) return <div className="p-8 max-w-4xl mx-auto"><PageSpinner /></div>;
+  if (isLoading || !article) return <div className="p-8 max-w-6xl mx-auto"><PageSpinner /></div>;
 
   const category = categories?.find((c) => c.id === article.category_id);
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
+    <div className="p-8 max-w-6xl mx-auto">
       {/* Tiptap prose styles — same canvas styling as the feedback editor */}
       <style>{`
         .tiptap-canvas .ProseMirror p { margin: 0 0 0.5em; }
@@ -343,12 +366,26 @@ export default function ArticleDetailPage() {
           />
         ) : (
           <div>
-            <h1 className="text-xl font-bold text-foreground">{article.title}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-bold text-foreground">{article.title}</h1>
+              <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide", STATUS_CFG[article.status].cls)}>
+                {STATUS_CFG[article.status].label}
+              </span>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               {article.created_by_name && `Created by ${article.created_by_name} · `}
               Last updated {new Date(article.updated_at).toLocaleString()}
               {article.updated_by_name && ` by ${article.updated_by_name}`}
             </p>
+            {article.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {article.tags.map((t) => (
+                  <span key={t} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+                    #{t}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -395,17 +432,50 @@ export default function ArticleDetailPage() {
       )}
 
       {editing && (
-        <div className="mb-4 flex items-center gap-3">
-          <label className="text-xs text-muted-foreground flex-shrink-0">Category</label>
-          <select
-            value={categoryId ?? ""}
-            onChange={(e) => setCategoryId(Number(e.target.value))}
-            className="px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {categories?.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+        <div className="mb-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <label className="text-xs text-muted-foreground flex-shrink-0">Category</label>
+            <select
+              value={categoryId ?? ""}
+              onChange={(e) => setCategoryId(Number(e.target.value))}
+              className="px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {categories?.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+
+            <label className="text-xs text-muted-foreground flex-shrink-0 ml-2">Status</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as ArticleStatus)}
+              className="px-2.5 py-1.5 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {(Object.keys(STATUS_CFG) as ArticleStatus[]).map((s) => (
+                <option key={s} value={s}>{STATUS_CFG[s].label}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <label className="text-xs text-muted-foreground flex-shrink-0">Tags</label>
+            {tags.map((t) => (
+              <span key={t} className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+                #{t}
+                <button onClick={() => setTags((prev) => prev.filter((x) => x !== t))} className="hover:text-red-500">
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              </span>
             ))}
-          </select>
+            <input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); addTag(); } }}
+              onBlur={addTag}
+              placeholder="e.g. churn, xgboost, retail — press Enter"
+              className="px-2.5 py-1 text-xs border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-56"
+            />
+          </div>
         </div>
       )}
 

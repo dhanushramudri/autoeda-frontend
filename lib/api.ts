@@ -512,9 +512,9 @@ export const docsApi = {
   deleteCategory: (id: number) => api.delete(`/doc-categories/${id}`),
   listArticles: (categoryId: number) => api.get(`/doc-categories/${categoryId}/articles`),
   getArticle: (articleId: number) => api.get(`/doc-articles/${articleId}`),
-  createArticle: (data: { category_id: number; title: string; summary?: string; content?: string; dataset_ids?: number[] }) =>
+  createArticle: (data: { category_id: number; title: string; summary?: string; content?: string; status?: string; tags?: string[]; dataset_ids?: number[] }) =>
     api.post("/doc-articles", data),
-  updateArticle: (articleId: number, data: Partial<{ category_id: number; title: string; summary: string; content: string; dataset_ids: number[] }>) =>
+  updateArticle: (articleId: number, data: Partial<{ category_id: number; title: string; summary: string; content: string; status: string; tags: string[]; dataset_ids: number[] }>) =>
     api.patch(`/doc-articles/${articleId}`, data),
   deleteArticle: (articleId: number) => api.delete(`/doc-articles/${articleId}`),
   uploadAttachment: async (articleId: number, file: File, onProgress?: (pct: number) => void) => {
@@ -539,6 +539,15 @@ export const docsApi = {
     api.post(`/doc-attachments/${attachmentId}/import`, { workspace_id: Number(workspaceId), name }),
   searchDatasets: (q: string) => api.get("/doc-dataset-search", { params: { q } }),
   articlesForDataset: (datasetId: string) => api.get(`/datasets/${datasetId}/doc-articles`),
+};
+
+// CoE Pulse — the shared DS-practice feed (newsletters, events, findings,
+// certifications, resources) living alongside Delivery Playbooks.
+export const coeApi = {
+  list: (category?: string) => api.get("/coe-posts", { params: category ? { category } : undefined }),
+  create: (data: { category: string; title: string; content?: string; link_url?: string; event_date?: string; tags?: string[] }) =>
+    api.post("/coe-posts", data),
+  delete: (id: number) => api.delete(`/coe-posts/${id}`),
 };
 
 export const aiApi = {

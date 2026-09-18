@@ -735,6 +735,22 @@ export interface Hypothesis {
   validated_at: string | null;
 }
 
+// -- CoE Pulse (shared DS-practice feed alongside Delivery Playbooks) --
+export type CoePostCategory = "newsletter" | "event" | "finding" | "certification" | "resource";
+
+export interface CoePost {
+  id: number;
+  category: CoePostCategory;
+  title: string;
+  content: string;
+  link_url: string | null;
+  event_date: string | null;
+  tags: string[];
+  created_by: number;
+  created_by_name: string | null;
+  created_at: string;
+}
+
 // -- Auto EDA (workspace-level, autonomous agentic worklist + growing report) --
 export type AutoEdaWorklistStatus = "pending" | "running" | "done" | "error" | "skipped";
 

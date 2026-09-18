@@ -77,6 +77,9 @@ export const queryKeys = {
     article: (articleId: number) => ["docs", "article", articleId] as const,
     forDataset: (datasetId: string) => ["docs", "for-dataset", datasetId] as const,
   },
+  coe: {
+    posts: (category?: string) => ["coe", "posts", category ?? "all"] as const,
+  },
   scout: {
     conversations: (workspaceId: string) => ["scout", "conversations", workspaceId] as const,
     thread: (workspaceId: string, conversationId: number) => ["scout", "thread", workspaceId, conversationId] as const,
