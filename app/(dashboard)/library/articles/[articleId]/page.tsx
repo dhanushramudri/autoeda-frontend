@@ -127,7 +127,7 @@ export default function ArticleDetailPage() {
     extensions: [
       StarterKit,
       TiptapLink.configure({ openOnClick: false }),
-      Placeholder.configure({ placeholder: "Business use case, project use case, anything worth knowing…" }),
+      Placeholder.configure({ placeholder: "Delivery approach, business use case, anything worth knowing…" }),
     ],
     editorProps: {
       attributes: {
@@ -172,7 +172,7 @@ export default function ArticleDetailPage() {
     try {
       const res = await docsApi.updateArticle(article.id, {
         category_id: categoryId ?? article.category_id,
-        title: title.trim() || "Untitled article",
+        title: title.trim() || "Untitled playbook",
         summary: summary.trim(),
         content: editor?.getHTML() ?? "",
         dataset_ids: linkedDatasets.map((d) => d.id),
@@ -196,7 +196,7 @@ export default function ArticleDetailPage() {
       await docsApi.deleteArticle(article.id);
       router.push(`/library/${article.category_id}`);
     } catch {
-      setSaveError("Failed to delete this article. Please try again.");
+      setSaveError("Failed to delete this playbook. Please try again.");
     }
   };
 
@@ -327,7 +327,7 @@ export default function ArticleDetailPage() {
 
       <Breadcrumb
         items={[
-          { label: "Dataset Library", href: "/library" },
+          { label: "Delivery Playbooks", href: "/library" },
           { label: category?.name ?? "Category", href: `/library/${article.category_id}` },
           { label: article.title },
         ]}
@@ -339,7 +339,7 @@ export default function ArticleDetailPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="text-xl font-bold text-foreground flex-1 border-b border-border focus:outline-none focus:border-brand pb-1"
-            placeholder="Article title"
+            placeholder="Playbook title"
           />
         ) : (
           <div>
@@ -371,7 +371,7 @@ export default function ArticleDetailPage() {
               <button
                 onClick={() => setEditing(true)}
                 className="flex items-center gap-1.5 px-3 py-1.5 border border-border text-muted-foreground text-xs font-medium rounded-lg hover:bg-muted transition"
-                title="Anyone can edit this article"
+                title="Anyone can edit this playbook"
               >
                 <Pencil className="w-3.5 h-3.5" /> Edit
               </button>
@@ -413,7 +413,7 @@ export default function ArticleDetailPage() {
         <input
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
-          placeholder="One-line summary (shown in article lists)"
+          placeholder="One-line summary (shown in playbook lists)"
           className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
         />
       ) : (
@@ -558,7 +558,7 @@ export default function ArticleDetailPage() {
             </div>
           </div>
         ) : isContentEmpty(article.content) ? (
-          <p className="text-sm text-muted-foreground">No content yet — click Edit to write the business use case, project use case, and anything else worth knowing.</p>
+          <p className="text-sm text-muted-foreground">No content yet — click Edit to write the delivery approach, business use case, and anything else worth knowing.</p>
         ) : (
           <div
             className="prose prose-sm max-w-none doc-article-content"

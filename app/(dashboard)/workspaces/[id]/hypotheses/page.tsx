@@ -344,11 +344,18 @@ export default function HypothesesPage() {
       statement: draft.trim(), dataset_id: scopedDatasetId,
       image_key: attachedImage?.key, image_content_type: attachedImage?.contentType,
     }),
-    onSuccess: () => {
+    // Kick off validation immediately instead of leaving it sitting on
+    // "pending" waiting for a separate "Validate now" click — that button
+    // only ever flashed for a moment before the row you just added scrolled
+    // out of view anyway. "Validate now" stays as a manual fallback (e.g.
+    // if this call fails) but isn't the expected path anymore.
+    onSuccess: (res) => {
       setDraft("");
       if (draftRef.current) draftRef.current.style.height = "auto";
       clearAttachedImage();
       invalidate();
+      const created = res.data as Hypothesis;
+      if (created?.id) handleValidate(created.id);
     },
   });
 

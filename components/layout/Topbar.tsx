@@ -232,7 +232,7 @@ export function Topbar() {
 
         <button
           onClick={() => router.push("/library")}
-          title="Dataset Library"
+          title="Delivery Playbooks"
           className="w-8 h-8 rounded-full flex items-center justify-center transition-transform hover:scale-105 relative z-10"
           style={{ background: "linear-gradient(135deg, #7C3AED, #A78BFA)" }}
         >
@@ -244,7 +244,7 @@ export function Topbar() {
             <span className="library-ping" />
             <span className="library-ping library-ping-delay" />
             <span className="library-glow" />
-            <NewFeatureNudge label="Dataset Library" className="top-full right-0 mt-1" />
+            <NewFeatureNudge label="Delivery Playbooks" className="top-full right-0 mt-1" />
           </>
         )}
       </div>

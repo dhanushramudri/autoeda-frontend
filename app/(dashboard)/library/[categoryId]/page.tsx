@@ -63,7 +63,7 @@ export default function CategoryArticlesPage() {
   });
 
   const createArticle = async () => {
-    const res = await docsApi.createArticle({ category_id: catId, title: "Untitled article" });
+    const res = await docsApi.createArticle({ category_id: catId, title: "Untitled playbook" });
     await queryClient.invalidateQueries({ queryKey: queryKeys.docs.articles(catId) });
     router.push(`/library/articles/${res.data.id}?edit=1`);
   };
@@ -73,7 +73,7 @@ export default function CategoryArticlesPage() {
       <div className="px-8 pt-6">
         <Breadcrumb
           items={[
-            { label: "Dataset Library", href: "/library" },
+            { label: "Delivery Playbooks", href: "/library" },
             { label: category?.name ?? "Category" },
           ]}
         />
@@ -91,7 +91,7 @@ export default function CategoryArticlesPage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">{category?.name ?? "Category"}</h1>
             {category?.description && <p className="text-sm text-muted-foreground mt-1 max-w-lg">{category.description}</p>}
-            <p className="text-xs text-muted-foreground mt-1.5">{articles?.length ?? 0} article{articles?.length === 1 ? "" : "s"}</p>
+            <p className="text-xs text-muted-foreground mt-1.5">{articles?.length ?? 0} playbook{articles?.length === 1 ? "" : "s"}</p>
           </div>
         </div>
         <button
@@ -99,7 +99,7 @@ export default function CategoryArticlesPage() {
           className="flex items-center gap-1.5 px-3.5 py-2.5 text-white text-sm font-semibold rounded-xl transition flex-shrink-0 shadow-sm"
           style={{ backgroundColor: color.solid }}
         >
-          <Plus className="w-4 h-4" /> New Article
+          <Plus className="w-4 h-4" /> New Playbook
         </button>
       </div>
 
@@ -109,14 +109,14 @@ export default function CategoryArticlesPage() {
         ) : !articles || articles.length === 0 ? (
           <EmptyState
             icon={<FileText className="w-12 h-12" />}
-            title="No articles yet"
-            description="Write the first one — describe what the dataset is for, the business use case, and link the relevant dataset(s)."
+            title="No playbooks yet"
+            description="Write the first one — describe the delivery approach, the business use case, and link the relevant dataset(s)."
             action={
               <button
                 onClick={createArticle}
                 className="px-4 py-2 bg-brand text-white text-sm font-semibold rounded-lg hover:bg-[#2a0d8a] transition"
               >
-                Write an article
+                Write a playbook
               </button>
             }
           />

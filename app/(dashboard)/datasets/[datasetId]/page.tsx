@@ -449,17 +449,17 @@ export default function DatasetOverviewPage() {
       <div className="bg-card rounded-xl border border-border p-5 mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <BookOpen className="w-4 h-4 text-brand" /> Related Documentation
+            <BookOpen className="w-4 h-4 text-brand" /> Related Playbooks
           </h2>
           <button onClick={() => router.push("/library")} className="text-xs text-brand hover:text-[#2a0d8a] font-medium">
-            Browse Dataset Library
+            Browse Delivery Playbooks
           </button>
         </div>
         {!relatedArticles || relatedArticles.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            No documentation linked to this dataset yet. Add an article in the{" "}
+            No playbook linked to this dataset yet. Add one in{" "}
             <button onClick={() => router.push("/library")} className="text-brand hover:underline">
-              Dataset Library
+              Delivery Playbooks
             </button>{" "}
             describing what it's for.
           </p>

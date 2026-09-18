@@ -63,9 +63,10 @@ export default function LibraryPage() {
         </svg>
 
         <div className="relative z-10">
-          <h1 className="text-3xl font-bold text-white tracking-tight">Dataset Library</h1>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Delivery Playbooks</h1>
           <p className="text-sm text-white/70 mt-1.5 max-w-lg">
-            Find datasets by use case, see the business context behind them, and edit or download as needed.
+            Reusable playbooks for data science project delivery — find the right approach by use case, see the
+            business context behind it, and adapt it as needed.
           </p>
 
           <div className="flex items-center gap-3 mt-6">
@@ -75,7 +76,7 @@ export default function LibraryPage() {
             </div>
             <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/15 min-w-[100px]">
               <p className="text-2xl font-bold text-white tabular-nums">{totalArticles}</p>
-              <p className="text-[11px] text-white/60 uppercase tracking-wide">Articles</p>
+              <p className="text-[11px] text-white/60 uppercase tracking-wide">Playbooks</p>
             </div>
             <button
               onClick={() => setShowNew(true)}
@@ -134,7 +135,7 @@ export default function LibraryPage() {
           <EmptyState
             icon={<BookOpen className="w-12 h-12" />}
             title="No categories yet"
-            description="Create the first one — e.g. Churn, Forecasting, or Revenue Prediction — to start organizing dataset documentation."
+            description="Create the first one — e.g. Churn, Forecasting, or Revenue Prediction — to start organizing your delivery playbooks."
             action={
               <button
                 onClick={() => setShowNew(true)}
@@ -176,7 +177,7 @@ export default function LibraryPage() {
                     {cat.description || "No description yet."}
                   </p>
                   <div className="flex items-center gap-1 mt-3 text-xs font-semibold opacity-0 group-hover:opacity-100 transition" style={{ color: color.solid }}>
-                    Browse articles <ArrowRight className="w-3.5 h-3.5" />
+                    Browse playbooks <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </button>
               );

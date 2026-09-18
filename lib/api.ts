@@ -504,7 +504,7 @@ export const feedbackApi = {
     api.patch(`/feedback/${id}`, data),
 };
 
-// Dataset Library (doc hub)
+// Delivery Playbooks (doc hub)
 export const docsApi = {
   listCategories: () => api.get("/doc-categories"),
   createCategory: (name: string, description?: string) =>
