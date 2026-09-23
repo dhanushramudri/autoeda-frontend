@@ -4,15 +4,16 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMutation } from "@tanstack/react-query";
-import { datasetsApi, workspacesApi, workspacesExtraApi } from "@/lib/api";
+import { datasetsApi, sourcesApi, workspacesApi, workspacesExtraApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { ConnectorLogo } from "@/components/shared/ConnectorLogo";
 import {
   Upload, Database, FileText, ChevronRight, Clock, Rows, Columns,
   CheckCircle, AlertCircle, Loader2, X, Plus, GitMerge, Trash2,
-  FileSpreadsheet, FileCode, ChevronDown,
+  FileSpreadsheet, FileCode, ChevronDown, Plug,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { Dataset } from "@/types";
@@ -151,12 +152,30 @@ const STATUS_COLOR = {
   error: "border-red-200 dark:border-red-800 bg-red-50/40 dark:bg-red-950/40",
 };
 
+interface CatalogEntry { id: string; label: string; group: string }
+
 function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: () => void }) {
   const qc = useQueryClient();
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [entries, setEntries] = useState<FileEntry[]>([]);
   const [uploading, setUploading] = useState(false);
   const [allDone, setAllDone] = useState(false);
+
+  const { data: catalogData } = useQuery({
+    queryKey: ["sources-catalog"],
+    queryFn: () => sourcesApi.catalog().then((r) => r.data),
+  });
+  // Files are exactly what the drop zone above already covers — only show
+  // the live-connection sources here so the two paths don't overlap.
+  const liveConnectors: CatalogEntry[] = (catalogData?.catalog ?? []).filter(
+    (c: CatalogEntry) => c.group !== "Files"
+  );
+
+  const goToConnector = (typeId: string) => {
+    onClose();
+    router.push(`/workspaces/${workspaceId}/sources/new?type=${typeId}`);
+  };
 
   // ── parse preview after entry is added ──
   useEffect(() => {
@@ -335,6 +354,34 @@ function UploadModal({ workspaceId, onClose }: { workspaceId: string; onClose: (
               onChange={(e) => e.target.files && addFiles(e.target.files)}
             />
           </div>
+
+          {/* Live data sources — files aren't the only way in */}
+          {liveConnectors.length > 0 && (
+            <div>
+              <div className="flex items-center gap-3 py-1">
+                <div className="flex-1 h-px bg-border" />
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
+                  <Plug className="w-3 h-3" /> Or connect a live source
+                </span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 mt-2">
+                {liveConnectors.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => goToConnector(c.id)}
+                    title={c.label}
+                    className="flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border border-border hover:border-brand/40 hover:bg-brand/[0.03] transition group"
+                  >
+                    <ConnectorLogo id={c.id} className="w-6 h-6 flex-shrink-0" />
+                    <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground text-center truncate w-full">
+                      {c.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* File entries */}
           {entries.map((entry) => (

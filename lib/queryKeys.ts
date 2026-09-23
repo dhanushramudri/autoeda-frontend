@@ -93,4 +93,8 @@ export const queryKeys = {
     run: (workspaceId: string, runId: number) => ["auto-eda", "run", workspaceId, runId] as const,
     chat: (workspaceId: string, runId: number) => ["auto-eda", "chat", workspaceId, runId] as const,
   },
+  experiments: {
+    list: (workspaceId: string) => ["experiments", "list", workspaceId] as const,
+    detail: (experimentId: number) => ["experiments", "detail", experimentId] as const,
+  },
 };

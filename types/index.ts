@@ -751,6 +751,46 @@ export interface CoePost {
   created_at: string;
 }
 
+// -- AutoML / experiment tracking (training runs on the engineer's laptop
+// via the local Docker agent — this is just the queue + leaderboard) --
+export type ExperimentStatus = "queued" | "running" | "completed" | "failed";
+
+export interface ExperimentRun {
+  id: number;
+  algorithm: string;
+  params: Record<string, unknown>;
+  metrics: Record<string, number>;
+  feature_importance: Record<string, number>;
+  training_seconds: number | null;
+  status: "completed" | "failed";
+  error: string | null;
+  has_artifact: boolean;
+  artifact_filename: string | null;
+  created_at: string;
+}
+
+export interface Experiment {
+  id: number;
+  workspace_id: number;
+  dataset_id: number;
+  dataset_name: string | null;
+  created_by: number;
+  created_by_name: string | null;
+  name: string;
+  target_column: string;
+  problem_type: "classification" | "regression" | null;
+  excluded_columns: string[];
+  auto_planned: boolean;
+  rationale: string | null;
+  engineered_features: { tool: string; args: Record<string, unknown>; output: string; reason?: string }[];
+  status: ExperimentStatus;
+  error: string | null;
+  created_at: string;
+  claimed_at: string | null;
+  completed_at: string | null;
+  runs: ExperimentRun[];
+}
+
 // -- Auto EDA (workspace-level, autonomous agentic worklist + growing report) --
 export type AutoEdaWorklistStatus = "pending" | "running" | "done" | "error" | "skipped";
 

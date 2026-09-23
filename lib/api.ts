@@ -734,3 +734,15 @@ export const autoEdaApi = {
       })
       .then((r) => r.data as { markdown: string; replacement: string }),
 };
+
+export const experimentsApi = {
+  list: (workspaceId: string) => api.get(`/workspaces/${workspaceId}/experiments`),
+  get: (experimentId: number) => api.get(`/experiments/${experimentId}`),
+  create: (workspaceId: string, data: { dataset_id: number; name: string; target_column: string; problem_type?: string | null; excluded_columns?: string[] }) =>
+    api.post(`/workspaces/${workspaceId}/experiments`, data),
+  createAuto: (workspaceId: string) => api.post(`/workspaces/${workspaceId}/experiments/auto`),
+  delete: (experimentId: number) => api.delete(`/experiments/${experimentId}`),
+  downloadArtifact: (experimentId: number, runId: number) =>
+    api.get(`/experiments/${experimentId}/runs/${runId}/download`, { responseType: "blob" }),
+  downloadAgent: () => api.get(`/agent/download`, { responseType: "blob" }),
+};

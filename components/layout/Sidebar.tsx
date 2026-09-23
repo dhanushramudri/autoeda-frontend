@@ -11,7 +11,7 @@ import {
   FileSearch, TrendingUp, AlertTriangle, Layers,
   Type, Wand2, Plug, Warehouse, ShieldCheck,
   Code2, ChevronLeft, MessageSquarePlus,
-  HelpCircle, ChevronUp, FlaskConical, Microscope,
+  HelpCircle, ChevronUp, FlaskConical, Microscope, Cpu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dataset } from "@/types";
@@ -62,6 +62,7 @@ const WORKSPACE_LINKS = [
   { label: "Auto EDA",     href: "/auto-eda",   icon: Microscope },
   { label: "Scout",        href: "/scout",      icon: Mascot },
   { label: "Hypotheses",   href: "/hypotheses", icon: FlaskConical },
+  // { label: "AutoML",       href: "/automl",     icon: Cpu }, // hidden — not ready for users yet
   { label: "Warehouse",    href: "/warehouse",  icon: Warehouse },
   { label: "Data Sources", href: "/sources",    icon: Plug },
   { label: "Members",      href: "/members",    icon: Users },

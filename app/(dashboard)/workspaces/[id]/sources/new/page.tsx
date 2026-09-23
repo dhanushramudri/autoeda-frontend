@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useMemo } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sourcesApi } from "@/lib/api";
 import {
@@ -247,6 +247,7 @@ function Field({ fd, value, onChange }: {
 export default function NewSourcePage() {
   const { id: workspaceId } = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [step, setStep]               = useState<Step>("pick_type");
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -263,6 +264,17 @@ export default function NewSourcePage() {
 
   const catalog: CatalogEntry[] = catalogData?.catalog ?? [];
   const groups = GROUP_ORDER.filter((g) => catalog.some((c) => c.group === g));
+
+  // Deep-link from the Add Dataset modal's connector grid — jump straight
+  // to configuring that connector instead of making the user pick it again.
+  useEffect(() => {
+    const preselect = searchParams.get("type");
+    if (preselect && catalog.some((c) => c.id === preselect)) {
+      setSelectedType(preselect);
+      setStep("configure");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalog.length]);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return catalog;
