@@ -249,6 +249,12 @@ export function AutoEdaPanel({
   const isRunning = selectedRun?.status === "pending" || selectedRun?.status === "running" || selectedRun?.status === "pausing";
   const isPaused = selectedRun?.status === "paused";
   const isPlanned = selectedRun?.status === "planned";
+  // A run the stale-watchdog marked "error" after the server crashed/
+  // restarted mid-run (see backend _reap_if_stale) is functionally the
+  // same as a paused one — every item already marked "done" keeps its
+  // content, so resuming continues from there instead of re-spending the
+  // AI calls (and time) that already succeeded.
+  const isResumableError = selectedRun?.status === "error" && (selectedRun?.worklist.some((i) => i.status === "done") ?? false);
   const canSteer = isRunning || isPaused || isPlanned;
 
   const datasetNameById = useMemo(() => {
@@ -783,20 +789,21 @@ export function AutoEdaPanel({
                       Approve & Run
                     </button>
                   )}
-                  {(isRunning || isPaused) && (
+                  {(isRunning || isPaused || isResumableError) && (
                     <button
-                      onClick={() => (isPaused ? handleResume(selectedRun.id) : handlePause(selectedRun.id))}
+                      onClick={() => (isPaused || isResumableError ? handleResume(selectedRun.id) : handlePause(selectedRun.id))}
                       disabled={isPausing || isResuming || selectedRun.status === "pausing"}
                       className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-lg border border-border bg-card text-muted-foreground hover:border-brand/40 hover:text-brand transition-colors disabled:opacity-50"
+                      title={isResumableError ? "Pick up where this run left off — items already completed won't be redone" : undefined}
                     >
                       {isPausing || isResuming ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : isPaused ? (
+                      ) : isPaused || isResumableError ? (
                         <Play className="w-3 h-3" />
                       ) : (
                         <Pause className="w-3 h-3" />
                       )}
-                      {isPaused ? "Resume" : "Pause"}
+                      {isPaused || isResumableError ? "Resume" : "Pause"}
                     </button>
                   )}
                 </div>
