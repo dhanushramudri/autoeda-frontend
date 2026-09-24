@@ -809,6 +809,7 @@ export interface AutoEdaRun {
   status: "pending" | "planned" | "running" | "pausing" | "paused" | "completed" | "error";
   title: string | null;
   business_context: string | null;
+  max_items: number | null;
   markdown: string | null;
   worklist: AutoEdaWorklistItem[];
   error: string | null;

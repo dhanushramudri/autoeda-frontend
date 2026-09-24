@@ -702,12 +702,13 @@ export const autoEdaApi = {
   // run can take many minutes and would otherwise get killed by the /api
   // proxy route's underlying Node request timeout. Can cover multiple
   // datasets at once (e.g. every dataset in the workspace).
-  startRun: (workspaceId: string, datasetIds: (string | number)[], businessContext?: string, reportTitle?: string) =>
+  startRun: (workspaceId: string, datasetIds: (string | number)[], businessContext?: string, reportTitle?: string, maxItems?: number) =>
     api
       .post(`/workspaces/${workspaceId}/auto-eda/run`, {
         dataset_ids: datasetIds.map(Number),
         business_context: businessContext?.trim() || undefined,
         report_title: reportTitle?.trim() || undefined,
+        max_items: maxItems || undefined,
       })
       .then((r) => r.data as { run_id: number }),
   pauseRun: (workspaceId: string, runId: number) =>

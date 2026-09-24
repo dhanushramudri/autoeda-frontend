@@ -198,6 +198,7 @@ export function AutoEdaPanel({
   const [isApproving, setIsApproving] = useState(false);
   const [businessContext, setBusinessContext] = useState("");
   const [reportTitle, setReportTitle] = useState("");
+  const [maxItems, setMaxItems] = useState("");
   const [setupCollapsed, setSetupCollapsed] = useState(false);
   const [listCollapsed, setListCollapsed] = useState(false);
   const [worklistCollapsed, setWorklistCollapsed] = useState(false);
@@ -457,7 +458,8 @@ export function AutoEdaPanel({
     setIsStarting(true);
     setStartError(null);
     try {
-      const { run_id } = await autoEdaApi.startRun(workspaceId, selectedIds, businessContext, reportTitle);
+      const parsedMaxItems = Math.min(100, Math.max(1, parseInt(maxItems, 10) || 0)) || undefined;
+      const { run_id } = await autoEdaApi.startRun(workspaceId, selectedIds, businessContext, reportTitle, parsedMaxItems);
       setSelectedRunId(run_id);
       invalidateRuns();
     } catch {
@@ -538,10 +540,11 @@ export function AutoEdaPanel({
               Report setup
             </span>
             <div className="flex items-center gap-2 min-w-0">
-              {setupCollapsed && (reportTitle || businessContext) && (
+              {setupCollapsed && (reportTitle || businessContext || maxItems) && (
                 <span className="text-[11px] text-muted-foreground truncate max-w-[420px]">
                   {reportTitle || "Untitled report"}
                   {businessContext ? ` · ${businessContext}` : ""}
+                  {maxItems ? ` · up to ${maxItems} items` : ""}
                 </span>
               )}
               <ChevronDown
@@ -553,7 +556,7 @@ export function AutoEdaPanel({
             </div>
           </button>
           {!setupCollapsed && (
-            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-4 px-4 pb-4 pt-1">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.55fr)_minmax(0,1.4fr)] gap-4 px-4 pb-4 pt-1">
               <div>
                 <label className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan mb-1.5 block">
                   Report title <span className="font-normal normal-case text-muted-foreground/70">(optional — defaults to the workspace name)</span>
@@ -566,6 +569,24 @@ export function AutoEdaPanel({
                   placeholder="e.g. Apax Portfolio Retention Analysis"
                   className="w-full text-xs bg-background border border-foreground/15 shadow-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
                 />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan mb-1.5 block">
+                  Max items <span className="font-normal normal-case text-muted-foreground/70">(1–100, optional)</span>
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={maxItems}
+                  onChange={(e) => setMaxItems(e.target.value)}
+                  disabled={isStarting}
+                  placeholder="Default"
+                  className="w-full text-xs bg-background border border-foreground/15 shadow-sm rounded-xl px-3 py-2.5 focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/15 placeholder-muted-foreground/60 transition-colors disabled:opacity-50"
+                />
+                <p className="text-[11px] text-muted-foreground/70 mt-1">
+                  How many investigations this run may plan/grow to.
+                </p>
               </div>
               <div>
                 <label className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan mb-1.5 block">
