@@ -7,7 +7,6 @@ import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Data, Layout, Config, Shape } from "plotly.js";
-import { SubNav } from "@/components/layout/SubNav";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import type {
   FullAnalysisResult,
@@ -1032,7 +1031,6 @@ export default function AnalysisPage() {
   // ── Loading / error states ────────────────────────────────────────────────────
   if (isLoading) return (
     <div className="flex flex-col min-h-screen bg-muted">
-      <SubNav datasetId={datasetId} />
       <div className="flex-1 flex flex-col items-center justify-center gap-3">
         <PageSpinner />
         <p className="text-sm text-muted-foreground animate-pulse">Computing analysis…</p>
@@ -1042,7 +1040,6 @@ export default function AnalysisPage() {
 
   if (error) return (
     <div className="flex flex-col min-h-screen bg-muted">
-      <SubNav datasetId={datasetId} />
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-3">
           <AlertTriangle className="w-8 h-8 text-red-400 dark:text-red-400 mx-auto" />
@@ -1061,7 +1058,6 @@ export default function AnalysisPage() {
 
   return (
     <div className="flex flex-col h-screen bg-muted">
-      <SubNav datasetId={datasetId} />
 
       {data && (
         <div className="flex flex-1 overflow-hidden min-h-0">

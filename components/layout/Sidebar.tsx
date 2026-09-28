@@ -6,11 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/authStore";
 import {
-  LayoutDashboard, Database, BarChart2,
+  LayoutDashboard, Database,
   Sliders, ChevronDown, LogOut, Settings, Users,
-  FileSearch, TrendingUp, AlertTriangle, Layers,
-  Type, Wand2, Plug, Warehouse, ShieldCheck,
-  Code2, ChevronLeft, MessageSquarePlus,
+  Plug, Warehouse, ChevronLeft, MessageSquarePlus,
   HelpCircle, ChevronUp, FlaskConical, Microscope, Cpu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,45 +16,6 @@ import type { Dataset } from "@/types";
 import { useTour } from "@/hooks/useTourContext";
 import { tourSteps } from "@/lib/tourSteps";
 import { Mascot } from "@/components/shared/Mascot";
-
-// -- Dataset sub-nav  --  grouped by priority -------------------------------------
-interface NavItem  { label: string; href: string; icon: React.ComponentType<{ className?: string }> }
-interface NavGroup { label: string; items: NavItem[] }
-
-const DATASET_GROUPS: NavGroup[] = [
-  {
-    label: "Explore",
-    items: [
-      { label: "Overview",       href: "",               icon: LayoutDashboard },
-      { label: "Profile",        href: "/profile",       icon: FileSearch },
-      { label: "Distributions",  href: "/distributions", icon: BarChart2 },
-      { label: "Correlations",   href: "/correlations",  icon: Layers },
-    ],
-  },
-  {
-    label: "Quality",
-    items: [
-      { label: "Missing Values", href: "/missing",  icon: AlertTriangle },
-      { label: "Outliers",       href: "/outliers", icon: ShieldCheck },
-      { label: "Quality Rules",  href: "/rules",    icon: ShieldCheck },
-    ],
-  },
-  {
-    label: "Analysis",
-    items: [
-      { label: "Feature Importance",  href: "/feature-importance", icon: TrendingUp },
-      { label: "Time Series",         href: "/timeseries",         icon: TrendingUp },
-      { label: "Text Analysis",       href: "/text",               icon: Type },
-    ],
-  },
-  {
-    label: "Tools",
-    items: [
-      { label: "Transform Studio", href: "/transform", icon: Wand2 },
-      { label: "SQL Editor",       href: "/sql",       icon: Code2 },
-    ],
-  },
-];
 
 const WORKSPACE_LINKS = [
   { label: "Auto EDA",     href: "/auto-eda",   icon: Microscope },
@@ -184,23 +143,14 @@ function SectionLabel({ children, collapsed }: { children: React.ReactNode; coll
   );
 }
 
-function SubGroupLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="px-2 pt-2 pb-0.5 text-[8px] font-semibold uppercase tracking-widest text-sidebar-foreground/25 select-none">
-      {children}
-    </p>
-  );
-}
-
 // -- Sidebar --------------------------------------------------------------------
 
 interface SidebarProps {
   datasets?: Dataset[];
   workspaceId?: string;
-  activeDatasetId?: string;
 }
 
-export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: SidebarProps) {
+export function Sidebar({ datasets = [], workspaceId }: SidebarProps) {
   const pathname  = usePathname();
   const router      = useRouter();
   const queryClient = useQueryClient();
@@ -209,7 +159,6 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
   const { startTour } = useTour();
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const [expandedDataset, setExpandedDataset] = useState<string | null>(activeDatasetId ?? null);
   const [datasetsExpanded, setDatasetsExpanded] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -394,81 +343,29 @@ export function Sidebar({ datasets = [], workspaceId, activeDatasetId }: Sidebar
                   )}
 
                   {datasets.map((ds) => {
-                    const base       = `/datasets/${ds.id}`;
-                    const isExpanded = expandedDataset === ds.id;
-                    const isActive   = pathname.startsWith(base);
+                    const base     = `/datasets/${ds.id}`;
+                    const isActive = pathname.startsWith(base);
 
                     return (
-                      <div key={ds.id}>
-                        <button
-                          onClick={() => setExpandedDataset(isExpanded ? null : ds.id)}
-                          className={cn(
-                            "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors",
-                            isActive
-                              ? "shadow-sm font-semibold"
-                              : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                          )}
-                          style={isActive ? {
-                            backgroundColor: "hsl(var(--primary) / 0.10)",
-                            color: "hsl(var(--primary))",
-                            borderLeft: "1px solid hsl(var(--primary))",
-                          } : {}}
-                          title={ds.name}
-                        >
-                          <Database className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
-                          <span className="flex-1 text-left truncate">{ds.name}</span>
-                          <ChevronDown
-                            className={cn(
-                              "w-3 h-3 flex-shrink-0 transition-transform duration-200 opacity-60",
-                              isExpanded ? "rotate-0" : "-rotate-90"
-                            )}
-                          />
-                        </button>
-
-                        {isExpanded && (
-                          <div
-                            className="ml-4 mt-0.5 mb-1 pl-3"
-                            style={{ borderLeft: "1px solid rgb(255 97 150 / 0.18)" }}
-                          >
-                            {DATASET_GROUPS.map((group, gi) => (
-                              <div key={group.label}>
-                                {gi > 0 && (
-                                  <div className="my-1 border-t border-sidebar-border/40" />
-                                )}
-                                <SubGroupLabel>{group.label}</SubGroupLabel>
-                                {group.items.map((section) => {
-                                  const href = `${base}${section.href}`;
-                                  const active =
-                                    section.href === ""
-                                      ? pathname === base
-                                      : pathname.startsWith(href);
-                                  const Icon = section.icon;
-                                  return (
-                                    <Link
-                                      key={section.href}
-                                      href={href}
-                                      className={cn(
-                                        "flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] font-normal transition-colors",
-                                        active
-                                          ? "font-semibold"
-                                          : "text-sidebar-foreground/55 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                                      )}
-                                      style={active ? {
-                                          color: "hsl(var(--primary))",
-                                          backgroundColor: "hsl(var(--primary) / 0.10)",
-                                          borderLeft: "1px solid hsl(var(--primary))",
-                                        } : {}}
-                                    >
-                                      <Icon className="w-2.5 h-2.5 flex-shrink-0 opacity-70" />
-                                      {section.label}
-                                    </Link>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </div>
+                      <Link
+                        key={ds.id}
+                        href={base}
+                        className={cn(
+                          "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors",
+                          isActive
+                            ? "shadow-sm font-semibold"
+                            : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
                         )}
-                      </div>
+                        style={isActive ? {
+                          backgroundColor: "hsl(var(--primary) / 0.10)",
+                          color: "hsl(var(--primary))",
+                          borderLeft: "1px solid hsl(var(--primary))",
+                        } : {}}
+                        title={ds.name}
+                      >
+                        <Database className="w-3.5 h-3.5 flex-shrink-0 opacity-80" />
+                        <span className="flex-1 text-left truncate">{ds.name}</span>
+                      </Link>
                     );
                   })}
                 </div>

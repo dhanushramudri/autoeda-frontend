@@ -87,6 +87,8 @@ export const workspacesApi = {
     api.post(`/workspaces/${workspaceId}/members`, data),
   removeMember: (workspaceId: string, memberId: string) =>
     api.delete(`/workspaces/${workspaceId}/members/${memberId}`),
+  setStorageDestination: (workspaceId: string, sourceId: number | null) =>
+    api.put(`/workspaces/${workspaceId}/storage-destination`, { source_id: sourceId }),
 };
 
 // Datasets

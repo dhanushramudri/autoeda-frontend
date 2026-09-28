@@ -17,7 +17,6 @@ import {
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
-import { SubNav } from "@/components/layout/SubNav";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { EmptyState } from "@/components/shared/EmptyState";
 
@@ -1215,7 +1214,6 @@ export default function TimeSeriesPage() {
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-7xl mx-auto">
         <Breadcrumb
           items={[

@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { sourcesApi } from "@/lib/api";
+import { sourcesApi, workspacesApi } from "@/lib/api";
 import {
   Plug, Plus, Search, Trash2, TestTube2, ExternalLink,
-  CheckCircle2, XCircle, Clock, AlertCircle,
+  CheckCircle2, XCircle, Clock, AlertCircle, ShieldCheck, Database, Check,
 } from "lucide-react";
 import Link from "next/link";
 import { ConnectorLogo } from "@/components/shared/ConnectorLogo";
@@ -44,6 +44,85 @@ const TYPE_LABEL: Record<string, string> = {
   databricks: "Databricks",
   fabric: "Microsoft Fabric",
 };
+
+// Kept in sync with app/dataset_storage.py's DESTINATION_CAPABLE_TYPES on the backend.
+const DESTINATION_CAPABLE_TYPES = new Set(["s3", "databricks"]);
+
+function StorageDestinationSection({
+  workspaceId, sources,
+}: { workspaceId: string; sources: DataSource[] }) {
+  const qc = useQueryClient();
+
+  const { data: workspace } = useQuery({
+    queryKey: ["workspace", workspaceId],
+    queryFn: () => workspacesApi.get(workspaceId).then((r) => r.data),
+  });
+
+  const setDestMut = useMutation({
+    mutationFn: (sourceId: number | null) =>
+      workspacesApi.setStorageDestination(workspaceId, sourceId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspace", workspaceId] }),
+  });
+
+  const eligible = sources.filter((s) => DESTINATION_CAPABLE_TYPES.has(s.source_type));
+  const current = workspace?.storage_destination_source_id ?? null;
+  const pendingId = setDestMut.isPending ? (setDestMut.variables ?? undefined) : undefined;
+
+  const optionClass = (active: boolean) =>
+    `flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition ${
+      active
+        ? "border-brand bg-brand/5 text-brand"
+        : "border-border text-muted-foreground hover:border-brand/40 hover:text-foreground"
+    }`;
+
+  return (
+    <div className="px-6 pt-5 pb-4 border-b border-border bg-card flex-shrink-0">
+      <div className="flex items-center gap-2 mb-1">
+        <ShieldCheck className="w-4 h-4 text-brand" />
+        <h2 className="text-sm font-bold text-foreground">Storage Destination</h2>
+      </div>
+      <p className="text-xs text-muted-foreground mb-3 max-w-2xl">
+        By default, files you upload are stored in AutoEDA&apos;s own secure database. If your
+        organization needs data to stay in an environment you control, point new uploads at a
+        source below instead — we won&apos;t keep a copy ourselves. This only affects data
+        uploaded from now on.
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setDestMut.mutate(null)}
+          disabled={setDestMut.isPending}
+          className={optionClass(current === null)}
+        >
+          {current === null ? <Check className="w-3.5 h-3.5" /> : <Database className="w-3.5 h-3.5" />}
+          Default (JMAN-managed)
+        </button>
+        {eligible.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setDestMut.mutate(s.id)}
+            disabled={setDestMut.isPending}
+            className={optionClass(current === s.id)}
+            title={s.description}
+          >
+            {current === s.id ? (
+              <Check className="w-3.5 h-3.5 flex-shrink-0" />
+            ) : (
+              <ConnectorLogo id={s.source_type} className="w-3.5 h-3.5 flex-shrink-0" />
+            )}
+            {s.name}
+            {pendingId === s.id && <span className="opacity-60">…</span>}
+          </button>
+        ))}
+        {eligible.length === 0 && (
+          <p className="text-xs text-muted-foreground italic self-center">
+            Add an Amazon S3 or Databricks source below to enable this. (Snowflake and other
+            destinations are coming soon.)
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function StatusBadge({ status }: { status: string }) {
   if (status === "connected") {
@@ -116,6 +195,8 @@ export default function SourcesPage() {
           Add Source
         </Link>
       </div>
+
+      <StorageDestinationSection workspaceId={workspaceId} sources={sources} />
 
       {/* Search bar */}
       <div className="px-6 py-3 border-b border-border bg-card flex-shrink-0">

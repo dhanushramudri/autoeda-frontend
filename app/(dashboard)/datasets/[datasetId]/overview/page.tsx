@@ -9,7 +9,6 @@ import { QualityGauge } from "@/components/charts/QualityGauge";
 import { StatCard } from "@/components/shared/StatCard";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { SubNav } from "@/components/layout/SubNav";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ColumnDetailPanel } from "@/components/shared/ColumnDetailPanel";
 import {
@@ -120,7 +119,7 @@ export default function DatasetOverviewPage() {
   });
 
   const isLoading = datasetLoading || qualityLoading || profileLoading;
-  if (isLoading) return <><SubNav datasetId={datasetId} /><PageSpinner /></>;
+  if (isLoading) return <PageSpinner />;
   if (!dataset) return <EmptyState title="No data" description="Could not load dataset overview" />;
 
   const memoryMb = profile?.memory_mb ?? 0;
@@ -151,7 +150,6 @@ export default function DatasetOverviewPage() {
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-7xl mx-auto">
         <Breadcrumb
           items={[

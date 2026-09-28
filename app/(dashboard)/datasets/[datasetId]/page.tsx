@@ -9,7 +9,6 @@ import { PageSpinner } from "@/components/shared/LoadingBar";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { StatCard } from "@/components/shared/StatCard";
 import { QualityGauge } from "@/components/charts/QualityGauge";
-import { SubNav } from "@/components/layout/SubNav";
 import {
   Database, Rows, Columns, FileText, ArrowRight,
   BookOpen, Upload, X, Loader2, CheckCircle2, ChevronDown,
@@ -357,7 +356,6 @@ export default function DatasetOverviewPage() {
           onClose={() => setShowExport(false)}
         />
       )}
-      <SubNav datasetId={datasetId} />
       <div className="p-8 max-w-6xl mx-auto">
         <Breadcrumb
           items={[

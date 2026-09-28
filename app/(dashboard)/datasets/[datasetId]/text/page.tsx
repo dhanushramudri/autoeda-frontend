@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
-import { SubNav } from "@/components/layout/SubNav";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { WordCloud } from "@/components/charts/WordCloud";
@@ -205,7 +204,6 @@ export default function TextAnalysisPage() {
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="p-8 max-w-6xl mx-auto">
         <Breadcrumb
           items={[

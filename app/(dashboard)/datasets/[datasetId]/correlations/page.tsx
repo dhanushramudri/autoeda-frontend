@@ -5,7 +5,6 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { SubNav } from "@/components/layout/SubNav";
 import { CorrelationHeatmap, type HeatmapMode } from "@/components/charts/CorrelationHeatmap";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { cn } from "@/lib/utils";
@@ -819,7 +818,6 @@ export default function CorrelationsPage() {
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-full mx-auto">
         <Breadcrumb
           items={[

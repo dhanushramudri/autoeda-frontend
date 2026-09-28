@@ -6,7 +6,6 @@ import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { SubNav } from "@/components/layout/SubNav";
 import { SqlResultsTable } from "@/components/shared/SqlResultsTable";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { Play, Zap, Copy, RotateCcw, ChevronDown, ChevronUp, Code2 } from "lucide-react";
@@ -114,7 +113,6 @@ export default function SqlEditorPage() {
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="flex h-[calc(100vh-104px)] overflow-hidden">
         {/* Schema panel */}
         <div

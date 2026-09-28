@@ -7,7 +7,6 @@ import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { SubNav } from "@/components/layout/SubNav";
 import { ColumnDetailPanel } from "@/components/shared/ColumnDetailPanel";
 import { MissingHeatmap } from "@/components/charts/MissingHeatmap";
 import { DistributionChart } from "@/components/charts/DistributionChart";
@@ -771,12 +770,11 @@ export default function ProfilePage() {
     URL.revokeObjectURL(a.href);
   }, [profileData, dataset]);
 
-  if (isLoading) return <><SubNav datasetId={datasetId} /><PageSpinner /></>;
+  if (isLoading) return <PageSpinner />;
   if (!profileData) return null;
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-full mx-auto">
         <Breadcrumb items={[
           { label: "Workspaces", href: "/workspaces" },

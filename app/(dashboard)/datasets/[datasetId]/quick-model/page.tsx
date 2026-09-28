@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { datasetsApi, jobsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { SubNav } from "@/components/layout/SubNav";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import {
@@ -81,11 +80,10 @@ export default function QuickModelPage() {
   const isFailed = job?.status === "failed";
   const result = job?.result_data;
 
-  if (isLoading) return <><SubNav datasetId={datasetId} /><PageSpinner /></>;
+  if (isLoading) return <PageSpinner />;
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-4xl mx-auto">
         <Breadcrumb items={[{ label: "Datasets", href: "/workspaces" }, { label: "Quick Model" }]} />
 

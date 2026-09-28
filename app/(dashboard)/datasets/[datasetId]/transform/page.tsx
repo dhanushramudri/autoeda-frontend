@@ -6,7 +6,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
 import { PageSpinner } from "@/components/shared/LoadingBar";
-import { SubNav } from "@/components/layout/SubNav";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import {
   Wand2, Download, Trash2, Plus, CheckCircle, Sparkles,
@@ -171,11 +170,10 @@ export default function TransformStudioPage() {
 
 
 
-  if (isLoading) return <><SubNav datasetId={datasetId} /><PageSpinner /></>;
+  if (isLoading) return <PageSpinner />;
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-7xl mx-auto">
         <Breadcrumb
           items={[

@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { SubNav } from "@/components/layout/SubNav";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { Plus, Trash2, Play, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import type { QualityRule, RuleResult, RuleType, ColumnProfile } from "@/types";
@@ -69,7 +68,6 @@ export default function RulesPage() {
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <div>

@@ -40,7 +40,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   // Derive workspaceId from URL or fall back to store
   const workspaceIdFromPath = pathname.match(/\/workspaces\/([^/]+)/)?.[1];
-  const datasetIdFromPath = pathname.match(/\/datasets\/([^/]+)/)?.[1];
 
   const matchesWorkspace = (id: string | number) =>
     workspaces?.some((w: { id: string | number }) => String(w.id) === String(id)) ?? false;
@@ -68,7 +67,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Sidebar
         datasets={datasets ?? []}
         workspaceId={activeWorkspaceId}
-        activeDatasetId={datasetIdFromPath ?? undefined}
       />
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar />

@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { datasetsApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
-import { SubNav } from "@/components/layout/SubNav";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { Save, Trash2, Download } from "lucide-react";
 import {
@@ -166,7 +165,6 @@ export default function ChartsPage() {
 
   return (
     <>
-      <SubNav datasetId={datasetId} />
       <div className="p-6 max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-bold text-foreground">Chart Builder</h1>

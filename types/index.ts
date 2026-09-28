@@ -29,6 +29,7 @@ export interface Workspace {
   member_count: number;
   dataset_count: number;
   workspace_name?: string;
+  storage_destination_source_id: number | null;
 }
 
 // Datasets
