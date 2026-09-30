@@ -247,7 +247,7 @@ export function ChurnResults({ run, workspaceId }: { run: FlowRun; workspaceId: 
       {tab === "Drivers" && (
         <div className="space-y-4">
           {topFeatures.length > 0 && (
-            <Card title="What moves churn risk" subtitle="Drop in AUC when the feature is shuffled, on unseen accounts">
+            <Card title="What moves churn risk" subtitle="Drop in AUC when the feature is shuffled, on unseen accounts · associations, not proof of cause">
               <Table head={["Feature", "Direction", "Impact"]} rows={topFeatures.map((t: any) => [label(t.feature), t.direction, <Bar1 key="b" value={t.importance} max={maxImp} />])} />
             </Card>
           )}
