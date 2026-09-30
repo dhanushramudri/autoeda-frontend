@@ -525,17 +525,17 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
 
   return (
     <div className="grid lg:grid-cols-[210px_1fr] gap-3 items-start">
-      <aside className="bg-card border border-border rounded-xl overflow-hidden lg:sticky lg:top-2">
+      <aside className="bg-card border border-border rounded-xl overflow-x-auto overflow-y-auto lg:max-h-[calc(100vh-1rem)] lg:sticky lg:top-2">
         <div className="px-3 py-2.5 border-b border-border">
           <div className="flex justify-between text-xs mb-1.5"><span className="font-semibold">Flow</span><span className="text-muted-foreground">{finished} of {phases.length}</span></div>
           <div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-brand transition-all duration-500" style={{ width: `${(finished / phases.length) * 100}%` }} /></div>
         </div>
-        <ol>
+        <ol className="min-w-max">
           {phases.map((p, i) => (
             <li key={p.id}>
               <button onClick={() => setPickedPhase(p.id)} className={cn("w-full flex items-center gap-2 px-3 py-2 text-left border-l-2 transition-colors", p.id === phase.id ? "border-brand bg-brand/5" : "border-transparent hover:bg-muted/50")}>
                 <StageIcon s={p.status} />
-                <span className={cn("flex-1 min-w-0 text-sm truncate", p.status === "pending" ? "text-muted-foreground" : "text-foreground font-medium")}>{i + 1}. {p.title}</span>
+                <span className={cn("flex-1 text-sm whitespace-nowrap", p.status === "pending" ? "text-muted-foreground" : "text-foreground font-medium")}>{i + 1}. {p.title}</span>
                 {p.seconds > 0 && <span className="text-[10px] text-muted-foreground">{Math.round(p.seconds)}s</span>}
                 <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground", p.id !== phase.id && "opacity-0")} />
               </button>
