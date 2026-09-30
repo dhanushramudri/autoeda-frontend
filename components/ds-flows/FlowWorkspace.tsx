@@ -31,6 +31,7 @@ export interface FlowRunFull {
   markdown: string | null;
   files: { enriched: boolean; accounts: boolean; dictionary: boolean; model: boolean };
   working_dataset_id?: number | null;
+  auto_eda_run_id?: number | null;
 }
 
 // JMAN palette (hex: SVG chart attributes don't resolve CSS variables reliably)
@@ -159,6 +160,7 @@ function LeakageStep({ r }: any) {
   const data = (r.top_univariate ?? []).slice(0, 14).map((u: any) => ({ name: label(u.feature), v: Math.max(u.auc, 1 - u.auc) }));
   return (
     <div className="space-y-4">
+      {r.probe && <Note>A model on all remaining features reached AUC {r.probe.auc_with.toFixed(2)}, which is implausible for churn. Removed: {r.probe.removed.map((x: any) => label(x.feature)).join(", ")}.</Note>}
       <Grid cols={3}><Kpi title="Features screened" value={String(r.candidate_features)} /><Kpi title="Kept out (leaks)" value={String(r.excluded.length)} pink /><Kpi title="Text columns checked" value={String(r.categorical_checked ?? 0)} /></Grid>
       <Card title="How well each feature alone separates churned from retained" subtitle="Above 0.80 needs a check; above 0.90 is excluded as a leak">
         <Chart h={Math.max(240, data.length * 26)}>
@@ -406,17 +408,24 @@ function ReportStep({ run, dl }: any) {
 // The flow's cleaned modelling table is saved as a hidden dataset; these are the existing AutoEDA pages on it.
 const EMBEDS: Record<string, { label: string; path: string }[]> = {
   understand: [{ label: "Profile", path: "profile" }, { label: "Overview", path: "overview" }],
+  leakage: [{ label: "Feature importance & leakage", path: "feature-importance?target=churned" }],
+  hypotheses: [{ label: "Hypotheses (AI)", path: "@hyp" }],
+  report: [{ label: "Ask Scout", path: "@scout" }],
   eda: [
-    { label: "Analysis", path: "analysis" }, { label: "Distributions", path: "distributions" }, { label: "Correlations", path: "correlations" },
+    { label: "Auto EDA report", path: "@auto" }, { label: "Analysis", path: "analysis" }, { label: "Distributions", path: "distributions" }, { label: "Correlations", path: "correlations" },
     { label: "Missing", path: "missing" }, { label: "Outliers", path: "outliers" }, { label: "Time series", path: "timeseries" },
   ],
   select: [{ label: "Feature importance", path: "feature-importance?target=churned" }],
   explain: [{ label: "Feature importance", path: "feature-importance?target=churned" }],
 };
 
-function Embedded({ datasetId, path }: { datasetId: number; path: string }) {
-  const src = `/datasets/${datasetId}/${path}${path.includes("?") ? "&" : "?"}embed=1`;
-  return <iframe key={src} src={src} title={path} className="w-full rounded-xl border border-border bg-background" style={{ height: "80vh" }} />;
+function Embedded({ datasetId, path, workspaceId }: { datasetId: number; path: string; workspaceId: string }) {
+  // "@auto" = the Auto EDA page (the same agent-written report as the Auto EDA feature), scoped to this flow's table
+  const src = path === "@auto" ? `/workspaces/${workspaceId}/auto-eda?dataset_id=${datasetId}&embed=1`
+    : path === "@hyp" ? `/workspaces/${workspaceId}/hypotheses?dataset_id=${datasetId}&embed=1`
+    : path === "@scout" ? `/workspaces/${workspaceId}/scout?embed=1`
+    : `/datasets/${datasetId}/${path}${path.includes("?") ? "&" : "?"}embed=1`;
+  return <iframe key={src} src={src} title={path} className="w-full rounded-xl border border-border bg-background" style={{ height: "max(640px, calc(100vh - 240px))" }} />;
 }
 
 /* ------------------------------------------------------------------ workspace shell */
@@ -455,7 +464,12 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
   };
 
   const embeds = run.working_dataset_id ? EMBEDS[stage.key] ?? [] : [];
-  const activeEmbed = view.stage === stage.key ? view.path : null;
+  const showEmbeds = embeds.length > 0 && (stage.status === "done" || stage.key === "eda");
+  // the real AutoEDA page is the main content of a step; the flow's own summary is the last tab
+  // (for the board summary the flow's own page stays first and "Ask Scout" is the extra tab)
+  const flowTab = { label: "Flow results", path: null as string | null };
+  const tabs = stage.key === "report" ? [flowTab, ...embeds] : [...embeds, flowTab];
+  const activeEmbed = !showEmbeds ? null : view.stage === stage.key ? view.path : stage.key === "report" ? null : embeds[0].path;
 
   const body = (() => {
     const r = R[stage.key];
@@ -504,9 +518,9 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2">{stage.title}{stage.status !== "done" && <Pill v={stage.status} />}</h2>
           {stage.summary && <p className={cn("text-sm mt-0.5", stage.status === "error" ? "text-red-600" : "text-muted-foreground")}>{stage.summary}</p>}
         </div>
-        {embeds.length > 0 && stage.status === "done" && (
+        {showEmbeds && (
           <div className="flex flex-wrap gap-1.5">
-            {[{ label: "Flow results", path: null as string | null }, ...embeds].map((e) => (
+            {tabs.map((e) => (
               <button key={e.label} onClick={() => setView({ stage: stage.key, path: e.path })}
                 className={cn("px-3 py-1.5 rounded-full text-xs font-medium border transition-colors", activeEmbed === e.path ? "bg-brand text-brand-foreground border-brand" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted")}>
                 {e.label}
@@ -514,7 +528,7 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
             ))}
           </div>
         )}
-        {activeEmbed && run.working_dataset_id && embeds.length > 0 ? <Embedded datasetId={run.working_dataset_id} path={activeEmbed} /> : body ?? (
+        {activeEmbed && run.working_dataset_id && embeds.length > 0 ? <Embedded datasetId={run.working_dataset_id} path={activeEmbed} workspaceId={workspaceId} /> : body ?? (
           <div className="bg-card border border-border rounded-xl p-10 text-center text-sm text-muted-foreground">
             {stage.status === "running" ? <span className="inline-flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Running…</span>
               : stage.status === "pending" ? "Waiting for the earlier steps to finish."
