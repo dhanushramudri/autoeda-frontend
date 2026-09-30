@@ -405,19 +405,6 @@ function ReportStep({ run, dl }: any) {
 }
 
 /* ------------------------------------------------------------------ real AutoEDA pages, embedded */
-// The flow's cleaned modelling table is saved as a hidden dataset; these are the existing AutoEDA pages on it.
-const EMBEDS: Record<string, { label: string; path: string }[]> = {
-  understand: [{ label: "Profile", path: "profile" }, { label: "Overview", path: "overview" }],
-  leakage: [{ label: "Feature importance & leakage", path: "feature-importance?target=churned" }],
-  hypotheses: [{ label: "Hypotheses (AI)", path: "@hyp" }],
-  report: [{ label: "Ask Scout", path: "@scout" }],
-  eda: [
-    { label: "Auto EDA report", path: "@auto" }, { label: "Analysis", path: "analysis" }, { label: "Distributions", path: "distributions" }, { label: "Correlations", path: "correlations" },
-    { label: "Missing", path: "missing" }, { label: "Outliers", path: "outliers" }, { label: "Time series", path: "timeseries" },
-  ],
-  select: [{ label: "Feature importance", path: "feature-importance?target=churned" }],
-  explain: [{ label: "Feature importance", path: "feature-importance?target=churned" }],
-};
 
 function Embedded({ datasetId, path, workspaceId }: { datasetId: number; path: string; workspaceId: string }) {
   // "@auto" = the Auto EDA page (the same agent-written report as the Auto EDA feature), scoped to this flow's table
@@ -437,20 +424,57 @@ function StageIcon({ s }: { s: FlowStage["status"] }) {
   return <Circle className="w-4 h-4 text-muted-foreground/40" />;
 }
 
+/* ------------------------------------------------------------------ the 10 phases of the project
+   The engine keeps finer internal stages (for progress and error handling); the screen groups them into the
+   phases of a standard data-science project. Each real AutoEDA page is embedded once, in the phase it belongs to. */
+type Tab = { label: string; embed?: string; stage?: string };
+type Phase = { id: string; title: string; stages: string[]; embedFirst: boolean; tabs: Tab[] };
+
+const PHASES: Phase[] = [
+  { id: "discover", title: "Discover & link", stages: ["discover"], embedFirst: false, tabs: [{ label: "Overview", stage: "discover" }] },
+  { id: "checks", title: "Data checks", stages: ["understand", "leakage"], embedFirst: true,
+    tabs: [{ label: "Profile", embed: "profile" }, { label: "Overview", embed: "overview" }, { label: "Data summary", stage: "understand" }, { label: "Leakage audit", stage: "leakage" }] },
+  { id: "eda", title: "Explore (EDA)", stages: ["eda"], embedFirst: true,
+    tabs: [{ label: "Auto EDA report", embed: "@auto" }, { label: "Analysis", embed: "analysis" }, { label: "Distributions", embed: "distributions" },
+      { label: "Correlations", embed: "correlations" }, { label: "Missing", embed: "missing" }, { label: "Outliers", embed: "outliers" },
+      { label: "Time series", embed: "timeseries" }, { label: "Flow results", stage: "eda" }] },
+  { id: "hyp", title: "Hypotheses", stages: ["hypotheses"], embedFirst: true, tabs: [{ label: "Hypotheses (AI)", embed: "@hyp" }, { label: "Statistical tests", stage: "hypotheses" }] },
+  { id: "features", title: "Features", stages: ["features", "select"], embedFirst: false, tabs: [{ label: "Feature engineering", stage: "features" }, { label: "Feature selection", stage: "select" }] },
+  { id: "model", title: "Modeling", stages: ["models"], embedFirst: false, tabs: [{ label: "Model comparison", stage: "models" }] },
+  { id: "explain", title: "Explain", stages: ["explain"], embedFirst: true, tabs: [{ label: "Feature importance", embed: "feature-importance?target=churned" }, { label: "Drivers", stage: "explain" }] },
+  { id: "validate", title: "Validate", stages: ["validate"], embedFirst: false, tabs: [{ label: "Checks", stage: "validate" }] },
+  { id: "impact", title: "Business impact", stages: ["value"], embedFirst: false, tabs: [{ label: "Revenue at risk", stage: "value" }] },
+  { id: "deliver", title: "Deliverables", stages: ["build", "report"], embedFirst: false,
+    tabs: [{ label: "Board summary", stage: "report" }, { label: "Files", stage: "build" }, { label: "Ask Scout", embed: "@scout" }] },
+];
+
+function phaseStatus(ss: FlowStage[]): FlowStage["status"] {
+  if (ss.some((s) => s.status === "error")) return "error";
+  if (ss.some((s) => s.status === "running")) return "running";
+  if (ss.every((s) => s.status === "done")) return "done";
+  if (ss.every((s) => s.status === "skipped")) return "skipped";
+  return ss.some((s) => s.status === "done") ? "running" : "pending";
+}
+
 export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspaceId: string }) {
-  const [picked, setPicked] = useState<string | null>(null);
-  const [view, setView] = useState<{ stage: string; path: string | null }>({ stage: "", path: null });
+  const [pickedPhase, setPickedPhase] = useState<string | null>(null);
+  const [pickedTab, setPickedTab] = useState<{ phase: string; label: string } | null>(null);
   const R = run.results ?? {};
   const running = run.status === "pending" || run.status === "running";
-  // follow progress until the user picks a step; when finished, open the board summary
+  const byKey = useMemo(() => Object.fromEntries(run.stages.map((s) => [s.key, s])), [run.stages]);
+
+  const phases = useMemo(() => PHASES.map((p) => {
+    const ss = p.stages.map((k) => byKey[k]).filter(Boolean) as FlowStage[];
+    return { ...p, ss, status: phaseStatus(ss), seconds: ss.reduce((t, s) => t + (s.seconds ?? 0), 0), summary: ss.map((s) => s.summary).filter(Boolean).join(" · ") };
+  }), [byKey]);
+
+  // follow progress until the user picks a phase; when finished, open the deliverables
   const auto = useMemo(() => {
-    if (running) return run.stages.find((s) => s.status === "running")?.key ?? [...run.stages].reverse().find((s) => s.status === "done")?.key ?? run.stages[0]?.key;
-    return run.status === "completed" ? "report" : [...run.stages].reverse().find((s) => s.status === "error")?.key ?? run.stages[0]?.key;
-  }, [running, run.stages, run.status]);
-  const sel = picked ?? auto;
-  useEffect(() => { if (!running && picked === null) return; }, [running, picked]);
-  const stage = run.stages.find((s) => s.key === sel) ?? run.stages[0];
-  const finished = run.stages.filter((s) => ["done", "error", "skipped"].includes(s.status)).length;
+    if (running) return phases.find((p) => p.status === "running")?.id ?? [...phases].reverse().find((p) => p.status === "done")?.id ?? phases[0].id;
+    return run.status === "completed" ? "deliver" : [...phases].reverse().find((p) => p.status === "error")?.id ?? phases[0].id;
+  }, [running, phases, run.status]);
+  const phase = phases.find((p) => p.id === (pickedPhase ?? auto)) ?? phases[0];
+  const finished = phases.filter((p) => ["done", "error", "skipped"].includes(p.status)).length;
 
   const dl = async (kind: string, format: string) => {
     const res = await dsFlowsApi.download(workspaceId, run.id, kind, format);
@@ -463,19 +487,26 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
     URL.revokeObjectURL(url);
   };
 
-  const embeds = run.working_dataset_id ? EMBEDS[stage.key] ?? [] : [];
-  const showEmbeds = embeds.length > 0 && (stage.status === "done" || stage.key === "eda");
-  // the real AutoEDA page is the main content of a step; the flow's own summary is the last tab
-  // (for the board summary the flow's own page stays first and "Ask Scout" is the extra tab)
-  const flowTab = { label: "Flow results", path: null as string | null };
-  const tabs = stage.key === "report" ? [flowTab, ...embeds] : [...embeds, flowTab];
-  const activeEmbed = !showEmbeds ? null : view.stage === stage.key ? view.path : stage.key === "report" ? null : embeds[0].path;
+  // the real pages read the saved working table: available once that phase has finished (the EDA phase shows live)
+  const embedsReady = !!run.working_dataset_id && (phase.status === "done" || phase.id === "eda");
+  const tabs = phase.tabs.filter((t) => !t.embed || embedsReady);
+  const defaultTab = phase.embedFirst && embedsReady ? tabs[0] : tabs.find((t) => t.stage) ?? tabs[0];
+  const activeTab = tabs.find((t) => pickedTab?.phase === phase.id && t.label === pickedTab.label) ?? defaultTab;
 
-  const body = (() => {
-    const r = R[stage.key];
-    if (stage.key === "report") return stage.status === "done" || run.narrative ? <ReportStep run={run} dl={dl} /> : null;
-    if (!r) return null;
-    switch (stage.key) {
+  const stageBody = (key: string) => {
+    const st = byKey[key];
+    const r = R[key];
+    const wait = (
+      <div className="bg-card border border-border rounded-xl p-10 text-center text-sm text-muted-foreground">
+        {st?.status === "running" ? <span className="inline-flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Running…</span>
+          : st?.status === "pending" ? "Waiting for the earlier steps to finish."
+          : st?.status === "skipped" ? "Skipped because an earlier step failed."
+          : st?.status === "error" ? `This step failed. ${st.summary ?? ""}` : "No data for this step."}
+      </div>
+    );
+    if (key === "report") return st?.status === "done" || run.narrative ? <ReportStep run={run} dl={dl} /> : wait;
+    if (!r) return wait;
+    switch (key) {
       case "discover": return <DiscoverStep r={r} />;
       case "understand": return <UnderstandStep r={r} />;
       case "leakage": return <LeakageStep r={r} />;
@@ -488,25 +519,25 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
       case "value": return <ValueStep r={r} h={run.headline ?? R.models?.holdout_metrics ?? {}} />;
       case "validate": return <ValidateStep r={r} />;
       case "build": return <BuildStep r={r} run={run} dl={dl} />;
-      default: return null;
+      default: return wait;
     }
-  })();
+  };
 
   return (
     <div className="grid lg:grid-cols-[210px_1fr] gap-3 items-start">
       <aside className="bg-card border border-border rounded-xl overflow-hidden lg:sticky lg:top-2">
-        <div className="px-4 py-3 border-b border-border">
-          <div className="flex justify-between text-xs mb-1.5"><span className="font-semibold">Flow</span><span className="text-muted-foreground">{finished} of {run.stages.length}</span></div>
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-brand transition-all duration-500" style={{ width: `${(finished / Math.max(run.stages.length, 1)) * 100}%` }} /></div>
+        <div className="px-3 py-2.5 border-b border-border">
+          <div className="flex justify-between text-xs mb-1.5"><span className="font-semibold">Flow</span><span className="text-muted-foreground">{finished} of {phases.length}</span></div>
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-brand transition-all duration-500" style={{ width: `${(finished / phases.length) * 100}%` }} /></div>
         </div>
         <ol>
-          {run.stages.map((s, i) => (
-            <li key={s.key}>
-              <button onClick={() => setPicked(s.key)} className={cn("w-full flex items-center gap-2 px-3 py-2 text-left border-l-2 transition-colors", s.key === sel ? "border-brand bg-brand/5" : "border-transparent hover:bg-muted/50")}>
-                <StageIcon s={s.status} />
-                <span className="flex-1 min-w-0"><span className={cn("block text-sm truncate", s.status === "pending" ? "text-muted-foreground" : "text-foreground font-medium")}>{i + 1}. {s.title}</span></span>
-                {s.seconds != null && <span className="text-[10px] text-muted-foreground">{s.seconds}s</span>}
-                <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground", s.key !== sel && "opacity-0")} />
+          {phases.map((p, i) => (
+            <li key={p.id}>
+              <button onClick={() => setPickedPhase(p.id)} className={cn("w-full flex items-center gap-2 px-3 py-2 text-left border-l-2 transition-colors", p.id === phase.id ? "border-brand bg-brand/5" : "border-transparent hover:bg-muted/50")}>
+                <StageIcon s={p.status} />
+                <span className={cn("flex-1 min-w-0 text-sm truncate", p.status === "pending" ? "text-muted-foreground" : "text-foreground font-medium")}>{i + 1}. {p.title}</span>
+                {p.seconds > 0 && <span className="text-[10px] text-muted-foreground">{Math.round(p.seconds)}s</span>}
+                <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground", p.id !== phase.id && "opacity-0")} />
               </button>
             </li>
           ))}
@@ -515,27 +546,22 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
 
       <section className="min-w-0 space-y-2">
         <div>
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2">{stage.title}{stage.status !== "done" && <Pill v={stage.status} />}</h2>
-          {stage.summary && <p className={cn("text-xs mt-0.5", stage.status === "error" ? "text-red-600" : "text-muted-foreground")}>{stage.summary}</p>}
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">{phase.title}{phase.status !== "done" && <Pill v={phase.status} />}</h2>
+          {phase.summary && <p className={cn("text-xs mt-0.5", phase.status === "error" ? "text-red-600" : "text-muted-foreground")}>{phase.summary}</p>}
         </div>
-        {showEmbeds && (
+        {tabs.length > 1 && (
           <div className="flex flex-wrap gap-1.5">
-            {tabs.map((e) => (
-              <button key={e.label} onClick={() => setView({ stage: stage.key, path: e.path })}
-                className={cn("px-3 py-1.5 rounded-full text-xs font-medium border transition-colors", activeEmbed === e.path ? "bg-brand text-brand-foreground border-brand" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted")}>
-                {e.label}
+            {tabs.map((t) => (
+              <button key={t.label} onClick={() => setPickedTab({ phase: phase.id, label: t.label })}
+                className={cn("px-3 py-1.5 rounded-full text-xs font-medium border transition-colors", activeTab?.label === t.label ? "bg-brand text-brand-foreground border-brand" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted")}>
+                {t.label}
               </button>
             ))}
           </div>
         )}
-        {activeEmbed && run.working_dataset_id && embeds.length > 0 ? <Embedded datasetId={run.working_dataset_id} path={activeEmbed} workspaceId={workspaceId} /> : body ?? (
-          <div className="bg-card border border-border rounded-xl p-10 text-center text-sm text-muted-foreground">
-            {stage.status === "running" ? <span className="inline-flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" />Running…</span>
-              : stage.status === "pending" ? "Waiting for the earlier steps to finish."
-              : stage.status === "skipped" ? "Skipped because an earlier step failed."
-              : stage.status === "error" ? "This step failed. See the message above." : "No data for this step."}
-          </div>
-        )}
+        {activeTab?.embed && run.working_dataset_id
+          ? <Embedded datasetId={run.working_dataset_id} path={activeTab.embed} workspaceId={workspaceId} />
+          : activeTab?.stage ? stageBody(activeTab.stage) : stageBody(phase.stages[0])}
       </section>
     </div>
   );
