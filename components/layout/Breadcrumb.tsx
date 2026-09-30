@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 
 export interface BreadcrumbItem {
@@ -9,6 +10,9 @@ export interface BreadcrumbItem {
 }
 
 export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
+  const [embed, setEmbed] = useState(false);
+  useEffect(() => setEmbed(document.documentElement.dataset.embed === "1"), []);
+  if (embed) return null; // embedded inside a Data Science Flow step
   return (
     <nav className="flex items-center gap-1 text-xs text-muted-foreground">
       {items.map((item, i) => (

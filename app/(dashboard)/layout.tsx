@@ -15,6 +15,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const [isHydrated, setIsHydrated] = useState(false);
+  // ?embed=1 shows just the page (no sidebar / top bar) so it can sit inside a Data Science Flow step
+  const [embed, setEmbed] = useState(false);
   
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
@@ -23,6 +25,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Rehydrate on mount
   useEffect(() => {
     useAuthStore.persist.rehydrate();
+    const isEmbed = new URLSearchParams(window.location.search).get("embed") === "1";
+    if (isEmbed) document.documentElement.dataset.embed = "1";
+    setEmbed(isEmbed);
     setIsHydrated(true);
   }, []);
 
@@ -61,6 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   });
 
   if (!isHydrated || !token) return null;
+  if (embed) return <main className="h-screen overflow-y-auto scrollbar-thin bg-background">{children}</main>;
 
   return (
     <div className="flex overflow-hidden" style={{ height: `calc(100vh - ${PROMO_TICKER_HEIGHT}px)` }}>

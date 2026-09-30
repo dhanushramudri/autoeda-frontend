@@ -6,8 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, History, Loader2, Lock, Play, Trash2, TrendingDown, Workflow } from "lucide-react";
 import { dsFlowsApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { StageTimeline, type FlowStage } from "@/components/ds-flows/StageTimeline";
-import { ChurnResults, type FlowRun } from "@/components/ds-flows/ChurnResults";
+import { FlowWorkspace, type FlowRunFull } from "@/components/ds-flows/FlowWorkspace";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const VERDICT_STYLE: Record<string, string> = {
@@ -62,7 +61,7 @@ export default function DsFlowsPage() {
     refetchInterval: (q) => ((q.state.data as any[] | undefined)?.some((r) => r.status === "pending" || r.status === "running") ? 4000 : false),
   });
 
-  const { data: run } = useQuery<FlowRun & { stages: FlowStage[]; error: string | null }>({
+  const { data: run } = useQuery<FlowRunFull>({
     queryKey: ["ds-flow-run", workspaceId, activeRunId],
     queryFn: () => dsFlowsApi.getRun(workspaceId, activeRunId!),
     enabled: activeRunId != null,
@@ -99,7 +98,7 @@ export default function DsFlowsPage() {
   /* ---------------- run view ---------------- */
   if (activeRunId != null) {
     return (
-      <div className="p-6 max-w-7xl mx-auto space-y-5">
+      <div className="p-6 max-w-[1500px] mx-auto space-y-5">
         <button onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows`)} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-3.5 h-3.5" /> All flows
         </button>
@@ -114,16 +113,7 @@ export default function DsFlowsPage() {
             {run.status === "error" && run.error && (
               <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">{run.error}</div>
             )}
-            {(running || run.status === "error" || !run.headline) && <StageTimeline stages={run.stages} />}
-            {run.status === "completed" && run.headline && (
-              <>
-                <ChurnResults run={run} workspaceId={workspaceId} />
-                <details className="bg-card border border-border rounded-xl">
-                  <summary className="px-4 py-3 text-xs font-semibold text-foreground cursor-pointer">Stage log</summary>
-                  <div className="p-3 pt-0"><StageTimeline stages={run.stages} compact /></div>
-                </details>
-              </>
-            )}
+            <FlowWorkspace run={run} workspaceId={workspaceId} />
           </>
         )}
       </div>
