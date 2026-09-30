@@ -391,7 +391,7 @@ export function ChurnResults({ run, workspaceId }: { run: FlowRun; workspaceId: 
               {run.files.enriched && <DlBtn icon={<FileSpreadsheet className="w-3.5 h-3.5" />} text="Enriched (.xlsx)" onClick={() => download("enriched", "xlsx")} />}
               {run.files.accounts && <DlBtn icon={<Users className="w-3.5 h-3.5" />} text="One row per account" onClick={() => download("accounts", "csv")} />}
               {run.files.dictionary && <DlBtn icon={<FileText className="w-3.5 h-3.5" />} text="Data dictionary" onClick={() => download("dictionary", "csv")} />}
-              {run.markdown && <DlBtn icon={<FileText className="w-3.5 h-3.5" />} text="Board report (.docx)" onClick={() => download("report", "docx")} />}
+              {run.markdown && <DlBtn icon={<FileText className="w-3.5 h-3.5" />} text="Report (.docx)" onClick={() => download("report", "docx")} />}
               {run.files.model && <DlBtn icon={<Download className="w-3.5 h-3.5" />} text="Model (.joblib)" onClick={() => download("model", "csv")} />}
             </div>
             <div className={cn("mt-4 text-xs rounded-lg px-3 py-2 flex items-center gap-2", r.build.integrity.ok ? "bg-brand/10 text-brand" : "bg-red-50 text-red-700")}>

@@ -396,7 +396,7 @@ function ReportStep({ run, dl }: any) {
       {bullets.length > 0 && <Card title="Summary"><ul className="space-y-1.5">{bullets.map((b, i) => <li key={i} className="flex gap-2.5 text-sm"><span className="mt-2 w-1.5 h-1.5 rounded-full bg-brand flex-shrink-0" />{b}</li>)}</ul>{flags.map((c, i) => <div key={i} className="mt-3"><Note>{c}</Note></div>)}</Card>}
       {nar?.actions?.length > 0 && <Card title="Recommended actions"><ul className="space-y-2">{nar.actions.map((a: any, i: number) => <li key={i} className="text-sm"><span className="font-semibold">{a.driver}</span><span className="text-muted-foreground"> — {a.action}</span></li>)}</ul></Card>}
       {run.markdown && (
-        <Card title="Board report" right={<DlBtn icon={<FileText className="w-3.5 h-3.5" />} text="Download (.docx)" onClick={() => dl("report", "docx")} />}>
+        <Card title="Report" right={<DlBtn icon={<FileText className="w-3.5 h-3.5" />} text="Download (.docx)" onClick={() => dl("report", "docx")} />}>
           <details><summary className="text-xs text-brand cursor-pointer">Read the full report</summary><div className="mt-3"><Markdown content={run.markdown} /></div></details>
         </Card>
       )}
@@ -445,7 +445,7 @@ const PHASES: Phase[] = [
   { id: "validate", title: "Validate", stages: ["validate"], embedFirst: false, tabs: [{ label: "Checks", stage: "validate" }] },
   { id: "impact", title: "Business impact", stages: ["value"], embedFirst: false, tabs: [{ label: "Revenue at risk", stage: "value" }] },
   { id: "deliver", title: "Deliverables", stages: ["build", "report"], embedFirst: false,
-    tabs: [{ label: "Board summary", stage: "report" }, { label: "Files", stage: "build" }, { label: "Ask Scout", embed: "@scout" }] },
+    tabs: [{ label: "Summary", stage: "report" }, { label: "Files", stage: "build" }, { label: "Ask Scout", embed: "@scout" }] },
 ];
 
 function phaseStatus(ss: FlowStage[]): FlowStage["status"] {

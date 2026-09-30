@@ -132,13 +132,13 @@ export default function DsFlowsPage() {
   return (
     <div className="px-3 py-3 space-y-3 min-w-0 overflow-x-hidden">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2"><Workflow className="w-5 h-5 text-brand" /><h1 className="text-xl font-bold text-foreground">Data Science Flows</h1></div>
+        <div className="flex items-center gap-2"><Workflow className="w-5 h-5 text-brand" /><h1 className="text-xl font-bold text-foreground">Solutions</h1></div>
         <div className="flex items-center gap-3">
           {startError && <span className="text-xs text-red-600">{startError}</span>}
           <button disabled={!plan?.runnable || startMutation.isPending} onClick={() => startMutation.mutate()}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand text-brand-foreground disabled:opacity-50 hover:opacity-90">
             {startMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            Run churn analysis
+            Run analysis
           </button>
         </div>
       </div>
