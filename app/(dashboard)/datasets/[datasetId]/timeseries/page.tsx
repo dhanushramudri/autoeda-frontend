@@ -1115,34 +1115,19 @@ export default function TimeSeriesPage() {
     queryFn: () => datasetsApi.get(datasetId).then(r => r.data),
   });
 
-  const { data: profile } = useQuery({
-    queryKey: queryKeys.eda.profile(datasetId),
-    queryFn: () => datasetsApi.getProfile(datasetId).then(r => r.data),
+  // Content-based detection on the server: string dates and continuous high-cardinality
+  // numerics (e.g. revenue, which the profiler labels "id_like") must both be selectable.
+  const { data: tsColumns, isLoading: colsLoading } = useQuery({
+    queryKey: ["eda", "timeseries-columns", datasetId],
+    queryFn: () => datasetsApi.getTimeSeriesColumns(datasetId).then(r => r.data),
+    staleTime: 10 * 60 * 1000,
   });
 
-  const datetimeCols =
-    profile?.columns
-      ?.filter((c: any) => {
-        const name = c?.name?.toLowerCase?.() ?? "";
-        return (
-          c?.semantic_type === "datetime" ||
-          c?.dtype?.toLowerCase?.()?.includes("datetime") ||
-          c?.dtype?.toLowerCase?.()?.includes("date") ||
-          name.includes("date") ||
-          name.includes("time") ||
-          name.includes("timestamp")
-        );
-      })
-      .map((c: any) => c?.name)
-      .filter(Boolean) ?? [];
+  const datetimeCols: string[] = (tsColumns?.time_columns ?? []).map((c: any) => c.name);
+  const numericCols: string[] = (tsColumns?.value_columns ?? []).map((c: any) => c.name);
 
-  const numericCols: string[] = profile?.columns
-    ?.filter((c: any) => c?.semantic_type === "numeric")
-    .map((c: any) => c?.name)
-    .filter(Boolean) ?? [];
-
-  const timeCol = searchParams.get("time_col") ?? datetimeCols[0] ?? "";
-  const valueCol = searchParams.get("value_col") ?? numericCols[0] ?? "";
+  const timeCol = searchParams.get("time_col") || tsColumns?.recommended?.time_col || "";
+  const valueCol = searchParams.get("value_col") || tsColumns?.recommended?.value_col || "";
 
   const { data: initialData, isLoading, isError, refetch } = useQuery<TSData>({
     queryKey: queryKeys.eda.timeseries(datasetId, timeCol, valueCol),
@@ -1237,11 +1222,13 @@ export default function TimeSeriesPage() {
           )}
         </div>
 
-        {datetimeCols.length === 0 ? (
+        {colsLoading ? (
+          <PageSpinner />
+        ) : datetimeCols.length === 0 ? (
           <EmptyState
             icon={<TrendingUp className="w-12 h-12" />}
             title="No datetime columns"
-            description="This dataset has no datetime columns for time series analysis."
+            description="No column in this dataset could be parsed as dates (datetime, date strings, year or year-month)."
           />
         ) : (
           <>

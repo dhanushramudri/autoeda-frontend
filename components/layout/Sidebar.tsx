@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Database,
   Sliders, ChevronDown, LogOut, Settings, Users,
   Plug, Warehouse, ChevronLeft, MessageSquarePlus,
-  HelpCircle, ChevronUp, FlaskConical, Microscope, Cpu,
+  HelpCircle, ChevronUp, FlaskConical, Microscope, Cpu, Workflow,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Dataset } from "@/types";
@@ -25,6 +25,7 @@ const WORKSPACE_LINKS = [
   { label: "Warehouse",    href: "/warehouse",  icon: Warehouse },
   { label: "Data Sources", href: "/sources",    icon: Plug },
   { label: "Members",      href: "/members",    icon: Users },
+  { label: "DS Flows",     href: "/ds-flows",   icon: Workflow },
 ];
 
 // -- Animated SVG background (rose-pink data motifs) ----------------------------
@@ -396,12 +397,12 @@ export function Sidebar({ datasets = [], workspaceId }: SidebarProps) {
                             <>
                               <Icon className="w-3.5 h-3.5 flex-shrink-0" />
                               {sidebarOpen && <span>{link.label}</span>}
-                              {sidebarOpen && link.label === "Auto EDA" && (
+                              {sidebarOpen && (link.label === "Auto EDA" || link.label === "DS Flows") && (
                                 <span
                                   className="text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full flex-shrink-0"
                                   style={{ color: "#ff6196", backgroundColor: "rgba(255, 97, 150, 0.12)" }}
                                 >
-                                  Beta
+                                  {link.label === "DS Flows" ? "New" : "Beta"}
                                 </span>
                               )}
                             </>

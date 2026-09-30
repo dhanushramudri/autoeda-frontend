@@ -304,6 +304,8 @@ export const datasetsApi = {
 
   getTimeSeries: (datasetId: string, time_col: string, value_col: string, methods?: string) =>
     api.get(`/datasets/${datasetId}/timeseries`, { params: { time_col, value_col, methods } }),
+  getTimeSeriesColumns: (datasetId: string) =>
+    api.get(`/datasets/${datasetId}/timeseries-columns`),
   getText: (datasetId: string, column: string) =>
     api.get(`/datasets/${datasetId}/text`, { params: { column } }),
   getQualityScore: (datasetId: string) =>
@@ -748,4 +750,22 @@ export const experimentsApi = {
   downloadArtifact: (experimentId: number, runId: number) =>
     api.get(`/experiments/${experimentId}/runs/${runId}/download`, { responseType: "blob" }),
   downloadAgent: () => api.get(`/agent/download`, { responseType: "blob" }),
+};
+
+
+// Data Science Flows (churn today; other offerings plug into the same engine)
+export const dsFlowsApi = {
+  catalog: (workspaceId: string) => api.get(`/workspaces/${workspaceId}/ds-flows/catalog`).then((r) => r.data),
+  scan: (workspaceId: string) =>
+    api.post(`/workspaces/${workspaceId}/ds-flows/scan`, undefined, { timeout: 300000 }).then((r) => r.data),
+  listRuns: (workspaceId: string, datasetId?: number) =>
+    api.get(`/workspaces/${workspaceId}/ds-flows/runs`, { params: datasetId ? { dataset_id: datasetId } : undefined }).then((r) => r.data),
+  getRun: (workspaceId: string, runId: number) =>
+    api.get(`/workspaces/${workspaceId}/ds-flows/runs/${runId}`).then((r) => r.data),
+  // Zero configuration: the server discovers the outcome, key, date, revenue and table links itself.
+  startRun: (workspaceId: string, flowKey: string = "churn") =>
+    api.post(`/workspaces/${workspaceId}/ds-flows/runs`, { flow_key: flowKey }).then((r) => r.data as { run_id: number }),
+  deleteRun: (workspaceId: string, runId: number) => api.delete(`/workspaces/${workspaceId}/ds-flows/runs/${runId}`),
+  download: (workspaceId: string, runId: number, kind: string, format: string) =>
+    api.get(`/workspaces/${workspaceId}/ds-flows/runs/${runId}/download`, { params: { kind, format }, responseType: "blob" }),
 };
