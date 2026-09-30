@@ -282,3 +282,12 @@
 
 .mascot-antenna-color { stroke: #7C3AED; transition: stroke 0.5s linear; }
 .mascot-hover:hover .mascot-antenna-color { stroke: #EC4899; transition-delay: 1.3s; }
+
+
+/* Pages embedded in a Data Science Flow step (?embed=1): fill the frame, no centred max-width, tighter padding */
+html[data-embed="1"] .max-w-7xl,
+html[data-embed="1"] .max-w-6xl,
+html[data-embed="1"] .max-w-5xl,
+html[data-embed="1"] .max-w-4xl { max-width: none !important; margin-left: 0 !important; margin-right: 0 !important; }
+html[data-embed="1"] .p-6 { padding: 10px !important; }
+html[data-embed="1"] .px-6 { padding-left: 10px !important; padding-right: 10px !important; }

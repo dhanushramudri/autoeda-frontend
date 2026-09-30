@@ -425,7 +425,7 @@ function Embedded({ datasetId, path, workspaceId }: { datasetId: number; path: s
     : path === "@hyp" ? `/workspaces/${workspaceId}/hypotheses?dataset_id=${datasetId}&embed=1`
     : path === "@scout" ? `/workspaces/${workspaceId}/scout?embed=1`
     : `/datasets/${datasetId}/${path}${path.includes("?") ? "&" : "?"}embed=1`;
-  return <iframe key={src} src={src} title={path} className="w-full rounded-xl border border-border bg-background" style={{ height: "max(640px, calc(100vh - 240px))" }} />;
+  return <iframe key={src} src={src} title={path} className="w-full rounded-xl border border-border bg-background" style={{ height: "max(600px, calc(100vh - 130px))" }} />;
 }
 
 /* ------------------------------------------------------------------ workspace shell */
@@ -493,8 +493,8 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
   })();
 
   return (
-    <div className="grid lg:grid-cols-[290px_1fr] gap-5 items-start">
-      <aside className="bg-card border border-border rounded-xl overflow-hidden lg:sticky lg:top-4">
+    <div className="grid lg:grid-cols-[210px_1fr] gap-3 items-start">
+      <aside className="bg-card border border-border rounded-xl overflow-hidden lg:sticky lg:top-2">
         <div className="px-4 py-3 border-b border-border">
           <div className="flex justify-between text-xs mb-1.5"><span className="font-semibold">Flow</span><span className="text-muted-foreground">{finished} of {run.stages.length}</span></div>
           <div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-brand transition-all duration-500" style={{ width: `${(finished / Math.max(run.stages.length, 1)) * 100}%` }} /></div>
@@ -502,7 +502,7 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
         <ol>
           {run.stages.map((s, i) => (
             <li key={s.key}>
-              <button onClick={() => setPicked(s.key)} className={cn("w-full flex items-center gap-2.5 px-4 py-2.5 text-left border-l-2 transition-colors", s.key === sel ? "border-brand bg-brand/5" : "border-transparent hover:bg-muted/50")}>
+              <button onClick={() => setPicked(s.key)} className={cn("w-full flex items-center gap-2 px-3 py-2 text-left border-l-2 transition-colors", s.key === sel ? "border-brand bg-brand/5" : "border-transparent hover:bg-muted/50")}>
                 <StageIcon s={s.status} />
                 <span className="flex-1 min-w-0"><span className={cn("block text-sm truncate", s.status === "pending" ? "text-muted-foreground" : "text-foreground font-medium")}>{i + 1}. {s.title}</span></span>
                 {s.seconds != null && <span className="text-[10px] text-muted-foreground">{s.seconds}s</span>}
@@ -513,10 +513,10 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
         </ol>
       </aside>
 
-      <section className="min-w-0 space-y-4">
+      <section className="min-w-0 space-y-2">
         <div>
-          <h2 className="text-lg font-bold text-foreground flex items-center gap-2">{stage.title}{stage.status !== "done" && <Pill v={stage.status} />}</h2>
-          {stage.summary && <p className={cn("text-sm mt-0.5", stage.status === "error" ? "text-red-600" : "text-muted-foreground")}>{stage.summary}</p>}
+          <h2 className="text-base font-bold text-foreground flex items-center gap-2">{stage.title}{stage.status !== "done" && <Pill v={stage.status} />}</h2>
+          {stage.summary && <p className={cn("text-xs mt-0.5", stage.status === "error" ? "text-red-600" : "text-muted-foreground")}>{stage.summary}</p>}
         </div>
         {showEmbeds && (
           <div className="flex flex-wrap gap-1.5">

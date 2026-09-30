@@ -98,7 +98,7 @@ export default function DsFlowsPage() {
   /* ---------------- run view ---------------- */
   if (activeRunId != null) {
     return (
-      <div className="p-6 max-w-[1500px] mx-auto space-y-5">
+      <div className="px-3 py-2 space-y-2">
         <button onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows`)} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-3.5 h-3.5" /> All flows
         </button>
@@ -107,7 +107,7 @@ export default function DsFlowsPage() {
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-foreground">{run.title}</h1>
+              <h1 className="text-base font-bold text-foreground">{run.title}</h1>
               <StatusPill status={run.status} />
             </div>
             {run.status === "error" && run.error && (
