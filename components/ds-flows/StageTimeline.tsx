@@ -15,7 +15,7 @@ export interface FlowStage {
 
 function StageIcon({ status }: { status: FlowStage["status"] }) {
   if (status === "running") return <Loader2 className="w-4 h-4 text-brand animate-spin" />;
-  if (status === "done") return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
+  if (status === "done") return <CheckCircle2 className="w-4 h-4 text-brand" />;
   if (status === "error") return <XCircle className="w-4 h-4 text-red-500" />;
   if (status === "skipped") return <MinusCircle className="w-4 h-4 text-muted-foreground/50" />;
   return <Circle className="w-4 h-4 text-muted-foreground/40" />;

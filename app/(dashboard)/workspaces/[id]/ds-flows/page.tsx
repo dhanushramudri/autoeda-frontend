@@ -11,8 +11,8 @@ import { ChurnResults, type FlowRun } from "@/components/ds-flows/ChurnResults";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const VERDICT_STYLE: Record<string, string> = {
-  strong: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
-  possible: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+  strong: "bg-brand/10 text-brand",
+  possible: "bg-[#ff6196]/10 text-[#d6336c]",
   weak: "bg-muted text-muted-foreground",
   not_detected: "bg-muted text-muted-foreground",
 };
@@ -32,7 +32,7 @@ function errMsg(e: any, fallback: string): string {
 
 function StatusPill({ status }: { status: string }) {
   const cls =
-    status === "completed" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+    status === "completed" ? "bg-brand/10 text-brand"
     : status === "error" ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
     : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400";
   return <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase", cls)}>{status}</span>;
@@ -180,7 +180,7 @@ export default function DsFlowsPage() {
                 {churnFit?.signals?.[0] && <li className="text-xs text-muted-foreground">{churnFit.signals[0]}</li>}
               </ul>
             ) : (
-              <p className="text-sm text-amber-600">{plan.reason ?? "Churn analysis needs a churn outcome in at least one dataset."}</p>
+              <p className="text-sm text-[#d6336c]">{plan.reason ?? "Churn analysis needs a churn outcome in at least one dataset."}</p>
             )}
 
             {startError && <p className="text-xs text-red-600">{startError}</p>}
