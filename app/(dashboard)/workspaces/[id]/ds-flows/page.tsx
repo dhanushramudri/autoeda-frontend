@@ -123,12 +123,14 @@ export default function DsFlowsPage() {
   /* ---------------- start view ---------------- */
   const label = plan?.label;
   const tables: any[] = plan?.tables ?? [];
+  const sigText: string = plan?.flows?.find((f: any) => f.key === "churn")?.feasibility?.signals?.[0] ?? "";
+  const fromText = (w: string) => { const m = sigText.match(new RegExp("([\\d,]+) " + w)); return m ? Number(m[1].replace(/,/g, "")) : undefined; };
+  const counts = label?.counts ?? { churned: fromText("churned"), retained: fromText("retained"), open: fromText("still open") };
   const planErrorMsg = planError ? errMsg(planError, "Could not analyse the datasets") : undefined;
-  const PHASE_NAMES = ["Discover & link", "Data checks", "Explore (EDA)", "Hypotheses", "Features", "Modeling", "Explain", "Validate", "Business impact", "Deliverables"];
   const ROLE_STYLE: Record<string, string> = { base: "bg-brand/10 text-brand", events: "bg-[#ff6196]/10 text-[#d6336c]", dictionary: "bg-muted text-muted-foreground", other: "bg-muted text-muted-foreground" };
 
   return (
-    <div className="px-3 py-3 space-y-3">
+    <div className="px-3 py-3 space-y-3 min-w-0 overflow-x-hidden">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2"><Workflow className="w-5 h-5 text-brand" /><h1 className="text-xl font-bold text-foreground">Data Science Flows</h1></div>
         <div className="flex items-center gap-3">
@@ -157,23 +159,24 @@ export default function DsFlowsPage() {
                     {!available && <Lock className="w-3.5 h-3.5 text-muted-foreground" />}
                   </div>
                   <div className="mt-2 flex items-center gap-2">
-                    <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold", available ? "bg-white/20" : VERDICT_STYLE[f.feasibility.verdict])}>{VERDICT_LABEL[f.feasibility.verdict]}</span>
-                    {!available && <span className="text-[10px] text-muted-foreground">coming soon</span>}
+                    {available
+                      ? <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20">{VERDICT_LABEL[f.feasibility.verdict]}</span>
+                      : <span className="text-[11px] text-muted-foreground">Coming soon</span>}
                   </div>
                 </div>
               );
             })}
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-3">
+          <div className="grid lg:grid-cols-2 gap-3">
             <div className="bg-card border border-border rounded-xl p-4">
               <h2 className="text-sm font-semibold text-foreground mb-3">Outcome found</h2>
               {plan.runnable && label ? (
                 <>
                   <div className="text-xs text-muted-foreground mb-3"><span className="font-medium text-foreground">{label.column}</span> in <span className="font-medium text-foreground">{plan.base_table}</span></div>
                   <div className="grid grid-cols-3 gap-2">
-                    {[["Churned", label.counts?.churned, "text-[#ff6196]"], ["Retained", label.counts?.retained, "text-foreground"], ["Open", label.counts?.open, "text-brand"]].map(([t, v, c]: any) => (
-                      <div key={t} className="rounded-lg bg-muted/60 p-2.5"><div className="text-[10px] uppercase tracking-wide text-muted-foreground">{t}</div><div className={cn("text-lg font-bold", c)}>{(v ?? 0).toLocaleString()}</div></div>
+                    {[["Churned", counts.churned, "text-[#ff6196]"], ["Retained", counts.retained, "text-foreground"], ["Open", counts.open, "text-brand"]].map(([t, v, c]: any) => (
+                      <div key={t} className="rounded-lg bg-muted/60 p-2.5"><div className="text-[10px] uppercase tracking-wide text-muted-foreground">{t}</div><div className={cn("text-lg font-bold", c)}>{v == null ? "—" : Number(v).toLocaleString()}</div></div>
                     ))}
                   </div>
                 </>
@@ -193,12 +196,6 @@ export default function DsFlowsPage() {
               </ul>
             </div>
 
-            <div className="bg-card border border-border rounded-xl p-4">
-              <h2 className="text-sm font-semibold text-foreground mb-3">The run covers</h2>
-              <div className="flex flex-wrap gap-1.5">
-                {PHASE_NAMES.map((n, i) => <span key={n} className="px-2.5 py-1 rounded-full bg-muted/70 text-xs text-foreground"><span className="text-brand font-semibold">{i + 1}</span> {n}</span>)}
-              </div>
-            </div>
           </div>
         </>
       )}
