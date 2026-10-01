@@ -61,7 +61,7 @@ export default function DsFlowsPage() {
   const [runViewError, setRunViewError] = useState<string | null>(null);
   // finished runs open on the executive dashboard; "Analysis" is the full technical workspace
   const [viewPick, setViewPick] = useState<"dashboard" | "analysis" | null>(null);
-  useEffect(() => setViewPick(null), [activeRunId]);
+  useEffect(() => { setViewPick(null); setIsLaunching(false); setRunViewError(null); }, [activeRunId]);
   const { startTour } = useTour();
   const userId = useAuthStore((s) => s.user?.id);
 
@@ -183,10 +183,11 @@ export default function DsFlowsPage() {
       setIsLaunching(true);
       try {
         const d = await dsFlowsApi.startRun(workspaceId, run.flow_key);
-        qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
+        // Navigate first so the new run's query fires immediately, then invalidate the list
         router.replace(`/workspaces/${workspaceId}/ds-flows?run=${d.run_id}`);
+        qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
       } catch (e: any) {
-        setRunViewError(errMsg(e, "Could not start a new run"));
+        setRunViewError(errMsg(e, "Could not start a new run — please try again"));
         setIsLaunching(false);
       }
     };
@@ -364,8 +365,8 @@ export default function DsFlowsPage() {
                 {/* Watermark icon */}
                 <Icon className={cn("absolute -bottom-3 -right-3 w-20 h-20 opacity-[0.08]", cfg.watermarkColor)} strokeWidth={1.5} />
 
-                {/* Selection checkbox — available flows only, only when no runs */}
-                {available && flowRuns.length === 0 && (
+                {/* Selection checkbox — available flows only */}
+                {available && (
                   <div
                     onClick={e => { e.stopPropagation(); toggleFlow(f.key); }}
                     className={cn(
@@ -458,9 +459,14 @@ export default function DsFlowsPage() {
               </>
             );
 
-            // Cards with runs are plain divs — each run row handles navigation individually
+            // Cards with runs: clicking the card body navigates to the latest run; run rows handle their own nav
             return flowRuns.length > 0 ? (
-              <div key={f.key} className={sharedClass} style={{ animationDelay: `${i * 60}ms` }}>
+              <div
+                key={f.key}
+                onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows?run=${flowRuns[0].id}`)}
+                className={cn(sharedClass, "cursor-pointer")}
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
                 {cardTop}
               </div>
             ) : available ? (
