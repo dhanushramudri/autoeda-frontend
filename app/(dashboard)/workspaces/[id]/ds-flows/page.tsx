@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, Loader2, Lock, Play, TrendingDown } from "lucide-react";
+import { ArrowLeft, BarChart3, CheckCircle2, DollarSign, Loader2, Lock, Play, TrendingDown, TrendingUp, Zap, type LucideIcon } from "lucide-react";
+
 import { dsFlowsApi } from "@/lib/api";
 import { useTour } from "@/hooks/useTourContext";
 import { solutionsTour } from "@/lib/tourSteps";
@@ -13,13 +14,16 @@ import { FlowWorkspace, type FlowRunFull } from "@/components/ds-flows/FlowWorks
 import { ChurnDashboard } from "@/components/ds-flows/ChurnDashboard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const VERDICT_STYLE: Record<string, string> = {
-  strong: "bg-brand/10 text-brand",
-  possible: "bg-[#ff6196]/10 text-[#C30D5C]",
-  weak: "bg-muted text-muted-foreground",
-  not_detected: "bg-muted text-muted-foreground",
+const VERDICT_LABEL: Record<string, string> = { strong: "Strong fit", possible: "Possible fit", weak: "Weak fit", not_detected: "Not detected" };
+
+type FlowConfig = { icon: LucideIcon; gradient: string; iconGradient: string; glow: string; watermarkColor: string };
+const FLOW_CONFIG: Record<string, FlowConfig> = {
+  churn:           { icon: TrendingDown, gradient: "from-rose-50 via-pink-50 to-fuchsia-50 border-rose-200",     iconGradient: "from-rose-500 to-pink-600",     glow: "shadow-rose-200",    watermarkColor: "text-rose-300" },
+  revenue_growth:  { icon: TrendingUp,   gradient: "from-emerald-50 via-green-50 to-teal-50 border-emerald-200", iconGradient: "from-emerald-500 to-teal-600",  glow: "shadow-emerald-200", watermarkColor: "text-emerald-300" },
+  forecasting:     { icon: BarChart3,    gradient: "from-blue-50 via-sky-50 to-indigo-50 border-blue-200",       iconGradient: "from-blue-500 to-indigo-600",   glow: "shadow-blue-200",    watermarkColor: "text-blue-300" },
+  pricing:         { icon: DollarSign,   gradient: "from-amber-50 via-yellow-50 to-orange-50 border-amber-200",  iconGradient: "from-amber-400 to-orange-500",  glow: "shadow-amber-200",   watermarkColor: "text-amber-300" },
+  efficiency_cost: { icon: Zap,          gradient: "from-violet-50 via-purple-50 to-indigo-50 border-violet-200",iconGradient: "from-violet-500 to-purple-600", glow: "shadow-violet-200",  watermarkColor: "text-violet-300" },
 };
-const VERDICT_LABEL: Record<string, string> = { strong: "Strong fit", possible: "Possible fit", weak: "Weak fit", not_detected: "No fit" };
 
 // FastAPI returns `detail` as a string for our errors but as an array of {type, loc, msg, input} for validation
 // errors (422) — never render it raw.
@@ -149,14 +153,6 @@ export default function DsFlowsPage() {
   /* ---------------- start view ---------------- */
   const planErrorMsg = planError ? errMsg(planError, "Could not analyse the datasets") : undefined;
 
-  // Last completed run per flow key (for inline card summary)
-  const lastRunByFlow: Record<string, any> = {};
-  (runs ?? []).forEach((r: any) => {
-    if (!lastRunByFlow[r.flow_key] || new Date(r.created_at) > new Date(lastRunByFlow[r.flow_key].created_at)) {
-      lastRunByFlow[r.flow_key] = r;
-    }
-  });
-
   return (
     <div className="px-6 py-6 space-y-6 min-w-0 overflow-x-hidden max-w-5xl mx-auto">
       {/* Header */}
@@ -183,9 +179,9 @@ export default function DsFlowsPage() {
 
       {/* Cards */}
       {planLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-5 animate-pulse h-32" />
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 animate-pulse h-36" />
           ))}
         </div>
       ) : planError || !plan ? (
@@ -193,86 +189,52 @@ export default function DsFlowsPage() {
           {planErrorMsg ?? "Could not analyse the datasets."}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {plan.flows.map((f: any) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {plan.flows.map((f: any, i: number) => {
             const available = f.status === "available";
             const verdict: string = f.feasibility?.verdict ?? "";
-            const lastRun = lastRunByFlow[f.key];
-            const h = lastRun?.headline ?? {};
-            const hasResult = lastRun?.status === "completed" && h.roc_auc != null;
-            const isActive = lastRun?.status === "running" || lastRun?.status === "pending";
+            const cfg: FlowConfig = FLOW_CONFIG[f.key] ?? FLOW_CONFIG.churn;
+            const Icon = cfg.icon;
 
             return (
               <div
                 key={f.key}
                 className={cn(
-                  "rounded-2xl border p-5 flex flex-col gap-4 transition-shadow",
+                  "relative overflow-hidden rounded-2xl border p-5 flex flex-col gap-3",
+                  "transition-all duration-300 hover:-translate-y-1",
                   available
-                    ? "bg-card border-brand/40 shadow-sm"
-                    : "bg-card border-border opacity-60"
+                    ? `bg-gradient-to-br ${cfg.gradient} shadow-md hover:shadow-lg ${cfg.glow}`
+                    : "bg-card border-border opacity-50 grayscale"
                 )}
+                style={{ animationDelay: `${i * 60}ms` }}
               >
-                {/* Top row */}
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      {available ? (
-                        <span className="w-2 h-2 rounded-full bg-brand flex-shrink-0" />
-                      ) : (
-                        <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                      )}
-                      <span className="text-base font-semibold text-foreground">{f.category}</span>
-                    </div>
-                    {available ? (
-                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", VERDICT_STYLE[verdict] ?? VERDICT_STYLE.weak)}>
-                        {VERDICT_LABEL[verdict] ?? verdict}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Coming soon</span>
-                    )}
-                  </div>
-                  {available && (
-                    <span className="w-8 h-8 rounded-xl bg-brand/10 flex items-center justify-center flex-shrink-0">
-                      <TrendingDown className="w-4 h-4 text-brand" />
-                    </span>
-                  )}
+                {/* Watermark icon */}
+                <Icon className={cn("absolute -bottom-3 -right-3 w-20 h-20 opacity-[0.08]", cfg.watermarkColor)} strokeWidth={1.5} />
+
+                {/* Icon badge */}
+                <div className={cn(
+                  "w-11 h-11 rounded-2xl flex items-center justify-center shadow-sm",
+                  available ? `bg-gradient-to-br ${cfg.iconGradient}` : "bg-muted"
+                )}>
+                  {available
+                    ? <Icon className="w-5 h-5 text-white" strokeWidth={2} />
+                    : <Lock className="w-4 h-4 text-muted-foreground" />}
                 </div>
 
-                {/* Run result inline */}
-                {available && (
-                  <div className="border-t border-border pt-3">
-                    {isActive && (
-                      <div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-1">
-                          <div className="h-full bg-brand transition-all" style={{ width: `${(lastRun.progress.done / Math.max(lastRun.progress.total, 1)) * 100}%` }} />
-                        </div>
-                        <span className="text-[11px] text-muted-foreground">Running…</span>
-                      </div>
-                    )}
-                    {hasResult && (
-                      <button
-                        onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows?run=${lastRun.id}`)}
-                        className="group w-full flex items-center justify-between text-left"
-                      >
-                        <div className="space-y-0.5">
-                          <div className="text-xs font-semibold text-foreground">
-                            AUC {h.roc_auc.toFixed(2)} · {(h.high_risk_accounts ?? 0).toLocaleString()} high-risk accounts
-                          </div>
-                          <div className="text-[11px] text-muted-foreground">{new Date(lastRun.created_at).toLocaleDateString()}</div>
-                        </div>
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand whitespace-nowrap">
-                          View results <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                        </span>
-                      </button>
-                    )}
-                    {!isActive && !hasResult && !lastRun && (
-                      <span className="text-xs text-muted-foreground">No runs yet</span>
-                    )}
-                    {lastRun?.status === "error" && (
-                      <span className="text-xs text-red-500">Last run failed</span>
-                    )}
-                  </div>
-                )}
+                {/* Label */}
+                <div>
+                  <div className="font-semibold text-sm text-foreground leading-tight">{f.category}</div>
+                  {available ? (
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                      <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                        {VERDICT_LABEL[verdict] ?? "Detectable"}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[11px] text-muted-foreground mt-1 block">Coming soon</span>
+                  )}
+                </div>
               </div>
             );
           })}
