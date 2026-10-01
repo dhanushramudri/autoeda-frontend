@@ -14,7 +14,8 @@ import { FlowWorkspace, type FlowRunFull } from "@/components/ds-flows/FlowWorks
 import { ChurnDashboard } from "@/components/ds-flows/ChurnDashboard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const VERDICT_LABEL: Record<string, string> = { strong: "Strong fit", possible: "Possible fit", weak: "Weak fit", not_detected: "Not detected" };
+// Pre-run labels are deliberately hedged — these are surface-level data-structure signals, not proven results.
+const SIGNAL_LABEL: Record<string, string> = { strong: "Strong signals", possible: "Signals found", weak: "Weak signals", not_detected: "Not detected" };
 
 type FlowConfig = { icon: LucideIcon; gradient: string; iconGradient: string; glow: string; watermarkColor: string };
 const FLOW_CONFIG: Record<string, FlowConfig> = {
@@ -114,11 +115,12 @@ export default function DsFlowsPage() {
 
   const runSelected = async () => {
     if (selectedFlows.size === 0 || isLaunching) return;
+    const keys = Array.from(selectedFlows);
     setIsLaunching(true);
     setRunErrors({});
     const errors: Record<string, string> = {};
     let lastRunId: number | null = null;
-    for (const key of selectedFlows) {
+    for (const key of keys) {
       try {
         const d = await dsFlowsApi.startRun(workspaceId, key);
         lastRunId = d.run_id;
@@ -132,7 +134,7 @@ export default function DsFlowsPage() {
       setRunErrors(errors);
     } else {
       setSelectedFlows(new Set());
-      if (lastRunId != null && selectedFlows.size === 1) {
+      if (lastRunId != null && keys.length === 1) {
         router.replace(`/workspaces/${workspaceId}/ds-flows?run=${lastRunId}`);
       } else {
         qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
@@ -195,7 +197,7 @@ export default function DsFlowsPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-jman-midnight dark:text-foreground">Solutions</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Select analyses to run — click a card to add it to the queue</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Initial scores are based on your data structure — run an analysis to get actual findings</p>
         </div>
         <div className="flex flex-col items-end gap-1">
           {Object.entries(runErrors).map(([key, msg]) => (
@@ -230,7 +232,14 @@ export default function DsFlowsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {[...plan.flows]
-            .sort((a: any, b: any) => (b.feasibility?.score ?? 0) - (a.feasibility?.score ?? 0))
+            .sort((a: any, b: any) => {
+              // Completed runs are promoted above unrun flows — their rank is based on actual analysis, not a signal scan.
+              const aAnalysed = lastRunByFlow[a.key]?.status === "completed" ? 1 : 0;
+              const bAnalysed = lastRunByFlow[b.key]?.status === "completed" ? 1 : 0;
+              if (aAnalysed !== bAnalysed) return bAnalysed - aAnalysed;
+              // Within the same tier (both analysed or both unrun): order by feasibility signal score.
+              return (b.feasibility?.score ?? 0) - (a.feasibility?.score ?? 0);
+            })
             .map((f: any, i: number) => {
             const verdict: string = f.feasibility?.verdict ?? "";
             const available = verdict === "strong" || verdict === "possible";
@@ -241,7 +250,11 @@ export default function DsFlowsPage() {
             const isActive = lastRun?.status === "running" || lastRun?.status === "pending";
 
             const rankColors = ["bg-amber-400 text-white", "bg-slate-400 text-white", "bg-orange-400 text-white"];
-            const rankLabel = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
+            const isAnalysed = lastRunByFlow[f.key]?.status === "completed";
+            // Medal emojis only after actual analysis; unrun cards show "~N" to signal this is an estimate.
+            const rankLabel = isAnalysed
+              ? (i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`)
+              : `~${i + 1}`;
 
             const isSelected = selectedFlows.has(f.key);
 
@@ -263,14 +276,16 @@ export default function DsFlowsPage() {
                   </div>
                 )}
 
-                {/* Rank badge */}
+                {/* Rank badge — coloured only after actual analysis; muted/italic when still an estimate */}
                 <div className={cn(
                   "absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm",
-                  available
-                    ? i < 3 ? rankColors[i] : "bg-white/60 text-foreground"
-                    : "bg-muted text-muted-foreground"
+                  !available
+                    ? "bg-muted text-muted-foreground"
+                    : isAnalysed && i < 3 ? rankColors[i]
+                    : isAnalysed ? "bg-white/60 text-foreground"
+                    : "bg-black/10 dark:bg-white/10 text-muted-foreground italic"
                 )}>
-                  {i < 3 ? rankLabel : `#${i + 1}`}
+                  {rankLabel}
                 </div>
 
                 {/* Icon badge */}
@@ -283,18 +298,30 @@ export default function DsFlowsPage() {
                     : <Lock className="w-4 h-4 text-muted-foreground" />}
                 </div>
 
-                {/* Label + fit */}
+                {/* Label + verdict */}
                 <div className="flex-1">
                   <div className="font-semibold text-sm text-foreground leading-tight">{f.category}</div>
-                  {available ? (
+                  {isAnalysed ? (
+                    // Actual result — this rank and label is from real analysis output
                     <div className="flex items-center gap-1.5 mt-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-                      <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
-                        {VERDICT_LABEL[verdict] ?? "Detectable"}
-                      </span>
+                      <CheckCircle2 className="w-3.5 h-3.5 text-brand flex-shrink-0" />
+                      <span className="text-xs font-semibold text-brand dark:text-brand">Analysed</span>
                     </div>
+                  ) : available ? (
+                    // Pre-run estimate — deliberately hedged language
+                    <>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                        <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                          {SIGNAL_LABEL[verdict] ?? "Signals found"}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground/70 mt-0.5 block leading-tight">
+                        estimate · run to confirm
+                      </span>
+                    </>
                   ) : (
-                    <span className="text-[11px] text-muted-foreground mt-1 block">Coming soon</span>
+                    <span className="text-[11px] text-muted-foreground mt-1 block">Not detected</span>
                   )}
                 </div>
 
