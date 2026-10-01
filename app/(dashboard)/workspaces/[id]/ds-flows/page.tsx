@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, BarChart3, CheckCircle2, DollarSign, Loader2, Lock, Play, TrendingDown, TrendingUp, Zap, type LucideIcon } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, ArrowRight, BarChart3, Check, CheckCircle2, DollarSign, Loader2, Lock, Play, TrendingDown, TrendingUp, Zap, type LucideIcon } from "lucide-react";
 
 import { dsFlowsApi } from "@/lib/api";
 import { useTour } from "@/hooks/useTourContext";
@@ -52,7 +52,9 @@ export default function DsFlowsPage() {
   const qc = useQueryClient();
   const runParam = searchParams.get("run");
   const activeRunId = runParam ? Number(runParam) : null;
-  const [startError, setStartError] = useState<string | null>(null);
+  const [selectedFlows, setSelectedFlows] = useState<Set<string>>(new Set());
+  const [runErrors, setRunErrors] = useState<Record<string, string>>({});
+  const [isLaunching, setIsLaunching] = useState(false);
   // finished runs open on the executive dashboard; "Analysis" is the full technical workspace
   const [viewPick, setViewPick] = useState<"dashboard" | "analysis" | null>(null);
   useEffect(() => setViewPick(null), [activeRunId]);
@@ -102,15 +104,41 @@ export default function DsFlowsPage() {
     if (run?.status === "completed" || run?.status === "error") qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
   }, [run?.status, qc, workspaceId]);
 
-  const startMutation = useMutation({
-    mutationFn: () => dsFlowsApi.startRun(workspaceId, "churn"),
-    onMutate: () => setStartError(null),
-    onSuccess: (d) => {
-      qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
-      router.replace(`/workspaces/${workspaceId}/ds-flows?run=${d.run_id}`);
-    },
-    onError: (e: any) => setStartError(errMsg(e, "Could not start the run")),
-  });
+  const toggleFlow = (key: string) => {
+    setSelectedFlows(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
+
+  const runSelected = async () => {
+    if (selectedFlows.size === 0 || isLaunching) return;
+    setIsLaunching(true);
+    setRunErrors({});
+    const errors: Record<string, string> = {};
+    let lastRunId: number | null = null;
+    for (const key of selectedFlows) {
+      try {
+        const d = await dsFlowsApi.startRun(workspaceId, key);
+        lastRunId = d.run_id;
+        qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
+      } catch (e: any) {
+        errors[key] = errMsg(e, `Could not start ${key}`);
+      }
+    }
+    setIsLaunching(false);
+    if (Object.keys(errors).length) {
+      setRunErrors(errors);
+    } else {
+      setSelectedFlows(new Set());
+      if (lastRunId != null && selectedFlows.size === 1) {
+        router.replace(`/workspaces/${workspaceId}/ds-flows?run=${lastRunId}`);
+      } else {
+        qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
+      }
+    }
+  };
 
   /* ---------------- run view ---------------- */
   if (activeRunId != null) {
@@ -130,7 +158,7 @@ export default function DsFlowsPage() {
             {run.status === "error" && run.error && (
               <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">{run.error}</div>
             )}
-            {run.status === "completed" && run.headline && (
+            {run.status === "completed" && run.headline && run.flow_key === "churn" && (
               <div className="flex gap-1.5">
                 {(["dashboard", "analysis"] as const).map((v) => (
                   <button key={v} onClick={() => setViewPick(v)}
@@ -141,7 +169,7 @@ export default function DsFlowsPage() {
                 ))}
               </div>
             )}
-            {run.status === "completed" && run.headline && (viewPick ?? "dashboard") === "dashboard"
+            {run.status === "completed" && run.headline && run.flow_key === "churn" && (viewPick ?? "dashboard") === "dashboard"
               ? <ChurnDashboard run={run} workspaceId={workspaceId} onAnalysis={() => setViewPick("analysis")} />
               : <FlowWorkspace run={run} workspaceId={workspaceId} />}
           </>
@@ -167,22 +195,25 @@ export default function DsFlowsPage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-jman-midnight dark:text-foreground">Solutions</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Which analyses your data can support</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Select analyses to run — click a card to add it to the queue</p>
         </div>
-        {plan?.runnable && (
-          <div className="flex flex-col items-end gap-1">
-            {startError && <span className="text-xs text-red-600">{startError}</span>}
-            <button
-              data-tour="run-analysis"
-              disabled={startMutation.isPending}
-              onClick={() => startMutation.mutate()}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand text-brand-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
-            >
-              {startMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-              Run Churn Analysis
-            </button>
-          </div>
-        )}
+        <div className="flex flex-col items-end gap-1">
+          {Object.entries(runErrors).map(([key, msg]) => (
+            <span key={key} className="text-xs text-red-600">{key}: {msg}</span>
+          ))}
+          <button
+            data-tour="run-analysis"
+            disabled={selectedFlows.size === 0 || isLaunching}
+            onClick={runSelected}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand text-brand-foreground disabled:opacity-40 hover:opacity-90 transition-opacity"
+          >
+            {isLaunching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {selectedFlows.size > 0 ? `Run selected (${selectedFlows.size})` : "Run analyses"}
+          </button>
+          {selectedFlows.size === 0 && !planLoading && !planError && (
+            <span className="text-[11px] text-muted-foreground">Click cards below to select</span>
+          )}
+        </div>
       </div>
 
       {/* Cards */}
@@ -212,10 +243,25 @@ export default function DsFlowsPage() {
             const rankColors = ["bg-amber-400 text-white", "bg-slate-400 text-white", "bg-orange-400 text-white"];
             const rankLabel = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
 
+            const isSelected = selectedFlows.has(f.key);
+
             const cardContent = (
               <>
                 {/* Watermark icon */}
                 <Icon className={cn("absolute -bottom-3 -right-3 w-20 h-20 opacity-[0.08]", cfg.watermarkColor)} strokeWidth={1.5} />
+
+                {/* Selection checkbox — available flows only */}
+                {available && (
+                  <div
+                    onClick={e => { e.stopPropagation(); toggleFlow(f.key); }}
+                    className={cn(
+                      "absolute top-3 left-3 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-150 cursor-pointer z-10",
+                      isSelected ? "bg-brand border-brand shadow-sm" : "bg-white/70 dark:bg-white/20 border-black/20 hover:border-brand/60"
+                    )}
+                  >
+                    {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                  </div>
+                )}
 
                 {/* Rank badge */}
                 <div className={cn(
@@ -274,7 +320,8 @@ export default function DsFlowsPage() {
               "transition-all duration-300 hover:-translate-y-1",
               available
                 ? `bg-gradient-to-br ${cfg.gradient} shadow-md hover:shadow-lg ${cfg.glow}`
-                : "bg-card border-border opacity-50 grayscale"
+                : "bg-card border-border opacity-50 grayscale",
+              isSelected && "ring-2 ring-brand ring-offset-1"
             );
 
             return hasRun ? (
@@ -286,6 +333,15 @@ export default function DsFlowsPage() {
               >
                 {cardContent}
               </button>
+            ) : available ? (
+              <div
+                key={f.key}
+                onClick={() => toggleFlow(f.key)}
+                className={cn(sharedClass, "cursor-pointer")}
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                {cardContent}
+              </div>
             ) : (
               <div key={f.key} className={sharedClass} style={{ animationDelay: `${i * 60}ms` }}>
                 {cardContent}

@@ -21,6 +21,7 @@ export interface FlowStage {
 }
 export interface FlowRunFull {
   id: number;
+  flow_key: string;
   status: string;
   title: string | null;
   error: string | null;
