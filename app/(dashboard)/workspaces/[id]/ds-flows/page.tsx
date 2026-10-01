@@ -161,7 +161,9 @@ export default function DsFlowsPage() {
             {run.status === "error" && run.error && (
               <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">{run.error}</div>
             )}
-            {run.flow_key === "churn" ? (
+            {run.flow_key === "forecasting" ? (
+              <GenericFlowWorkspace run={run} workspaceId={workspaceId} />
+            ) : (
               <>
                 {run.status === "completed" && run.headline && (
                   <div className="flex gap-1.5">
@@ -178,8 +180,6 @@ export default function DsFlowsPage() {
                   ? <ChurnDashboard run={run} workspaceId={workspaceId} onAnalysis={() => setViewPick("analysis")} />
                   : <FlowWorkspace run={run} workspaceId={workspaceId} />}
               </>
-            ) : (
-              <GenericFlowWorkspace run={run} workspaceId={workspaceId} />
             )}
           </>
         )}
