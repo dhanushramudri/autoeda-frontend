@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, BarChart3, CheckCircle2, DollarSign, Loader2, Lock, Play, TrendingDown, TrendingUp, Zap, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, CheckCircle2, DollarSign, Loader2, Lock, Play, TrendingDown, TrendingUp, Zap, type LucideIcon } from "lucide-react";
 
 import { dsFlowsApi } from "@/lib/api";
 import { useTour } from "@/hooks/useTourContext";
@@ -153,6 +153,14 @@ export default function DsFlowsPage() {
   /* ---------------- start view ---------------- */
   const planErrorMsg = planError ? errMsg(planError, "Could not analyse the datasets") : undefined;
 
+  // Most-recent run per flow key so cards can link to results
+  const lastRunByFlow: Record<string, any> = {};
+  (runs ?? []).forEach((r: any) => {
+    if (!lastRunByFlow[r.flow_key] || new Date(r.created_at) > new Date(lastRunByFlow[r.flow_key].created_at)) {
+      lastRunByFlow[r.flow_key] = r;
+    }
+  });
+
   return (
     <div className="px-6 py-6 space-y-6 min-w-0 overflow-x-hidden max-w-5xl mx-auto">
       {/* Header */}
@@ -192,24 +200,15 @@ export default function DsFlowsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {plan.flows.map((f: any, i: number) => {
             const verdict: string = f.feasibility?.verdict ?? "";
-            // Show as available when the data scan finds a strong or possible fit —
-            // regardless of whether the flow's run pipeline is built yet.
             const available = verdict === "strong" || verdict === "possible";
             const cfg: FlowConfig = FLOW_CONFIG[f.key] ?? FLOW_CONFIG.churn;
             const Icon = cfg.icon;
+            const lastRun = lastRunByFlow[f.key];
+            const hasRun = !!lastRun;
+            const isActive = lastRun?.status === "running" || lastRun?.status === "pending";
 
-            return (
-              <div
-                key={f.key}
-                className={cn(
-                  "relative overflow-hidden rounded-2xl border p-5 flex flex-col gap-3",
-                  "transition-all duration-300 hover:-translate-y-1",
-                  available
-                    ? `bg-gradient-to-br ${cfg.gradient} shadow-md hover:shadow-lg ${cfg.glow}`
-                    : "bg-card border-border opacity-50 grayscale"
-                )}
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
+            const cardContent = (
+              <>
                 {/* Watermark icon */}
                 <Icon className={cn("absolute -bottom-3 -right-3 w-20 h-20 opacity-[0.08]", cfg.watermarkColor)} strokeWidth={1.5} />
 
@@ -223,8 +222,8 @@ export default function DsFlowsPage() {
                     : <Lock className="w-4 h-4 text-muted-foreground" />}
                 </div>
 
-                {/* Label */}
-                <div>
+                {/* Label + fit */}
+                <div className="flex-1">
                   <div className="font-semibold text-sm text-foreground leading-tight">{f.category}</div>
                   {available ? (
                     <div className="flex items-center gap-1.5 mt-1.5">
@@ -237,6 +236,44 @@ export default function DsFlowsPage() {
                     <span className="text-[11px] text-muted-foreground mt-1 block">Coming soon</span>
                   )}
                 </div>
+
+                {/* Run status footer */}
+                {hasRun && (
+                  <div className="border-t border-black/10 dark:border-white/10 pt-2 mt-1 flex items-center justify-between gap-2">
+                    {isActive ? (
+                      <div className="flex items-center gap-1.5">
+                        <Loader2 className="w-3 h-3 animate-spin text-brand" />
+                        <span className="text-[10px] text-muted-foreground">Running…</span>
+                      </div>
+                    ) : (
+                      <StatusPill status={lastRun.status} />
+                    )}
+                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                )}
+              </>
+            );
+
+            const sharedClass = cn(
+              "relative overflow-hidden rounded-2xl border p-5 flex flex-col gap-3",
+              "transition-all duration-300 hover:-translate-y-1",
+              available
+                ? `bg-gradient-to-br ${cfg.gradient} shadow-md hover:shadow-lg ${cfg.glow}`
+                : "bg-card border-border opacity-50 grayscale"
+            );
+
+            return hasRun ? (
+              <button
+                key={f.key}
+                onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows?run=${lastRun.id}`)}
+                className={cn(sharedClass, "text-left w-full cursor-pointer")}
+                style={{ animationDelay: `${i * 60}ms` }}
+              >
+                {cardContent}
+              </button>
+            ) : (
+              <div key={f.key} className={sharedClass} style={{ animationDelay: `${i * 60}ms` }}>
+                {cardContent}
               </div>
             );
           })}
