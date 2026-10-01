@@ -58,6 +58,7 @@ export default function DsFlowsPage() {
   const [runErrors, setRunErrors] = useState<Record<string, string>>({});
   const [isLaunching, setIsLaunching] = useState(false);
   const [deletingRunId, setDeletingRunId] = useState<number | null>(null);
+  const [runViewError, setRunViewError] = useState<string | null>(null);
   // finished runs open on the executive dashboard; "Analysis" is the full technical workspace
   const [viewPick, setViewPick] = useState<"dashboard" | "analysis" | null>(null);
   useEffect(() => setViewPick(null), [activeRunId]);
@@ -164,25 +165,28 @@ export default function DsFlowsPage() {
 
     const handleDeleteRun = async () => {
       if (!run || deletingRunId != null) return;
+      setRunViewError(null);
       setDeletingRunId(run.id);
       try {
         await dsFlowsApi.deleteRun(workspaceId, run.id);
-        router.replace(`/workspaces/${workspaceId}/ds-flows`);
         qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
-      } catch {
+        router.replace(`/workspaces/${workspaceId}/ds-flows`);
+      } catch (e: any) {
+        setRunViewError(errMsg(e, "Could not delete this run — try again"));
         setDeletingRunId(null);
       }
     };
 
     const handleRunAgain = async () => {
       if (!run || isLaunching) return;
+      setRunViewError(null);
       setIsLaunching(true);
       try {
         const d = await dsFlowsApi.startRun(workspaceId, run.flow_key);
         qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
         router.replace(`/workspaces/${workspaceId}/ds-flows?run=${d.run_id}`);
       } catch (e: any) {
-        setRunErrors({ [run.flow_key]: errMsg(e, "Could not start run") });
+        setRunViewError(errMsg(e, "Could not start a new run"));
         setIsLaunching(false);
       }
     };
@@ -216,6 +220,11 @@ export default function DsFlowsPage() {
           )}
         </div>
 
+        {runViewError && (
+          <div className="rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-3 py-2 text-sm text-red-700 dark:text-red-400">
+            {runViewError}
+          </div>
+        )}
         {!run ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
         ) : (
@@ -224,9 +233,6 @@ export default function DsFlowsPage() {
               <h1 className="text-base font-bold text-jman-midnight dark:text-foreground">{run.title}</h1>
               <StatusPill status={run.status} />
             </div>
-            {Object.entries(runErrors).map(([k, m]) => (
-              <div key={k} className="text-xs text-red-600">{m}</div>
-            ))}
             {run.status === "error" && run.error && (
               <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">{run.error}</div>
             )}
