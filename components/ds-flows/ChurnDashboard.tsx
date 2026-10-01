@@ -133,7 +133,6 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
   const [msgs, setMsgs] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
-  const [askMode, setAskMode] = useState<"scout" | "quick">("scout");
   const chatEnd = useRef<HTMLDivElement>(null);
 
   const R = run.results ?? {};
@@ -170,6 +169,12 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
           seg: Object.fromEntries(segs.map((s) => [s, r[ix[s]] ?? ""])), reasons: reasonsFor(drivers),
         };
       });
+      const ds = list.map((c) => c.due).filter(Boolean).sort() as string[];
+      if (ds.length) {
+        const mid = new Date(ds[Math.floor(ds.length / 2)] + "T00:00:00Z").getTime();
+        const span = 3 * 365 * 864e5;
+        for (const c of list) if (c.due && Math.abs(new Date(c.due + "T00:00:00Z").getTime() - mid) > span) c.due = null;
+      }
       return { all: list, segCols: segs };
     }
     // fallback: the top customers kept in the run results
@@ -227,7 +232,8 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
   const dues = useMemo(() => all.map((c) => c.due).filter(Boolean).sort() as string[], [all]);
   const hasDates = dues.length > 0;
   const todayIso = new Date().toISOString().slice(0, 10);
-  const anchor = dues.find((d) => d >= todayIso) ?? dues[0] ?? todayIso;
+  const base = asOf ?? todayIso;
+  const anchor = dues.find((d) => d >= base) ?? dues[0] ?? base;
   const addMonths = (iso: string, n: number) => { const d = new Date(iso + "T00:00:00Z"); d.setUTCMonth(d.getUTCMonth() + n); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); };
   const setWindow = (months: number) => { setDueFrom(anchor); setDueTo(addMonths(anchor, months)); };
   const monthly = useMemo(() => {
@@ -298,7 +304,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, thinking]);
   useEffect(() => { setShown(25); }, [tier, reason, segVal, minRev, q, dueFrom, dueTo, sort]);
 
-  const askAbout = (c: Cust) => { setOpen(null); setTab("Ask"); setAskMode("quick"); setDraft(`Tell me about customer ${c.id} and what we should do to keep them.`); };
+  const askAbout = (c: Cust) => { setOpen(null); setTab("Ask"); setDraft(`Tell me about customer ${c.id} and what we should do to keep them.`); };
   const Row = ({ c }: { c: Cust }) => (
     <tr key={c.id} onClick={() => setOpen(c)} style={{ cursor: "pointer" }}>
       <td style={{ fontWeight: 700 }}>{c.id}</td>
@@ -575,18 +581,6 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
           )}
 
           {tab === "Ask" && (
-            <div className="jd-tabs" style={{ marginBottom: 0 }}>
-              {([["scout", "Scout"], ["quick", "Quick answers"]] as const).map(([k, l]) => (
-                <button key={k} className={`jd-tab ${askMode === k ? "active" : ""}`} onClick={() => setAskMode(k)}>{l}</button>
-              ))}
-            </div>
-          )}
-          {tab === "Ask" && askMode === "scout" && (
-            <div className="jd-panel" style={{ padding: 0 }}>
-              <iframe key="scout" src={`/workspaces/${workspaceId}/scout?embed=1`} title="Scout" style={{ width: "100%", height: "max(640px, calc(100vh - 260px))", border: 0, display: "block", background: "var(--card)" }} />
-            </div>
-          )}
-          {tab === "Ask" && askMode === "quick" && (
             <Panel title="Ask about this analysis" sub="Plain-English answers, based only on this analysis. Mention a customer ID to ask about one customer.">
               <div style={{ minHeight: 260, maxHeight: 460, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10, padding: "4px 2px" }}>
                 {!msgs.length && (
@@ -662,7 +656,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
                   </div>
                   <input type="date" value={dueFrom} onChange={(e) => setDueFrom(e.target.value)} />
                   <input type="date" style={{ marginTop: 6 }} value={dueTo} onChange={(e) => setDueTo(e.target.value)} />
-                  <p className="jd-note" style={{ marginTop: 4 }}>Months count forward from {anchor}.</p>
+                  <p className="jd-note" style={{ marginTop: 4 }}>Months count forward from {anchor}. Renewals are due between {dues[0]} and {dues[dues.length - 1]}.</p>
                 </div>
               )}
               <div className="jd-field"><label>Find a customer</label><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Customer ID" /></div>
