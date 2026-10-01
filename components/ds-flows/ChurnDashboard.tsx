@@ -70,7 +70,7 @@ const driverText = (d: string) => {
   return binary ? nice(m[1]) : `${nice(m[1])}: ${m[2]}`;
 };
 
-type Cust = { id: string; prob: number; tier: string; value: number | null; loss: number | null; drivers: string[]; due: string | null; seg: Record<string, string>; reasons: { reason: string; action: string }[] };
+type Cust = { id: string; name: string; prob: number; tier: string; value: number | null; loss: number | null; drivers: string[]; due: string | null; seg: Record<string, string>; reasons: { reason: string; action: string }[] };
 
 function Spark({ data, color }: { data: any[]; color: string }) {
   return (
@@ -136,6 +136,8 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
   const chatEnd = useRef<HTMLDivElement>(null);
 
   const R = run.results ?? {};
+  const derived = !!R.discover?.label?.derived;
+  const horizon = String(R.discover?.label?.column ?? "").match(/(\d+)m$/)?.[1] ?? "12";
   const H = run.headline ?? {};
   const value = R.value;
   const eda = R.eda;
@@ -157,12 +159,12 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
   const { all, segCols } = useMemo(() => {
     if (raw) {
       const ix = Object.fromEntries(raw.columns.map((c, i) => [c, i]));
-      const fixed = new Set(["account", "as_of_snapshot", "churn_probability", "risk_tier", "expected_value_at_risk", "driver_1", "driver_2", "driver_3", valueCol ?? "__none__"]);
+      const fixed = new Set(["account", "as_of_snapshot", "churn_probability", "risk_tier", "expected_value_at_risk", "driver_1", "driver_2", "driver_3", "customer_name", valueCol ?? "__none__"]);
       const segs = raw.columns.filter((c) => !fixed.has(c));
       const list: Cust[] = raw.rows.map((r) => {
         const drivers = ["driver_1", "driver_2", "driver_3"].map((k) => r[ix[k]]).filter((x) => typeof x === "string" && x);
         return {
-          id: String(r[ix.account]), prob: Number(r[ix.churn_probability]), tier: String(r[ix.risk_tier]),
+          id: String(r[ix.account]), name: ix.customer_name != null && r[ix.customer_name] ? String(r[ix.customer_name]) : "", prob: Number(r[ix.churn_probability]), tier: String(r[ix.risk_tier]),
           value: valueCol && r[ix[valueCol]] != null ? Number(r[ix[valueCol]]) : null,
           loss: r[ix.expected_value_at_risk] != null ? Number(r[ix.expected_value_at_risk]) : null,
           drivers, due: ix.as_of_snapshot != null && r[ix.as_of_snapshot] ? String(r[ix.as_of_snapshot]).slice(0, 10) : null,
@@ -179,7 +181,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
     }
     // fallback: the top customers kept in the run results
     const list: Cust[] = (value?.top_accounts ?? []).map((a: any) => ({
-      id: String(a.entity), prob: a.probability, tier: a.tier, value: a.value ?? null, loss: a.expected_loss ?? null,
+      id: String(a.entity), name: "", prob: a.probability, tier: a.tier, value: a.value ?? null, loss: a.expected_loss ?? null,
       drivers: a.drivers ?? [], due: null, seg: {}, reasons: reasonsFor(a.drivers ?? []),
     }));
     return { all: list, segCols: [] as string[] };
@@ -199,7 +201,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
       (segVal === "All" || c.seg[activeSeg] === segVal) &&
       (min == null || (c.value ?? 0) >= min) &&
       (!dueFrom || (!!c.due && c.due >= dueFrom)) && (!dueTo || (!!c.due && c.due <= dueTo)) &&
-      (!ql || c.id.toLowerCase().includes(ql)));
+      (!ql || c.id.toLowerCase().includes(ql) || c.name.toLowerCase().includes(ql)));
   }, [all, tier, reason, segVal, activeSeg, minRev, q, dueFrom, dueTo]);
 
   // headline numbers follow the filters
@@ -304,10 +306,10 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs, thinking]);
   useEffect(() => { setShown(25); }, [tier, reason, segVal, minRev, q, dueFrom, dueTo, sort]);
 
-  const askAbout = (c: Cust) => { setOpen(null); setTab("Ask"); setDraft(`Tell me about customer ${c.id} and what we should do to keep them.`); };
+  const askAbout = (c: Cust) => { setOpen(null); setTab("Ask"); setDraft(`Tell me about customer ${c.name || c.id} and what we should do to keep them.`); };
   const Row = ({ c }: { c: Cust }) => (
     <tr key={c.id} onClick={() => setOpen(c)} style={{ cursor: "pointer" }}>
-      <td style={{ fontWeight: 700 }}>{c.id}</td>
+      <td style={{ fontWeight: 700 }}>{c.name || c.id}{c.name && <div style={{ fontWeight: 400, fontSize: 10.5, color: "var(--ink-faint)" }}>{c.id.slice(0, 12)}</div>}</td>
       <td style={{ minWidth: 100 }}><RiskBar p={c.prob} tier={c.tier} /></td>
       <td><span className={`jd-tag ${c.tier.toLowerCase()}`}>{c.tier}</span></td>
       {hasValue && <td className="num">{fmt(c.value)}</td>}
@@ -327,7 +329,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
       <div className="jd-top">
         <div>
           <h1>Customer Churn Outlook</h1>
-          <p>{total.toLocaleString()} customers due for renewal{asOf ? ` · data as of ${asOf}` : ""}</p>
+          <p>{total.toLocaleString()} {derived ? "active customers" : "customers due for renewal"}{asOf ? ` · data as of ${asOf}` : ""}</p>
         </div>
         <div className="jd-actions">
           {run.files.accounts && <button className="jd-btn" onClick={() => download("accounts", "csv")}><Users size={14} /> Customer list</button>}
@@ -359,7 +361,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
                     <div className="k">What to expect</div>
                     <div className="x">
                       About <b>{M.expected.toLocaleString()}</b> of <b>{M.n.toLocaleString()}</b> customers
-                      {M.expected > 0 ? <> (roughly <b>1 in {Math.max(1, Math.round(M.n / M.expected))}</b>)</> : null} are likely to leave at renewal.
+                      {M.expected > 0 ? <> (roughly <b>1 in {Math.max(1, Math.round(M.n / M.expected))}</b>)</> : null} are likely to leave{derived ? ` within the next ${horizon} months` : " at renewal"}.
                     </div>
                   </div>
                   {hasValue && (
@@ -476,7 +478,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
                     <tbody>
                       {[...filtered].sort((a, b) => (b.loss ?? b.prob) - (a.loss ?? a.prob)).slice(0, 5).map((c) => (
                         <tr key={c.id} onClick={() => setOpen(c)} style={{ cursor: "pointer" }}>
-                          <td style={{ fontWeight: 700 }}>{c.id}</td>
+                          <td style={{ fontWeight: 700 }}>{c.name || c.id}</td>
                           <td style={{ width: 90 }}><RiskBar p={c.prob} tier={c.tier} /></td>
                           <td>{c.reasons[0]?.reason ?? "Several factors"}</td>
                           {hasValue && <td className="num" style={{ fontWeight: 700 }}>{fmt(c.loss)}</td>}
@@ -684,7 +686,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
                   <p className="jd-note" style={{ marginTop: 4 }}>Months count forward from {anchor}. Renewals are due between {dues[0]} and {dues[dues.length - 1]}.</p>
                 </div>
               )}
-              <div className="jd-field"><label>Find a customer</label><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Customer ID" /></div>
+              <div className="jd-field"><label>Find a customer</label><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Customer name or ID" /></div>
               <button className="jd-reset" onClick={resetFilters}>Reset filters</button>
               <p className="jd-note">{M.n.toLocaleString()} of {all.length.toLocaleString()} customers shown</p>
             </>
@@ -705,7 +707,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
         <div onClick={() => setOpen(null)} style={{ position: "fixed", inset: 0, background: "rgba(10,6,40,.45)", zIndex: 60, display: "flex", justifyContent: "flex-end" }}>
           <div onClick={(e) => e.stopPropagation()} className="jm-dash" style={{ width: "min(460px, 100%)", height: "100%", overflowY: "auto", boxShadow: "-20px 0 50px -20px rgba(0,0,0,.5)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div><div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".6px", color: "var(--ink-faint)" }}>Customer</div><div style={{ fontSize: 22, fontWeight: 800 }}>{open.id}</div></div>
+              <div><div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: ".6px", color: "var(--ink-faint)" }}>Customer</div><div style={{ fontSize: 22, fontWeight: 800 }}>{open.name || open.id}</div></div>
               <button onClick={() => setOpen(null)} className="jd-reset" style={{ width: 34, height: 34, padding: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><X size={16} /></button>
             </div>
             <div className="jd-panel" style={{ marginBottom: 12 }}>
