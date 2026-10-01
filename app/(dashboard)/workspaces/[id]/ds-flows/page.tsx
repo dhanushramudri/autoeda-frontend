@@ -198,7 +198,9 @@ export default function DsFlowsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-          {plan.flows.map((f: any, i: number) => {
+          {[...plan.flows]
+            .sort((a: any, b: any) => (b.feasibility?.score ?? 0) - (a.feasibility?.score ?? 0))
+            .map((f: any, i: number) => {
             const verdict: string = f.feasibility?.verdict ?? "";
             const available = verdict === "strong" || verdict === "possible";
             const cfg: FlowConfig = FLOW_CONFIG[f.key] ?? FLOW_CONFIG.churn;
@@ -207,10 +209,23 @@ export default function DsFlowsPage() {
             const hasRun = !!lastRun;
             const isActive = lastRun?.status === "running" || lastRun?.status === "pending";
 
+            const rankColors = ["bg-amber-400 text-white", "bg-slate-400 text-white", "bg-orange-400 text-white"];
+            const rankLabel = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
+
             const cardContent = (
               <>
                 {/* Watermark icon */}
                 <Icon className={cn("absolute -bottom-3 -right-3 w-20 h-20 opacity-[0.08]", cfg.watermarkColor)} strokeWidth={1.5} />
+
+                {/* Rank badge */}
+                <div className={cn(
+                  "absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm",
+                  available
+                    ? i < 3 ? rankColors[i] : "bg-white/60 text-foreground"
+                    : "bg-muted text-muted-foreground"
+                )}>
+                  {i < 3 ? rankLabel : `#${i + 1}`}
+                </div>
 
                 {/* Icon badge */}
                 <div className={cn(
