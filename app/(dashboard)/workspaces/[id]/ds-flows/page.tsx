@@ -205,13 +205,26 @@ export default function DsFlowsPage() {
   /* ---------------- start view ---------------- */
   const planErrorMsg = planError ? errMsg(planError, "Could not analyse the datasets") : undefined;
 
-  // Most-recent run per flow key so cards can link to results
-  const lastRunByFlow: Record<string, any> = {};
+  // All runs grouped by flow key, newest first
+  const runsByFlow: Record<string, any[]> = {};
   (runs ?? []).forEach((r: any) => {
-    if (!lastRunByFlow[r.flow_key] || new Date(r.created_at) > new Date(lastRunByFlow[r.flow_key].created_at)) {
-      lastRunByFlow[r.flow_key] = r;
-    }
+    if (!runsByFlow[r.flow_key]) runsByFlow[r.flow_key] = [];
+    runsByFlow[r.flow_key].push(r);
   });
+  // Most-recent run per flow (for rank/verdict logic)
+  const lastRunByFlow: Record<string, any> = {};
+  Object.entries(runsByFlow).forEach(([key, rs]) => { lastRunByFlow[key] = rs[0]; });
+
+  function timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `${d}d ago`;
+    return new Date(dateStr).toLocaleDateString();
+  }
 
   return (
     <div className="px-6 py-6 space-y-6 min-w-0 overflow-x-hidden max-w-5xl mx-auto">
@@ -267,10 +280,6 @@ export default function DsFlowsPage() {
             const available = verdict === "strong" || verdict === "possible";
             const cfg: FlowConfig = FLOW_CONFIG[f.key] ?? FLOW_CONFIG.churn;
             const Icon = cfg.icon;
-            const lastRun = lastRunByFlow[f.key];
-            const hasRun = !!lastRun;
-            const isActive = lastRun?.status === "running" || lastRun?.status === "pending";
-
             const rankColors = ["bg-amber-400 text-white", "bg-slate-400 text-white", "bg-orange-400 text-white"];
             const isAnalysed = lastRunByFlow[f.key]?.status === "completed";
             // Medal emojis only after actual analysis; unrun cards show "~N" to signal this is an estimate.
@@ -279,14 +288,24 @@ export default function DsFlowsPage() {
               : `~${i + 1}`;
 
             const isSelected = selectedFlows.has(f.key);
+            const flowRuns: any[] = runsByFlow[f.key] ?? [];
 
-            const cardContent = (
+            const sharedClass = cn(
+              "relative overflow-hidden rounded-2xl border border-border bg-white dark:bg-card p-5 flex flex-col gap-3",
+              "transition-all duration-300 hover:-translate-y-1",
+              available
+                ? "shadow-[0_2px_12px_0_rgba(0,0,0,0.07)] hover:shadow-[0_6px_20px_0_rgba(0,0,0,0.11)]"
+                : "opacity-50 grayscale shadow-sm",
+              isSelected && "ring-2 ring-brand ring-offset-1"
+            );
+
+            const cardTop = (
               <>
                 {/* Watermark icon */}
                 <Icon className={cn("absolute -bottom-3 -right-3 w-20 h-20 opacity-[0.08]", cfg.watermarkColor)} strokeWidth={1.5} />
 
-                {/* Selection checkbox — available flows only */}
-                {available && (
+                {/* Selection checkbox — available flows only, only when no runs */}
+                {available && flowRuns.length === 0 && (
                   <div
                     onClick={e => { e.stopPropagation(); toggleFlow(f.key); }}
                     className={cn(
@@ -298,7 +317,7 @@ export default function DsFlowsPage() {
                   </div>
                 )}
 
-                {/* Rank badge — coloured only after actual analysis; muted/italic when still an estimate */}
+                {/* Rank badge */}
                 <div className={cn(
                   "absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shadow-sm",
                   !available
@@ -324,13 +343,11 @@ export default function DsFlowsPage() {
                 <div className="flex-1">
                   <div className="font-semibold text-sm text-foreground leading-tight">{f.category}</div>
                   {isAnalysed ? (
-                    // Actual result — this rank and label is from real analysis output
                     <div className="flex items-center gap-1.5 mt-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-brand flex-shrink-0" />
-                      <span className="text-xs font-semibold text-brand dark:text-brand">Analysed</span>
+                      <span className="text-xs font-semibold text-brand">Analysed</span>
                     </div>
                   ) : available ? (
-                    // Pre-run estimate — deliberately hedged language
                     <>
                       <div className="flex items-center gap-1.5 mt-1.5">
                         <CheckCircle2 className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
@@ -347,52 +364,45 @@ export default function DsFlowsPage() {
                   )}
                 </div>
 
-                {/* Run status footer */}
-                {hasRun && (
-                  <div className="border-t border-black/10 dark:border-white/10 pt-2 mt-1 flex items-center justify-between gap-2">
-                    {isActive ? (
-                      <div className="flex items-center gap-1.5">
-                        <Loader2 className="w-3 h-3 animate-spin text-brand" />
-                        <span className="text-[10px] text-muted-foreground">Running…</span>
-                      </div>
-                    ) : (
-                      <StatusPill status={lastRun.status} />
-                    )}
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={(e) => deleteRun(e, lastRun.id)}
-                        className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-red-500 transition-colors"
-                        title="Delete this run"
-                      >
-                        {deletingRunId === lastRun.id
-                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          : <Trash2 className="w-3.5 h-3.5" />}
-                      </button>
-                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
-                    </div>
+                {/* Runs list */}
+                {flowRuns.length > 0 && (
+                  <div className="border-t border-black/10 dark:border-white/10 pt-2 space-y-1">
+                    {flowRuns.map((r: any) => {
+                      const running = r.status === "running" || r.status === "pending";
+                      return (
+                        <div key={r.id} className="flex items-center gap-1 group/row">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); router.replace(`/workspaces/${workspaceId}/ds-flows?run=${r.id}`); }}
+                            className="flex-1 flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-black/5 dark:hover:bg-white/5 text-left transition-colors min-w-0"
+                          >
+                            {running
+                              ? <Loader2 className="w-3 h-3 animate-spin text-brand flex-shrink-0" />
+                              : <StatusPill status={r.status} />}
+                            <span className="text-[10px] text-muted-foreground truncate">{timeAgo(r.created_at)}</span>
+                            <ArrowRight className="w-3 h-3 text-muted-foreground ml-auto opacity-0 group-hover/row:opacity-100 flex-shrink-0 transition-opacity" />
+                          </button>
+                          <button
+                            onClick={(e) => deleteRun(e, r.id)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex-shrink-0"
+                            title="Delete run"
+                          >
+                            {deletingRunId === r.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <Trash2 className="w-3 h-3" />}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </>
             );
 
-            const sharedClass = cn(
-              "relative overflow-hidden rounded-2xl border border-border bg-white dark:bg-card p-5 flex flex-col gap-3",
-              "transition-all duration-300 hover:-translate-y-1",
-              available
-                ? "shadow-[0_2px_12px_0_rgba(0,0,0,0.07)] hover:shadow-[0_6px_20px_0_rgba(0,0,0,0.11)]"
-                : "opacity-50 grayscale shadow-sm",
-              isSelected && "ring-2 ring-brand ring-offset-1"
-            );
-
-            return hasRun ? (
-              <button
-                key={f.key}
-                onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows?run=${lastRun.id}`)}
-                className={cn(sharedClass, "text-left w-full cursor-pointer")}
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                {cardContent}
-              </button>
+            // Cards with runs are plain divs — each run row handles navigation individually
+            return flowRuns.length > 0 ? (
+              <div key={f.key} className={sharedClass} style={{ animationDelay: `${i * 60}ms` }}>
+                {cardTop}
+              </div>
             ) : available ? (
               <div
                 key={f.key}
@@ -400,11 +410,11 @@ export default function DsFlowsPage() {
                 className={cn(sharedClass, "cursor-pointer")}
                 style={{ animationDelay: `${i * 60}ms` }}
               >
-                {cardContent}
+                {cardTop}
               </div>
             ) : (
               <div key={f.key} className={sharedClass} style={{ animationDelay: `${i * 60}ms` }}>
-                {cardContent}
+                {cardTop}
               </div>
             );
           })}
