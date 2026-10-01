@@ -1,16 +1,14 @@
 "use client";
 /**
- * Universal workspace renderer for any ds-flow that uses the P.page() block spec.
- * Works for: forecasting, revenue_growth, pricing, efficiency_cost, and any future flow.
- * Churn has its own bespoke FlowWorkspace; everything else lands here.
- *
- * A "page" from the backend is: { blocks: [ {type: kpis|chart|table|note|bullets|markdown|checks|downloads}, ... ] }
- * One generic renderer draws all of these so each solution gets consistent UI without per-flow code.
+ * Block renderers shared by FlowWorkspace: PageRenderer draws any backend `page` spec
+ * ({ blocks: [{type: kpis|chart|table|note|bullets|markdown|checks|downloads}, ...] }), and ScopeResult
+ * renders the legacy single-stage "scope" runs that predate the full pipeline. FlowWorkspace is the one
+ * Analysis component used for every flow; it falls back to these renderers for stage keys it has no
+ * bespoke Step component for (see pickPhases / stageBody in FlowWorkspace.tsx).
  */
 
-import { useState, useMemo } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { AlertCircle, CheckCircle2, Circle, ChevronRight, Download, Info, Loader2, MinusCircle, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, Info, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { dsFlowsApi } from "@/lib/api";
 import type { FlowRunFull } from "./FlowWorkspace";
@@ -252,17 +250,8 @@ export function PageRenderer({ page, run, workspaceId }: { page: any; run: FlowR
   );
 }
 
-// ─── Stage icon ──────────────────────────────────────────────────────────────
-function StageIcon({ status }: { status: string }) {
-  if (status === "running") return <Loader2 className="w-4 h-4 text-brand animate-spin" />;
-  if (status === "done")    return <CheckCircle2 className="w-4 h-4 text-brand" />;
-  if (status === "error")   return <XCircle className="w-4 h-4 text-red-500" />;
-  if (status === "skipped") return <MinusCircle className="w-4 h-4 text-muted-foreground/50" />;
-  return <Circle className="w-4 h-4 text-muted-foreground/40" />;
-}
-
-// ─── Scope result (for revenue_growth, pricing, efficiency_cost) ─────────────
-function ScopeResult({ stage }: { stage: any }) {
+// ─── Scope result (legacy single-stage runs predating the full pipeline) ─────
+export function ScopeResult({ stage }: { stage: any }) {
   const logs: string[] = stage?.logs ?? [];
   const signals = logs.filter((l: string) => !l.startsWith("Missing:"));
   const missing = logs.filter((l: string) => l.startsWith("Missing:")).map((l: string) => l.replace(/^Missing:\s*/, ""));
@@ -301,107 +290,3 @@ function ScopeResult({ stage }: { stage: any }) {
   );
 }
 
-// ─── Main component ──────────────────────────────────────────────────────────
-export function GenericFlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspaceId: string }) {
-  const stages = run.stages ?? [];
-  const R = run.results ?? {};
-  const isScope = stages.length === 1 && stages[0]?.key === "scope";
-
-  const [picked, setPicked] = useState<string | null>(null);
-
-  // auto-select: running stage → last done stage → first
-  const auto = useMemo(() => {
-    const running = stages.find((s: any) => s.status === "running");
-    if (running) return running.key;
-    const done = [...stages].reverse().find((s: any) => s.status === "done");
-    if (done) return done.key;
-    return stages[0]?.key ?? null;
-  }, [stages]);
-
-  const activeKey = picked ?? auto;
-  const active = stages.find((s: any) => s.key === activeKey) ?? stages[0];
-  const done = stages.filter((s: any) => ["done", "error", "skipped"].includes(s.status)).length;
-
-  const stageResult = active ? R[active.key] : null;
-  const hasPage = !!(stageResult?.page?.blocks?.length);
-
-  return (
-    <div className="grid lg:grid-cols-[210px_1fr] gap-3 items-start">
-      {/* Sidebar */}
-      <aside className="bg-card border border-border rounded-xl overflow-hidden lg:sticky lg:top-2">
-        <div className="px-3 py-2.5 border-b border-border">
-          <div className="flex justify-between text-xs mb-1.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan">Stages</span>
-            <span className="text-muted-foreground">{done} of {stages.length}</span>
-          </div>
-          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-            <div className="h-full bg-brand transition-all duration-500" style={{ width: `${stages.length ? (done / stages.length) * 100 : 0}%` }} />
-          </div>
-        </div>
-        <ol>
-          {stages.map((s: any, i: number) => (
-            <li key={s.key}>
-              <button
-                onClick={() => setPicked(s.key)}
-                className={cn("w-full flex items-center gap-2 px-3 py-2.5 text-left border-l-2 transition-colors",
-                  s.key === activeKey ? "border-brand bg-brand/10" : "border-transparent hover:bg-muted/50")}
-              >
-                <StageIcon status={s.status} />
-                <span className={cn("flex-1 text-sm whitespace-nowrap",
-                  s.key === activeKey ? "text-brand font-semibold" : s.status === "pending" ? "text-muted-foreground" : "text-foreground font-medium")}>
-                  {i + 1}. {s.title}
-                </span>
-                {s.seconds > 0 && <span className="text-[10px] text-muted-foreground">{Math.round(s.seconds)}s</span>}
-                <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground", s.key !== activeKey && "opacity-0")} />
-              </button>
-            </li>
-          ))}
-        </ol>
-      </aside>
-
-      {/* Content */}
-      <section className="min-w-0 space-y-3">
-        {active && (
-          <>
-            <div>
-              <h2 className="text-lg font-bold text-jman-midnight dark:text-foreground">{active.title}</h2>
-              {active.summary && (
-                <p className={cn("text-xs mt-0.5", active.status === "error" ? "text-red-600" : "text-muted-foreground")}>{active.summary}</p>
-              )}
-            </div>
-
-            {active.status === "running" && (
-              <div className="bg-card border border-border rounded-xl p-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin text-brand" /> Running…
-              </div>
-            )}
-            {active.status === "pending" && (
-              <div className="bg-card border border-border rounded-xl p-8 text-center text-sm text-muted-foreground">
-                Waiting for earlier stages to finish.
-              </div>
-            )}
-            {active.status === "skipped" && (
-              <div className="bg-card border border-border rounded-xl p-8 text-center text-sm text-muted-foreground">
-                Skipped because an earlier stage failed.
-              </div>
-            )}
-            {active.status === "error" && (
-              <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-                {active.summary ?? "This stage failed."}
-              </div>
-            )}
-            {active.status === "done" && (
-              isScope
-                ? <ScopeResult stage={active} />
-                : hasPage
-                  ? <PageRenderer page={stageResult.page} run={run} workspaceId={workspaceId} />
-                  : <div className="bg-card border border-border rounded-xl p-8 text-center text-sm text-muted-foreground">
-                      {active.summary ? <p>{active.summary}</p> : "Stage complete — no visual output for this step."}
-                    </div>
-            )}
-          </>
-        )}
-      </section>
-    </div>
-  );
-}

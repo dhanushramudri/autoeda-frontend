@@ -12,7 +12,6 @@ import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import { FlowWorkspace, type FlowRunFull } from "@/components/ds-flows/FlowWorkspace";
 import { ChurnDashboard } from "@/components/ds-flows/ChurnDashboard";
-import { GenericFlowWorkspace } from "@/components/ds-flows/GenericFlowWorkspace";
 import { ForecastDashboard } from "@/components/ds-flows/ForecastDashboard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -239,9 +238,10 @@ export default function DsFlowsPage() {
               <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">{run.error}</div>
             )}
             {(() => {
-              const isForecast = run.flow_key === "forecasting";
-              const Dashboard = isForecast ? ForecastDashboard : ChurnDashboard;
-              const Analysis = isForecast ? GenericFlowWorkspace : FlowWorkspace;
+              // Dashboard is domain-specific (scored accounts vs. a time series), so it still branches by flow.
+              // Analysis is the same FlowWorkspace for every flow — it dynamically adapts to whatever stages
+              // that flow's pipeline produced (see pickPhases in FlowWorkspace.tsx).
+              const Dashboard = run.flow_key === "forecasting" ? ForecastDashboard : ChurnDashboard;
               const hasDashboard = run.status === "completed" && !!run.headline;
               return (
                 <>
@@ -258,7 +258,7 @@ export default function DsFlowsPage() {
                   )}
                   {hasDashboard && (viewPick ?? "dashboard") === "dashboard"
                     ? <Dashboard run={run} workspaceId={workspaceId} onAnalysis={() => setViewPick("analysis")} />
-                    : <Analysis run={run} workspaceId={workspaceId} />}
+                    : <FlowWorkspace run={run} workspaceId={workspaceId} />}
                 </>
               );
             })()}

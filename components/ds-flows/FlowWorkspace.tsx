@@ -9,6 +9,7 @@ import { dsFlowsApi } from "@/lib/api";
 import { Markdown } from "@/components/shared/Markdown";
 import { cn } from "@/lib/utils";
 import { fmt, label } from "@/components/ds-flows/ChurnResults";
+import { PageRenderer, ScopeResult } from "@/components/ds-flows/GenericFlowWorkspace";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export interface FlowStage {
@@ -449,6 +450,32 @@ const PHASES: Phase[] = [
     tabs: [{ label: "Summary", stage: "report" }, { label: "Files", stage: "build" }, { label: "Ask Scout", embed: "@scout" }] },
 ];
 
+/* Forecasting runs a genuinely different pipeline (one time series, no classification label), so its stages don't
+   map onto PHASES above — but it gets the same real Auto EDA / Hypotheses AI agents (see runner.py execute_forecast_run),
+   pointed at the prepared series instead of a churn-style feature table. Stage bodies without a bespoke Step component
+   render through PageRenderer, using the `page` spec each forecast stage already returns. */
+const FORECAST_PHASES: Phase[] = [
+  { id: "prepare", title: "Prepare the series", stages: ["detect"], embedFirst: false, tabs: [{ label: "Overview", stage: "detect" }] },
+  { id: "eda", title: "Explore (EDA)", stages: ["explore"], embedFirst: true,
+    tabs: [{ label: "Auto EDA report", embed: "@auto" }, { label: "Analysis", stage: "explore" }] },
+  { id: "hyp", title: "Hypotheses", stages: ["explore"], embedFirst: true, tabs: [{ label: "Hypotheses (AI)", embed: "@hyp" }] },
+  { id: "model", title: "Backtest models", stages: ["models"], embedFirst: false, tabs: [{ label: "Model comparison", stage: "models" }] },
+  { id: "forecast", title: "Forecast", stages: ["forecast"], embedFirst: false, tabs: [{ label: "Forecast", stage: "forecast" }] },
+  { id: "validate", title: "Validate", stages: ["validate"], embedFirst: false, tabs: [{ label: "Checks", stage: "validate" }] },
+  { id: "deliver", title: "Deliverables", stages: ["deliver", "report"], embedFirst: false,
+    tabs: [{ label: "Summary", stage: "report" }, { label: "Files", stage: "deliver" }] },
+];
+
+/* Dynamic phase selection: recognised pipelines get a tailored, labelled grouping; anything else (a future flow
+   type) still works — one phase per stage, rendered generically through PageRenderer. Nothing here is hardcoded
+   to a specific flow_key, only to the stage *keys* a pipeline actually produces. */
+function pickPhases(stages: FlowStage[]): Phase[] {
+  const keys = new Set(stages.map((s) => s.key));
+  if (keys.has("discover")) return PHASES;
+  if (keys.has("detect")) return FORECAST_PHASES;
+  return stages.map((s) => ({ id: s.key, title: s.title, stages: [s.key], embedFirst: false, tabs: [{ label: s.title, stage: s.key }] }));
+}
+
 function phaseStatus(ss: FlowStage[]): FlowStage["status"] {
   if (ss.some((s) => s.status === "error")) return "error";
   if (ss.some((s) => s.status === "running")) return "running";
@@ -463,11 +490,13 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
   const R = run.results ?? {};
   const running = run.status === "pending" || run.status === "running";
   const byKey = useMemo(() => Object.fromEntries(run.stages.map((s) => [s.key, s])), [run.stages]);
+  const isClassificationPipeline = useMemo(() => run.stages.some((s) => s.key === "discover"), [run.stages]);
+  const PHASE_SET = useMemo(() => pickPhases(run.stages), [run.stages]);
 
-  const phases = useMemo(() => PHASES.map((p) => {
+  const phases = useMemo(() => PHASE_SET.map((p) => {
     const ss = p.stages.map((k) => byKey[k]).filter(Boolean) as FlowStage[];
     return { ...p, ss, status: phaseStatus(ss), seconds: ss.reduce((t, s) => t + (s.seconds ?? 0), 0), summary: ss.map((s) => s.summary).filter(Boolean).join(" · ") };
-  }), [byKey]);
+  }), [byKey, PHASE_SET]);
 
   // follow progress until the user picks a phase; when finished, open the deliverables
   const auto = useMemo(() => {
@@ -505,23 +534,32 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
           : st?.status === "error" ? `This step failed. ${st.summary ?? ""}` : "No data for this step."}
       </div>
     );
-    if (key === "report") return st?.status === "done" || run.narrative ? <ReportStep run={run} dl={dl} /> : wait;
-    if (!r) return wait;
-    switch (key) {
-      case "discover": return <DiscoverStep r={r} />;
-      case "understand": return <UnderstandStep r={r} />;
-      case "leakage": return <LeakageStep r={r} />;
-      case "eda": return <EdaStep r={r} />;
-      case "hypotheses": return <HypothesesStep r={r} />;
-      case "features": return <FeaturesStep r={r} />;
-      case "select": return <SelectStep r={r} />;
-      case "models": return <ModelsStep r={r} all={R} />;
-      case "explain": return <ExplainStep r={r} />;
-      case "value": return <ValueStep r={r} h={run.headline ?? R.models?.holdout_metrics ?? {}} />;
-      case "validate": return <ValidateStep r={r} />;
-      case "build": return <BuildStep r={r} run={run} dl={dl} />;
-      default: return wait;
+    if (isClassificationPipeline) {
+      if (key === "report") return st?.status === "done" || run.narrative ? <ReportStep run={run} dl={dl} /> : wait;
+      if (!r) return wait;
+      switch (key) {
+        case "discover": return <DiscoverStep r={r} />;
+        case "understand": return <UnderstandStep r={r} />;
+        case "leakage": return <LeakageStep r={r} />;
+        case "eda": return <EdaStep r={r} />;
+        case "hypotheses": return <HypothesesStep r={r} />;
+        case "features": return <FeaturesStep r={r} />;
+        case "select": return <SelectStep r={r} />;
+        case "models": return <ModelsStep r={r} all={R} />;
+        case "explain": return <ExplainStep r={r} />;
+        case "value": return <ValueStep r={r} h={run.headline ?? R.models?.holdout_metrics ?? {}} />;
+        case "validate": return <ValidateStep r={r} />;
+        case "build": return <BuildStep r={r} run={run} dl={dl} />;
+        default: return wait;
+      }
     }
+    // Any other pipeline (forecasting today, future flow types tomorrow): no bespoke Step component exists for
+    // these stage keys, so render the stage's own `page` spec through the generic block renderer.
+    if (key === "scope") return st?.status === "done" ? <ScopeResult stage={st} /> : wait;
+    if (st?.status !== "done") return wait;
+    return r?.page?.blocks?.length
+      ? <PageRenderer page={r.page} run={run} workspaceId={workspaceId} />
+      : <div className="bg-card border border-border rounded-xl p-10 text-center text-sm text-muted-foreground">{st?.summary ?? "Stage complete — no visual output for this step."}</div>;
   };
 
   return (
