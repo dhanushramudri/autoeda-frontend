@@ -768,6 +768,10 @@ export const dsFlowsApi = {
   startRun: (workspaceId: string, flowKey: string = "churn") =>
     api.post(`/workspaces/${workspaceId}/ds-flows/runs`, { flow_key: flowKey }).then((r) => r.data as { run_id: number }),
   deleteRun: (workspaceId: string, runId: number) => api.delete(`/workspaces/${workspaceId}/ds-flows/runs/${runId}`),
+  customers: (workspaceId: string, runId: number) =>
+    api.get(`/workspaces/${workspaceId}/ds-flows/runs/${runId}/customers`).then((r) => r.data as { columns: string[]; rows: any[][]; truncated: boolean }),
+  chat: (workspaceId: string, runId: number, message: string, history: { role: string; content: string }[]) =>
+    api.post(`/workspaces/${workspaceId}/ds-flows/runs/${runId}/chat`, { message, history }, { timeout: 120000 }).then((r) => r.data as { answer: string }),
   download: (workspaceId: string, runId: number, kind: string, format: string) =>
     api.get(`/workspaces/${workspaceId}/ds-flows/runs/${runId}/download`, { params: { kind, format }, responseType: "blob" }),
 };
