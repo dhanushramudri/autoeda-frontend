@@ -405,7 +405,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
                           <YAxis tickFormatter={(v) => fmt(v)} tick={AX} axisLine={false} tickLine={false} width={48} />
                           <Tooltip {...TT} formatter={(v: number) => fmt(v)} />
                           <Bar dataKey="Revenue held" fill={SOFT} radius={0} /><Bar dataKey="Expected to be lost" fill={HIGH} radius={0} />
-                          <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                          <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} formatter={(v: string) => <span style={{ color: "var(--ink)" }}>{v}</span>} />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -424,7 +424,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
                         <Tooltip {...TT} formatter={(v: number, n: string) => (n === "Revenue at risk" ? fmt(v) : v.toLocaleString())} />
                         <Bar yAxisId="l" dataKey="Expected to churn" fill={ACCENT} radius={0} />
                         {hasValue && <Bar yAxisId="r" dataKey="Revenue at risk" fill={SOFT} radius={0} />}
-                        <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                        <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} formatter={(v: string) => <span style={{ color: "var(--ink)" }}>{v}</span>} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -503,7 +503,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
                         <BarChart data={pairs} layout="vertical" margin={{ left: 8, right: 16 }}>
                           <CartesianGrid horizontal={false} stroke={GRID} /><XAxis type="number" tickFormatter={(v) => pct(v)} tick={AX} axisLine={false} tickLine={false} />
                           <YAxis type="category" dataKey="name" width={150} tick={{ ...AX, fill: "var(--ink-soft)" }} axisLine={false} tickLine={false} />
-                          <Tooltip {...TT} formatter={(v: number) => pct(v, 1)} /><Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+                          <Tooltip {...TT} formatter={(v: number) => pct(v, 1)} /><Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} formatter={(v: string) => <span style={{ color: "var(--ink)" }}>{v}</span>} />
                           <Bar dataKey="Below average" fill={SOFT} radius={0} /><Bar dataKey="Above average" fill={ACCENT} radius={0} />
                         </BarChart>
                       </ResponsiveContainer>
@@ -616,7 +616,7 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
                 <tbody>
                   {[
                     ["Likely to churn", "Each customer has a chance of churning. Adding them up across all customers due for renewal gives the number expected to leave — an estimate, not a named list."],
-                    ["High / Medium / Low risk", "High = the 10% of customers with the highest risk. Medium = the next 20%. Low = everyone else."],
+                    ["High / Medium / Low risk", "High = roughly the 10% of customers with the highest risk. Medium = roughly the next 20%. Low = everyone else."],
                     ["Revenue at risk", "Each customer's renewal revenue multiplied by their chance of churning, added up. It does not say when the revenue would be lost."],
                     ["Usual churn rate", "The share of past renewals that did not renew."],
                     ["How reliable is it?", H.recall_top10 != null ? `Checked on customers the analysis had never seen: the 10% highest-risk list contains ${pct(H.recall_top10)} of the customers who actually churned (${(H.lift_top10 ?? 0).toFixed(1)} times better than picking at random).` : "Checked on customers the analysis had never seen."],
