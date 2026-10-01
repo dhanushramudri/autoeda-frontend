@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, BarChart3, Check, CheckCircle2, DollarSign, Loader2, Lock, Play, TrendingDown, TrendingUp, Zap, type LucideIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, Check, CheckCircle2, DollarSign, Loader2, Lock, Play, Trash2, TrendingDown, TrendingUp, Zap, type LucideIcon } from "lucide-react";
 
 import { dsFlowsApi } from "@/lib/api";
 import { useTour } from "@/hooks/useTourContext";
@@ -57,6 +57,7 @@ export default function DsFlowsPage() {
   const [selectedFlows, setSelectedFlows] = useState<Set<string>>(new Set());
   const [runErrors, setRunErrors] = useState<Record<string, string>>({});
   const [isLaunching, setIsLaunching] = useState(false);
+  const [deletingRunId, setDeletingRunId] = useState<number | null>(null);
   // finished runs open on the executive dashboard; "Analysis" is the full technical workspace
   const [viewPick, setViewPick] = useState<"dashboard" | "analysis" | null>(null);
   useEffect(() => setViewPick(null), [activeRunId]);
@@ -105,6 +106,20 @@ export default function DsFlowsPage() {
   useEffect(() => {
     if (run?.status === "completed" || run?.status === "error") qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
   }, [run?.status, qc, workspaceId]);
+
+  const deleteRun = async (e: React.MouseEvent, runId: number) => {
+    e.stopPropagation();
+    if (deletingRunId != null) return;
+    setDeletingRunId(runId);
+    try {
+      await dsFlowsApi.deleteRun(workspaceId, runId);
+      qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
+    } catch {
+      // silently ignore — run list will stay unchanged
+    } finally {
+      setDeletingRunId(null);
+    }
+  };
 
   const toggleFlow = (key: string) => {
     setSelectedFlows(prev => {
@@ -343,7 +358,18 @@ export default function DsFlowsPage() {
                     ) : (
                       <StatusPill status={lastRun.status} />
                     )}
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => deleteRun(e, lastRun.id)}
+                        className="p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 text-muted-foreground hover:text-red-500 transition-colors"
+                        title="Delete this run"
+                      >
+                        {deletingRunId === lastRun.id
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
+                      <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
+                    </div>
                   </div>
                 )}
               </>
