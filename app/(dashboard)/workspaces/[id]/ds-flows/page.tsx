@@ -14,7 +14,7 @@ import { FlowWorkspace, type FlowRunFull } from "@/components/ds-flows/FlowWorks
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const VERDICT_STYLE: Record<string, string> = {
   strong: "bg-brand/10 text-brand",
-  possible: "bg-[#ff6196]/10 text-[#d6336c]",
+  possible: "bg-[#ff6196]/10 text-[#C30D5C]",
   weak: "bg-muted text-muted-foreground",
   not_detected: "bg-muted text-muted-foreground",
 };
@@ -38,7 +38,7 @@ function StatusPill({ status }: { status: string }) {
     status === "completed" ? "bg-brand/10 text-brand"
     : status === "error" ? "bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-400"
     : "bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400";
-  return <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase", cls)}>{status}</span>;
+  return <span className={cn("px-2 py-0.5 rounded text-[10px] tracking-wide font-semibold uppercase", cls)}>{status}</span>;
 }
 
 export default function DsFlowsPage() {
@@ -127,7 +127,7 @@ export default function DsFlowsPage() {
         ) : (
           <>
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-foreground">{run.title}</h1>
+              <h1 className="text-base font-bold text-jman-midnight dark:text-foreground">{run.title}</h1>
               <StatusPill status={run.status} />
             </div>
             {run.status === "error" && run.error && (
@@ -147,12 +147,12 @@ export default function DsFlowsPage() {
   const fromText = (w: string) => { const m = sigText.match(new RegExp("([\\d,]+) " + w)); return m ? Number(m[1].replace(/,/g, "")) : undefined; };
   const counts = label?.counts ?? { churned: fromText("churned"), retained: fromText("retained"), open: fromText("still open") };
   const planErrorMsg = planError ? errMsg(planError, "Could not analyse the datasets") : undefined;
-  const ROLE_STYLE: Record<string, string> = { base: "bg-brand/10 text-brand", events: "bg-[#ff6196]/10 text-[#d6336c]", dictionary: "bg-muted text-muted-foreground", other: "bg-muted text-muted-foreground" };
+  const ROLE_STYLE: Record<string, string> = { base: "bg-brand/10 text-brand", events: "bg-[#ff6196]/10 text-[#C30D5C]", dictionary: "bg-muted text-muted-foreground", other: "bg-muted text-muted-foreground" };
 
   return (
     <div className="px-3 py-3 space-y-3 min-w-0 overflow-x-hidden">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2"><Workflow className="w-5 h-5 text-brand" /><h1 className="text-xl font-bold text-foreground">Solutions</h1></div>
+        <div className="flex items-center gap-2"><Workflow className="w-5 h-5 text-brand" /><h1 className="text-xl font-bold text-jman-midnight dark:text-foreground">Solutions</h1></div>
         <div className="flex items-center gap-3">
           {startError && <span className="text-xs text-red-600">{startError}</span>}
           <button data-tour="run-analysis" disabled={!plan?.runnable || startMutation.isPending} onClick={() => startMutation.mutate()}
@@ -180,7 +180,7 @@ export default function DsFlowsPage() {
                   </div>
                   <div className="mt-2 flex items-center gap-2">
                     {available
-                      ? <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20">{VERDICT_LABEL[f.feasibility.verdict]}</span>
+                      ? <span className="px-2 py-0.5 rounded text-[10px] tracking-wide font-semibold bg-white/20">{VERDICT_LABEL[f.feasibility.verdict]}</span>
                       : <span className="text-[11px] text-muted-foreground">Coming soon</span>}
                   </div>
                 </div>
@@ -190,7 +190,7 @@ export default function DsFlowsPage() {
 
           <div className="grid lg:grid-cols-2 gap-3">
             <div className="bg-card border border-border rounded-xl p-4">
-              <h2 className="text-sm font-semibold text-foreground mb-3">Outcome found</h2>
+              <h2 className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan mb-3">Outcome found</h2>
               {plan.runnable && label ? (
                 <>
                   <div className="text-xs text-muted-foreground mb-3"><span className="font-medium text-foreground">{label.column}</span> in <span className="font-medium text-foreground">{plan.base_table}</span></div>
@@ -200,17 +200,17 @@ export default function DsFlowsPage() {
                     ))}
                   </div>
                 </>
-              ) : <p className="text-sm text-[#d6336c]">{plan.reason ?? "Churn analysis needs a churn outcome in at least one dataset."}</p>}
+              ) : <p className="text-sm text-[#C30D5C]">{plan.reason ?? "Churn analysis needs a churn outcome in at least one dataset."}</p>}
             </div>
 
             <div className="bg-card border border-border rounded-xl p-4">
-              <h2 className="text-sm font-semibold text-foreground mb-3">Data used{plan.link_key ? <span className="text-xs font-normal text-muted-foreground"> · linked on {plan.link_key}</span> : null}</h2>
+              <h2 className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan mb-3">Data used{plan.link_key ? <span className="text-xs font-normal text-muted-foreground"> · linked on {plan.link_key}</span> : null}</h2>
               <ul className="space-y-1.5">
                 {tables.map((t) => (
                   <li key={t.name} className="flex items-center gap-2 text-xs">
                     <span className="font-medium text-foreground">{t.name}</span>
                     <span className="text-muted-foreground">{t.rows.toLocaleString()} rows</span>
-                    <span className={cn("ml-auto px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase", ROLE_STYLE[t.role] ?? ROLE_STYLE.other)}>{t.role}</span>
+                    <span className={cn("ml-auto px-2 py-0.5 rounded text-[10px] tracking-wide font-semibold uppercase", ROLE_STYLE[t.role] ?? ROLE_STYLE.other)}>{t.role}</span>
                   </li>
                 ))}
               </ul>
@@ -222,7 +222,7 @@ export default function DsFlowsPage() {
 
       {runs && runs.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 mb-2"><History className="w-4 h-4 text-muted-foreground" /><h2 className="text-sm font-semibold text-foreground">Runs</h2><span className="text-xs text-muted-foreground">{runs.length}</span></div>
+          <div className="flex items-center gap-2 mb-2"><History className="w-4 h-4 text-muted-foreground" /><h2 className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan">Runs</h2><span className="text-xs text-muted-foreground">{runs.length}</span></div>
           <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
             {runs.map((r: any) => {
               const active = r.status === "running" || r.status === "pending";

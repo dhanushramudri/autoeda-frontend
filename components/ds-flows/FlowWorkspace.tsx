@@ -35,9 +35,9 @@ export interface FlowRunFull {
 }
 
 // JMAN palette (hex: SVG chart attributes don't resolve CSS variables reliably)
-const BRAND = "#4b1fb0";
+const BRAND = "#3411A3"; // jman-trypan
 const PINK = "#ff6196";
-const SOFT = "#c9bff0";
+const SOFT = "#B4AEFF"; // jman-midnight-300
 const MUTED = "#8a88a3";
 const GRID = "rgba(120,120,150,0.25)";
 const TIER: Record<string, string> = { High: PINK, Medium: BRAND, Low: SOFT };
@@ -51,7 +51,7 @@ function Card({ title, subtitle, children, right }: { title?: string; subtitle?:
     <div className="bg-card border border-border rounded-xl">
       {title && (
         <div className="px-4 pt-3.5 flex items-start justify-between gap-3">
-          <div><h3 className="text-sm font-semibold text-foreground">{title}</h3>{subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}</div>
+          <div><h3 className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan">{title}</h3>{subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}</div>
           {right}
         </div>
       )}
@@ -62,18 +62,18 @@ function Card({ title, subtitle, children, right }: { title?: string; subtitle?:
 function Kpi({ title, value, sub, pink }: { title: string; value: string; sub?: string; pink?: boolean }) {
   return (
     <div className="bg-card border border-border rounded-xl p-4">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{title}</div>
-      <div className={cn("mt-1.5 text-2xl font-bold", pink ? "text-[#ff6196]" : "text-foreground")}>{value}</div>
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan">{title}</div>
+      <div className={cn("mt-1.5 text-2xl font-bold", pink ? "text-[#ff6196]" : "text-jman-midnight dark:text-foreground")}>{value}</div>
       {sub && <div className="mt-0.5 text-xs text-muted-foreground">{sub}</div>}
     </div>
   );
 }
 function Tbl({ head, rows }: { head: string[]; rows: React.ReactNode[][] }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full text-xs">
-        <thead><tr className="text-left text-muted-foreground border-b border-border">{head.map((h) => <th key={h} className="py-2 pr-4 font-semibold">{h}</th>)}</tr></thead>
-        <tbody>{rows.map((r, i) => <tr key={i} className="border-b border-border/60 last:border-0">{r.map((c, j) => <td key={j} className="py-2 pr-4 text-foreground align-top">{c}</td>)}</tr>)}</tbody>
+        <thead><tr className="text-left text-white bg-jman-midnight">{head.map((h) => <th key={h} className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide whitespace-nowrap">{h}</th>)}</tr></thead>
+        <tbody>{rows.map((r, i) => <tr key={i} className="border-b border-border/60 last:border-0 even:bg-muted/40">{r.map((c, j) => <td key={j} className="px-3 py-2 text-foreground align-top">{c}</td>)}</tr>)}</tbody>
       </table>
     </div>
   );
@@ -96,8 +96,8 @@ function Bars({ items, max, format = (v: number) => v.toFixed(3), color = BRAND 
 }
 function Pill({ v }: { v: string }) {
   const cls = v === "supported" || v === "pass" || v === "done" ? "bg-brand/10 text-brand"
-    : v === "weak" || v === "quarantined" || v === "warn" ? "bg-[#ff6196]/10 text-[#d6336c]" : "bg-muted text-muted-foreground";
-  return <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase", cls)}>{v}</span>;
+    : v === "weak" || v === "quarantined" || v === "warn" ? "bg-[#ff6196]/10 text-[#C30D5C]" : "bg-muted text-muted-foreground";
+  return <span className={cn("px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide", cls)}>{v}</span>;
 }
 function Note({ children, tone = "pink" }: { children: React.ReactNode; tone?: "pink" | "plain" }) {
   return (
@@ -167,8 +167,8 @@ function LeakageStep({ r }: any) {
           <BarChart data={data} layout="vertical" margin={{ left: 10, right: 24 }}>
             <CartesianGrid horizontal={false} stroke={GRID} /><XAxis type="number" domain={[0.5, 1]} tick={AX} axisLine={false} tickLine={false} />
             <YAxis type="category" dataKey="name" width={200} tick={AX} axisLine={false} tickLine={false} />
-            <Tooltip {...TT} formatter={(v: number) => v.toFixed(3)} /><ReferenceLine x={0.8} stroke={PINK} strokeDasharray="4 3" /><ReferenceLine x={0.9} stroke="#d6336c" />
-            <Bar dataKey="v" name="Single-feature AUC" radius={[0, 6, 6, 0]}>{data.map((d: any, i: number) => <Cell key={i} fill={d.v >= 0.9 ? "#d6336c" : d.v >= 0.8 ? PINK : BRAND} />)}</Bar>
+            <Tooltip {...TT} formatter={(v: number) => v.toFixed(3)} /><ReferenceLine x={0.8} stroke={PINK} strokeDasharray="4 3" /><ReferenceLine x={0.9} stroke="#C30D5C" />
+            <Bar dataKey="v" name="Single-feature AUC" radius={[0, 6, 6, 0]}>{data.map((d: any, i: number) => <Cell key={i} fill={d.v >= 0.9 ? "#C30D5C" : d.v >= 0.8 ? PINK : BRAND} />)}</Bar>
           </BarChart>
         </Chart>
       </Card>
@@ -527,15 +527,15 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
     <div className="grid lg:grid-cols-[210px_1fr] gap-3 items-start">
       <aside className="bg-card border border-border rounded-xl overflow-x-auto overflow-y-auto lg:max-h-[calc(100vh-1rem)] lg:sticky lg:top-2">
         <div className="px-3 py-2.5 border-b border-border">
-          <div className="flex justify-between text-xs mb-1.5"><span className="font-semibold">Flow</span><span className="text-muted-foreground">{finished} of {phases.length}</span></div>
+          <div className="flex justify-between text-xs mb-1.5"><span className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan">Phases</span><span className="text-muted-foreground">{finished} of {phases.length}</span></div>
           <div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-brand transition-all duration-500" style={{ width: `${(finished / phases.length) * 100}%` }} /></div>
         </div>
         <ol className="min-w-max">
           {phases.map((p, i) => (
             <li key={p.id}>
-              <button onClick={() => setPickedPhase(p.id)} className={cn("w-full flex items-center gap-2 px-3 py-2 text-left border-l-2 transition-colors", p.id === phase.id ? "border-brand bg-brand/5" : "border-transparent hover:bg-muted/50")}>
+              <button onClick={() => setPickedPhase(p.id)} className={cn("w-full flex items-center gap-2 px-3 py-2 text-left border-l-2 transition-colors", p.id === phase.id ? "border-brand bg-brand/10" : "border-transparent hover:bg-muted/50")}>
                 <StageIcon s={p.status} />
-                <span className={cn("flex-1 text-sm whitespace-nowrap", p.status === "pending" ? "text-muted-foreground" : "text-foreground font-medium")}>{i + 1}. {p.title}</span>
+                <span className={cn("flex-1 text-sm whitespace-nowrap", p.id === phase.id ? "text-brand font-semibold" : p.status === "pending" ? "text-muted-foreground" : "text-foreground font-medium")}>{i + 1}. {p.title}</span>
                 {p.seconds > 0 && <span className="text-[10px] text-muted-foreground">{Math.round(p.seconds)}s</span>}
                 <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground", p.id !== phase.id && "opacity-0")} />
               </button>
@@ -546,14 +546,15 @@ export function FlowWorkspace({ run, workspaceId }: { run: FlowRunFull; workspac
 
       <section className="min-w-0 space-y-2">
         <div>
-          <h2 className="text-base font-bold text-foreground flex items-center gap-2">{phase.title}{phase.status !== "done" && <Pill v={phase.status} />}</h2>
+          <h2 className="text-lg font-bold text-jman-midnight dark:text-foreground flex items-center gap-2">{phase.title}{phase.status !== "done" && <Pill v={phase.status} />}</h2>
           {phase.summary && <p className={cn("text-xs mt-0.5", phase.status === "error" ? "text-red-600" : "text-muted-foreground")}>{phase.summary}</p>}
         </div>
         {tabs.length > 1 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex gap-0 border-b border-border overflow-x-auto">
             {tabs.map((t) => (
               <button key={t.label} onClick={() => setPickedTab({ phase: phase.id, label: t.label })}
-                className={cn("px-3 py-1.5 rounded-full text-xs font-medium border transition-colors", activeTab?.label === t.label ? "bg-brand text-brand-foreground border-brand" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted")}>
+                className={cn("px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors",
+                  activeTab?.label === t.label ? "border-brand text-brand" : "border-transparent text-muted-foreground hover:text-foreground hover:border-border")}>
                 {t.label}
               </button>
             ))}
