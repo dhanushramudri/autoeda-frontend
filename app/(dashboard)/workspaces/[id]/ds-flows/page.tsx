@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, History, Loader2, Lock, Play, Trash2, TrendingDown, Workflow } from "lucide-react";
+import { ArrowLeft, ArrowRight, History, Loader2, Lock, Play, Trash2, TrendingDown, Workflow } from "lucide-react";
 import { dsFlowsApi } from "@/lib/api";
 import { useTour } from "@/hooks/useTourContext";
 import { solutionsTour } from "@/lib/tourSteps";
@@ -19,6 +19,7 @@ const VERDICT_STYLE: Record<string, string> = {
   not_detected: "bg-muted text-muted-foreground",
 };
 const VERDICT_LABEL: Record<string, string> = { strong: "Strong fit", possible: "Possible fit", weak: "Weak fit", not_detected: "No fit" };
+const FLOW_LABEL: Record<string, string> = { churn: "Churn", revenue_growth: "Revenue Growth", forecasting: "Forecasting", pricing: "Pricing", efficiency_cost: "Efficiency & Cost" };
 
 // FastAPI returns `detail` as a string for our errors but as an array of {type, loc, msg, input} for validation
 // errors (422) — never render it raw.
@@ -55,7 +56,7 @@ export default function DsFlowsPage() {
   useEffect(() => {
     if (searchParams.get("welcome") !== "1") return;
     router.replace(`/workspaces/${workspaceId}/ds-flows`);
-    const key = `autoeda_solutions_tour_${userId ?? "user"}`;
+    const key = `autoeda_solutions_tour_v1_${userId ?? "user"}`; // bump v1 to re-show the tour to everyone
     let seen = false;
     try { seen = !!localStorage.getItem(key); } catch { /* storage unavailable */ }
     if (!seen) {
@@ -220,23 +221,48 @@ export default function DsFlowsPage() {
       )}
 
       {runs && runs.length > 0 && (
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-border flex items-center gap-2"><History className="w-4 h-4 text-muted-foreground" /><h2 className="text-sm font-semibold text-foreground">Runs</h2><span className="text-xs text-muted-foreground">{runs.length}</span></div>
-          <table className="w-full text-xs">
-            <thead><tr className="text-left text-muted-foreground border-b border-border"><th className="px-4 py-2 font-semibold">Run</th><th className="py-2 font-semibold">Started</th><th className="py-2 font-semibold">AUC</th><th className="py-2 font-semibold">High-risk accounts</th><th className="py-2 font-semibold">Status</th><th className="w-10" /></tr></thead>
-            <tbody>
-              {runs.map((r: any) => (
-                <tr key={r.id} onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows?run=${r.id}`)} className="border-b border-border/60 last:border-0 hover:bg-muted/40 cursor-pointer">
-                  <td className="px-4 py-2.5"><span className="inline-flex items-center gap-2 font-medium text-foreground"><TrendingDown className="w-3.5 h-3.5 text-brand" />{r.title}</span></td>
-                  <td className="py-2.5 text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
-                  <td className="py-2.5 text-foreground">{r.headline?.roc_auc != null ? r.headline.roc_auc.toFixed(2) : "—"}</td>
-                  <td className="py-2.5 text-foreground">{r.headline?.high_risk_accounts != null ? r.headline.high_risk_accounts.toLocaleString() : "—"}</td>
-                  <td className="py-2.5"><StatusPill status={r.status} />{(r.status === "running" || r.status === "pending") && <span className="ml-2 text-muted-foreground">{r.progress.done}/{r.progress.total}</span>}</td>
-                  <td className="pr-3 text-right"><button onClick={(e) => { e.stopPropagation(); deleteMutation.mutate(r.id); }} className="p-1.5 text-muted-foreground hover:text-red-500" title="Delete run"><Trash2 className="w-4 h-4" /></button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div>
+          <div className="flex items-center gap-2 mb-2"><History className="w-4 h-4 text-muted-foreground" /><h2 className="text-sm font-semibold text-foreground">Runs</h2><span className="text-xs text-muted-foreground">{runs.length}</span></div>
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            {runs.map((r: any) => {
+              const active = r.status === "running" || r.status === "pending";
+              const open = () => router.replace(`/workspaces/${workspaceId}/ds-flows?run=${r.id}`);
+              const h = r.headline ?? {};
+              const result = h.roc_auc != null
+                ? [`AUC ${h.roc_auc.toFixed(2)}`, `${(h.high_risk_accounts ?? 0).toLocaleString()} high-risk accounts`]
+                : h.key_result ? [h.key_result] : [];
+              return (
+                <div key={r.id} role="button" tabIndex={0} onClick={open} onKeyDown={(e) => { if (e.key === "Enter") open(); }}
+                  className="group bg-card border-2 border-border rounded-xl p-4 cursor-pointer transition hover:border-brand hover:shadow-md focus:outline-none focus:border-brand">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-9 h-9 rounded-lg bg-brand/10 text-brand flex items-center justify-center flex-shrink-0"><TrendingDown className="w-4.5 h-4.5" /></span>
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold text-foreground truncate">{r.title}</div>
+                        <div className="text-[11px] text-muted-foreground">{FLOW_LABEL[r.flow_key] ?? r.flow_key} · {new Date(r.created_at).toLocaleString()}</div>
+                      </div>
+                    </div>
+                    <StatusPill status={r.status} />
+                  </div>
+                  <div className="mt-3 min-h-[24px] flex flex-wrap gap-1.5">
+                    {result.map((t: string) => <span key={t} className="px-2 py-1 rounded-md bg-muted/70 text-xs text-foreground">{t}</span>)}
+                    {active && (
+                      <div className="w-full">
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-brand transition-all" style={{ width: `${(r.progress.done / Math.max(r.progress.total, 1)) * 100}%` }} /></div>
+                        <div className="text-[11px] text-muted-foreground mt-1">Running · {r.progress.done} of {r.progress.total} steps</div>
+                      </div>
+                    )}
+                    {r.status === "error" && <span className="text-xs text-red-600">Did not finish</span>}
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand">{active ? "Watch progress" : "Open results"} <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" /></span>
+                    <button onClick={(e) => { e.stopPropagation(); if (window.confirm("Delete this run?")) deleteMutation.mutate(r.id); }}
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50" title="Delete run"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
