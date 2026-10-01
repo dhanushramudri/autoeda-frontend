@@ -506,13 +506,14 @@ export function Sidebar({ datasets = [], workspaceId }: SidebarProps) {
                   <Settings className="w-3.5 h-3.5 opacity-60" />
                   Settings
                 </button>
-                <button
+                {/* Sign out hidden — login disabled */}
+                {/* <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-red-500 dark:text-red-400 hover:bg-red-50 dark:bg-red-950/40 dark:hover:bg-red-950/30 transition-colors"
                 >
                   <LogOut className="w-3.5 h-3.5" />
                   Sign out
-                </button>
+                </button> */}
               </div>
             )}
 

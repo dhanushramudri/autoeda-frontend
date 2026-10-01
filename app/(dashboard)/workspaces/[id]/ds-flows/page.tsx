@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight, History, Loader2, Lock, Play, Trash2, TrendingDown, Workflow } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, Lock, Play, TrendingDown } from "lucide-react";
 import { dsFlowsApi } from "@/lib/api";
 import { useTour } from "@/hooks/useTourContext";
 import { solutionsTour } from "@/lib/tourSteps";
@@ -20,7 +20,6 @@ const VERDICT_STYLE: Record<string, string> = {
   not_detected: "bg-muted text-muted-foreground",
 };
 const VERDICT_LABEL: Record<string, string> = { strong: "Strong fit", possible: "Possible fit", weak: "Weak fit", not_detected: "No fit" };
-const FLOW_LABEL: Record<string, string> = { churn: "Churn", revenue_growth: "Revenue Growth", forecasting: "Forecasting", pricing: "Pricing", efficiency_cost: "Efficiency & Cost" };
 
 // FastAPI returns `detail` as a string for our errors but as an array of {type, loc, msg, input} for validation
 // errors (422) — never render it raw.
@@ -109,16 +108,6 @@ export default function DsFlowsPage() {
     onError: (e: any) => setStartError(errMsg(e, "Could not start the run")),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: (id: number) => dsFlowsApi.deleteRun(workspaceId, id),
-    onSuccess: (_d, id) => {
-      qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
-      if (id === activeRunId) router.replace(`/workspaces/${workspaceId}/ds-flows`);
-    },
-  });
-
-  const running = run?.status === "pending" || run?.status === "running";
-
   /* ---------------- run view ---------------- */
   if (activeRunId != null) {
     return (
@@ -158,128 +147,135 @@ export default function DsFlowsPage() {
   }
 
   /* ---------------- start view ---------------- */
-  const label = plan?.label;
-  const tables: any[] = plan?.tables ?? [];
-  const sigText: string = plan?.flows?.find((f: any) => f.key === "churn")?.feasibility?.signals?.[0] ?? "";
-  const fromText = (w: string) => { const m = sigText.match(new RegExp("([\\d,]+) " + w)); return m ? Number(m[1].replace(/,/g, "")) : undefined; };
-  const counts = label?.counts ?? { churned: fromText("churned"), retained: fromText("retained"), open: fromText("still open") };
   const planErrorMsg = planError ? errMsg(planError, "Could not analyse the datasets") : undefined;
-  const ROLE_STYLE: Record<string, string> = { base: "bg-brand/10 text-brand", events: "bg-[#ff6196]/10 text-[#C30D5C]", dictionary: "bg-muted text-muted-foreground", other: "bg-muted text-muted-foreground" };
+
+  // Last completed run per flow key (for inline card summary)
+  const lastRunByFlow: Record<string, any> = {};
+  (runs ?? []).forEach((r: any) => {
+    if (!lastRunByFlow[r.flow_key] || new Date(r.created_at) > new Date(lastRunByFlow[r.flow_key].created_at)) {
+      lastRunByFlow[r.flow_key] = r;
+    }
+  });
 
   return (
-    <div className="px-3 py-3 space-y-3 min-w-0 overflow-x-hidden">
+    <div className="px-6 py-6 space-y-6 min-w-0 overflow-x-hidden max-w-5xl mx-auto">
+      {/* Header */}
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2"><Workflow className="w-5 h-5 text-brand" /><h1 className="text-xl font-bold text-jman-midnight dark:text-foreground">Solutions</h1></div>
-        <div className="flex items-center gap-3">
-          {startError && <span className="text-xs text-red-600">{startError}</span>}
-          <button data-tour="run-analysis" disabled={!plan?.runnable || startMutation.isPending} onClick={() => startMutation.mutate()}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand text-brand-foreground disabled:opacity-50 hover:opacity-90">
-            {startMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            Run analysis
-          </button>
+        <div>
+          <h1 className="text-2xl font-bold text-jman-midnight dark:text-foreground">Solutions</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Which analyses your data can support</p>
         </div>
+        {plan?.runnable && (
+          <div className="flex flex-col items-end gap-1">
+            {startError && <span className="text-xs text-red-600">{startError}</span>}
+            <button
+              data-tour="run-analysis"
+              disabled={startMutation.isPending}
+              onClick={() => startMutation.mutate()}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand text-brand-foreground disabled:opacity-50 hover:opacity-90 transition-opacity"
+            >
+              {startMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              Run Churn Analysis
+            </button>
+          </div>
+        )}
       </div>
 
+      {/* Cards */}
       {planLoading ? (
-        <div className="bg-card border border-border rounded-xl p-6 flex items-center gap-2.5 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Analysing your datasets…</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-5 animate-pulse h-32" />
+          ))}
+        </div>
       ) : planError || !plan ? (
-        <div className="bg-card border border-border rounded-xl p-6 text-sm text-red-600">{planErrorMsg ?? "Could not analyse the datasets."}</div>
+        <div className="rounded-2xl border border-border bg-card p-6 text-sm text-red-600">
+          {planErrorMsg ?? "Could not analyse the datasets."}
+        </div>
       ) : (
-        <>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            {plan.flows.map((f: any) => {
-              const available = f.status === "available";
-              return (
-                <div key={f.key} className={cn("rounded-xl border p-3.5", available ? "bg-brand text-brand-foreground border-brand" : "bg-card border-border")}>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={cn("text-sm font-semibold", !available && "text-foreground")}>{f.category}</span>
-                    {!available && <Lock className="w-3.5 h-3.5 text-muted-foreground" />}
-                  </div>
-                  <div className="mt-2 flex items-center gap-2">
-                    {available
-                      ? <span className="px-2 py-0.5 rounded text-[10px] tracking-wide font-semibold bg-white/20">{VERDICT_LABEL[f.feasibility.verdict]}</span>
-                      : <span className="text-[11px] text-muted-foreground">Coming soon</span>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {plan.flows.map((f: any) => {
+            const available = f.status === "available";
+            const verdict: string = f.feasibility?.verdict ?? "";
+            const lastRun = lastRunByFlow[f.key];
+            const h = lastRun?.headline ?? {};
+            const hasResult = lastRun?.status === "completed" && h.roc_auc != null;
+            const isActive = lastRun?.status === "running" || lastRun?.status === "pending";
 
-          <div className="grid lg:grid-cols-2 gap-3">
-            <div className="bg-card border border-border rounded-xl p-4">
-              <h2 className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan mb-3">Outcome found</h2>
-              {plan.runnable && label ? (
-                <>
-                  <div className="text-xs text-muted-foreground mb-3"><span className="font-medium text-foreground">{label.column}</span> in <span className="font-medium text-foreground">{plan.base_table}</span></div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[["Churned", counts.churned, "text-[#ff6196]"], ["Retained", counts.retained, "text-foreground"], ["Open", counts.open, "text-brand"]].map(([t, v, c]: any) => (
-                      <div key={t} className="rounded-lg bg-muted/60 p-2.5"><div className="text-[10px] uppercase tracking-wide text-muted-foreground">{t}</div><div className={cn("text-lg font-bold", c)}>{v == null ? "—" : Number(v).toLocaleString()}</div></div>
-                    ))}
-                  </div>
-                </>
-              ) : <p className="text-sm text-[#C30D5C]">{plan.reason ?? "Churn analysis needs a churn outcome in at least one dataset."}</p>}
-            </div>
-
-            <div className="bg-card border border-border rounded-xl p-4">
-              <h2 className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan mb-3">Data used{plan.link_key ? <span className="text-xs font-normal text-muted-foreground"> · linked on {plan.link_key}</span> : null}</h2>
-              <ul className="space-y-1.5">
-                {tables.map((t) => (
-                  <li key={t.name} className="flex items-center gap-2 text-xs">
-                    <span className="font-medium text-foreground">{t.name}</span>
-                    <span className="text-muted-foreground">{t.rows.toLocaleString()} rows</span>
-                    <span className={cn("ml-auto px-2 py-0.5 rounded text-[10px] tracking-wide font-semibold uppercase", ROLE_STYLE[t.role] ?? ROLE_STYLE.other)}>{t.role}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-          </div>
-        </>
-      )}
-
-      {runs && runs.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-2"><History className="w-4 h-4 text-muted-foreground" /><h2 className="text-[11px] font-semibold uppercase tracking-wide text-jman-trypan">Runs</h2><span className="text-xs text-muted-foreground">{runs.length}</span></div>
-          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
-            {runs.map((r: any) => {
-              const active = r.status === "running" || r.status === "pending";
-              const open = () => router.replace(`/workspaces/${workspaceId}/ds-flows?run=${r.id}`);
-              const h = r.headline ?? {};
-              const result = h.roc_auc != null
-                ? [`AUC ${h.roc_auc.toFixed(2)}`, `${(h.high_risk_accounts ?? 0).toLocaleString()} high-risk accounts`]
-                : h.key_result ? [h.key_result] : [];
-              return (
-                <div key={r.id} role="button" tabIndex={0} onClick={open} onKeyDown={(e) => { if (e.key === "Enter") open(); }}
-                  className="group bg-card border-2 border-border rounded-xl p-4 cursor-pointer transition hover:border-brand hover:shadow-md focus:outline-none focus:border-brand">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="w-9 h-9 rounded-lg bg-brand/10 text-brand flex items-center justify-center flex-shrink-0"><TrendingDown className="w-4.5 h-4.5" /></span>
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-foreground truncate">{r.title}</div>
-                        <div className="text-[11px] text-muted-foreground">{FLOW_LABEL[r.flow_key] ?? r.flow_key} · {new Date(r.created_at).toLocaleString()}</div>
-                      </div>
+            return (
+              <div
+                key={f.key}
+                className={cn(
+                  "rounded-2xl border p-5 flex flex-col gap-4 transition-shadow",
+                  available
+                    ? "bg-card border-brand/40 shadow-sm"
+                    : "bg-card border-border opacity-60"
+                )}
+              >
+                {/* Top row */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      {available ? (
+                        <span className="w-2 h-2 rounded-full bg-brand flex-shrink-0" />
+                      ) : (
+                        <Lock className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                      )}
+                      <span className="text-base font-semibold text-foreground">{f.category}</span>
                     </div>
-                    <StatusPill status={r.status} />
+                    {available ? (
+                      <span className={cn("text-xs font-semibold px-2 py-0.5 rounded-full", VERDICT_STYLE[verdict] ?? VERDICT_STYLE.weak)}>
+                        {VERDICT_LABEL[verdict] ?? verdict}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Coming soon</span>
+                    )}
                   </div>
-                  <div className="mt-3 min-h-[24px] flex flex-wrap gap-1.5">
-                    {result.map((t: string) => <span key={t} className="px-2 py-1 rounded-md bg-muted/70 text-xs text-foreground">{t}</span>)}
-                    {active && (
-                      <div className="w-full">
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden"><div className="h-full bg-brand transition-all" style={{ width: `${(r.progress.done / Math.max(r.progress.total, 1)) * 100}%` }} /></div>
-                        <div className="text-[11px] text-muted-foreground mt-1">Running · {r.progress.done} of {r.progress.total} steps</div>
+                  {available && (
+                    <span className="w-8 h-8 rounded-xl bg-brand/10 flex items-center justify-center flex-shrink-0">
+                      <TrendingDown className="w-4 h-4 text-brand" />
+                    </span>
+                  )}
+                </div>
+
+                {/* Run result inline */}
+                {available && (
+                  <div className="border-t border-border pt-3">
+                    {isActive && (
+                      <div>
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-1">
+                          <div className="h-full bg-brand transition-all" style={{ width: `${(lastRun.progress.done / Math.max(lastRun.progress.total, 1)) * 100}%` }} />
+                        </div>
+                        <span className="text-[11px] text-muted-foreground">Running…</span>
                       </div>
                     )}
-                    {r.status === "error" && <span className="text-xs text-red-600">Did not finish</span>}
+                    {hasResult && (
+                      <button
+                        onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows?run=${lastRun.id}`)}
+                        className="group w-full flex items-center justify-between text-left"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="text-xs font-semibold text-foreground">
+                            AUC {h.roc_auc.toFixed(2)} · {(h.high_risk_accounts ?? 0).toLocaleString()} high-risk accounts
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">{new Date(lastRun.created_at).toLocaleDateString()}</div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand whitespace-nowrap">
+                          View results <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                        </span>
+                      </button>
+                    )}
+                    {!isActive && !hasResult && !lastRun && (
+                      <span className="text-xs text-muted-foreground">No runs yet</span>
+                    )}
+                    {lastRun?.status === "error" && (
+                      <span className="text-xs text-red-500">Last run failed</span>
+                    )}
                   </div>
-                  <div className="mt-3 pt-3 border-t border-border flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand">{active ? "Watch progress" : "Open results"} <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" /></span>
-                    <button onClick={(e) => { e.stopPropagation(); if (window.confirm("Delete this run?")) deleteMutation.mutate(r.id); }}
-                      className="p-1.5 rounded-md text-muted-foreground hover:text-red-500 hover:bg-red-50" title="Delete run"><Trash2 className="w-4 h-4" /></button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

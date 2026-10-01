@@ -40,15 +40,7 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (res) => res,
-  (error: AxiosError<ApiError>) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("access_token");
-        window.location.href = "/login";
-      }
-    }
-    return Promise.reject(error);
-  }
+  (error: AxiosError<ApiError>) => Promise.reject(error)
 );
 
 export default api;

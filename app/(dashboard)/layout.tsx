@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useParams, usePathname } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
+import { usePathname } from "next/navigation";
 import { useWorkspaceStore } from "@/store/workspaceStore";
 import { useQuery } from "@tanstack/react-query";
 import { datasetsApi, workspacesApi } from "@/lib/api";
@@ -12,35 +11,25 @@ import { Topbar } from "@/components/layout/Topbar";
 import { PROMO_TICKER_HEIGHT } from "@/components/layout/PromoTicker";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
   const [isHydrated, setIsHydrated] = useState(false);
   // ?embed=1 shows just the page (no sidebar / top bar) so it can sit inside a Data Science Flow step
   const [embed, setEmbed] = useState(false);
-  
-  const user = useAuthStore((s) => s.user);
-  const token = useAuthStore((s) => s.token);
+
   const { currentWorkspaceId, setCurrentWorkspace } = useWorkspaceStore();
 
   // Rehydrate on mount
   useEffect(() => {
-    useAuthStore.persist.rehydrate();
     const isEmbed = new URLSearchParams(window.location.search).get("embed") === "1";
     if (isEmbed) document.documentElement.dataset.embed = "1";
     setEmbed(isEmbed);
     setIsHydrated(true);
   }, []);
 
-  useEffect(() => {
-    if (isHydrated && !token) {
-      router.replace("/login");
-    }
-  }, [token, router, isHydrated]);
-
   const { data: workspaces } = useQuery({
     queryKey: queryKeys.workspaces.list(),
     queryFn: () => workspacesApi.list().then((r) => r.data),
-    enabled: !!token,
+    enabled: isHydrated,
   });
 
   // Derive workspaceId from URL or fall back to store
@@ -65,7 +54,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     enabled: !!activeWorkspaceId,
   });
 
-  if (!isHydrated || !token) return null;
+  if (!isHydrated) return null;
   if (embed) return <main className="h-screen overflow-y-auto scrollbar-thin bg-background">{children}</main>;
 
   return (

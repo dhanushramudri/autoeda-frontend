@@ -17,12 +17,17 @@ function ThemeApplier() {
 }
 
 function AuthRehydrator({ children }: { children: React.ReactNode }) {
-  const [isHydrated, setIsHydrated] = useState(false);
-
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      useAuthStore.persist.rehydrate();
-      setIsHydrated(true);
+    if (typeof window === "undefined") return;
+    useAuthStore.persist.rehydrate();
+    // Auto-load the current user from the backend (no login required — backend returns the admin).
+    // This populates user info so components that read authStore.user work correctly.
+    if (!useAuthStore.getState().user) {
+      import("@/lib/api").then(({ authApi }) => {
+        authApi.me().then((res) => {
+          useAuthStore.getState().setAuth(res.data, "");
+        }).catch(() => {/* ignore — user stays null */});
+      });
     }
   }, []);
 
