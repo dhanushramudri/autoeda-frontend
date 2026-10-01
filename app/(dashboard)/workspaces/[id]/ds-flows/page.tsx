@@ -160,11 +160,62 @@ export default function DsFlowsPage() {
 
   /* ---------------- run view ---------------- */
   if (activeRunId != null) {
+    const runIsActive = run?.status === "running" || run?.status === "pending";
+
+    const handleDeleteRun = async () => {
+      if (!run || deletingRunId != null) return;
+      setDeletingRunId(run.id);
+      try {
+        await dsFlowsApi.deleteRun(workspaceId, run.id);
+        router.replace(`/workspaces/${workspaceId}/ds-flows`);
+        qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
+      } catch {
+        setDeletingRunId(null);
+      }
+    };
+
+    const handleRunAgain = async () => {
+      if (!run || isLaunching) return;
+      setIsLaunching(true);
+      try {
+        const d = await dsFlowsApi.startRun(workspaceId, run.flow_key);
+        qc.invalidateQueries({ queryKey: ["ds-flow-runs", workspaceId] });
+        router.replace(`/workspaces/${workspaceId}/ds-flows?run=${d.run_id}`);
+      } catch (e: any) {
+        setRunErrors({ [run.flow_key]: errMsg(e, "Could not start run") });
+        setIsLaunching(false);
+      }
+    };
+
     return (
       <div className="px-3 py-2 space-y-2">
-        <button onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows`)} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="w-3.5 h-3.5" /> All flows
-        </button>
+        {/* Top bar */}
+        <div className="flex items-center justify-between gap-3">
+          <button onClick={() => router.replace(`/workspaces/${workspaceId}/ds-flows`)} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-3.5 h-3.5" /> All flows
+          </button>
+          {run && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRunAgain}
+                disabled={isLaunching || runIsActive}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand text-brand-foreground disabled:opacity-40 hover:opacity-90 transition-opacity"
+              >
+                {isLaunching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
+                Run again
+              </button>
+              <button
+                onClick={handleDeleteRun}
+                disabled={deletingRunId != null}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-border text-muted-foreground hover:text-red-600 hover:border-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 disabled:opacity-40 transition-colors"
+              >
+                {deletingRunId === run?.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                Delete run
+              </button>
+            </div>
+          )}
+        </div>
+
         {!run ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="w-4 h-4 animate-spin" /> Loading…</div>
         ) : (
@@ -173,6 +224,9 @@ export default function DsFlowsPage() {
               <h1 className="text-base font-bold text-jman-midnight dark:text-foreground">{run.title}</h1>
               <StatusPill status={run.status} />
             </div>
+            {Object.entries(runErrors).map(([k, m]) => (
+              <div key={k} className="text-xs text-red-600">{m}</div>
+            ))}
             {run.status === "error" && run.error && (
               <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">{run.error}</div>
             )}
