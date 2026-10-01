@@ -353,13 +353,38 @@ export function ChurnDashboard({ run, workspaceId, onAnalysis }: { run: FlowRunF
 
           {tab === "Overview" && (
             <>
-              <Panel title="The headline">
-                <p className="jd-lead">
-                  {filtersActive ? <>For the selected customers{windowText}, about </> : <>About </>}<b>{M.expected.toLocaleString()}</b> of the <b>{M.n.toLocaleString()}</b> customers due for renewal are expected to churn
-                  {hasValue ? <>, putting roughly <b>{fmt(M.loss)}</b> of revenue at risk</> : null}.
-                  {M.high ? <> <b>{M.high.toLocaleString()}</b> are high-risk{hasValue ? <> and hold <b>{fmt(M.highValue)}</b> of revenue</> : null}.</> : null}
-                  {topSigns.length ? <> The strongest warning signs are {topSigns.join(", ")}.</> : null}
-                </p>
+              <Panel title="In short" sub={filtersActive ? `Based on the customers you have selected${windowText}` : "Based on all customers due for renewal"}>
+                <div className="jd-brief">
+                  <div className="row" style={{ borderColor: HIGH }}>
+                    <div className="k">What to expect</div>
+                    <div className="x">
+                      About <b>{M.expected.toLocaleString()}</b> of <b>{M.n.toLocaleString()}</b> customers
+                      {M.expected > 0 ? <> (roughly <b>1 in {Math.max(1, Math.round(M.n / M.expected))}</b>)</> : null} are likely to leave at renewal.
+                    </div>
+                  </div>
+                  {hasValue && (
+                    <div className="row" style={{ borderColor: MED }}>
+                      <div className="k">Money at stake</div>
+                      <div className="x">We could lose about <b>{fmt(M.loss)}</b> of renewal revenue if nothing is done.</div>
+                    </div>
+                  )}
+                  {M.high > 0 && (
+                    <div className="row" style={{ borderColor: ACCENT }}>
+                      <div className="k">Who to focus on first</div>
+                      <div className="x"><b>{M.high.toLocaleString()}</b> customers are at high risk{hasValue ? <> and together hold <b>{fmt(M.highValue)}</b> of revenue</> : null}. A personal call to each of them is the best place to start.</div>
+                    </div>
+                  )}
+                  {(topSigns.length > 0 || byReason.length > 0) && (
+                    <div className="row" style={{ borderColor: LOW }}>
+                      <div className="k">Why they may leave</div>
+                      <div className="x">
+                        {byReason.length > 0 ? <>The most common reason is <b>{byReason[0].reason.toLowerCase()}</b>. </> : null}
+                        {topSigns.length > 0 ? <>The biggest warning signs in the data are {topSigns.join(", ").toLowerCase()}.</> : null}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="jd-note">These are estimates based on how customers behaved in past renewals, not a guarantee.</p>
               </Panel>
 
               <div className="jd-kpis">
