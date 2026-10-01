@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { FlowWorkspace, type FlowRunFull } from "@/components/ds-flows/FlowWorkspace";
 import { ChurnDashboard } from "@/components/ds-flows/ChurnDashboard";
 import { GenericFlowWorkspace } from "@/components/ds-flows/GenericFlowWorkspace";
+import { ForecastDashboard } from "@/components/ds-flows/ForecastDashboard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Pre-run labels are deliberately hedged — these are surface-level data-structure signals, not proven results.
@@ -237,26 +238,30 @@ export default function DsFlowsPage() {
             {run.status === "error" && run.error && (
               <div className="rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 px-4 py-3 text-sm text-red-700 dark:text-red-400">{run.error}</div>
             )}
-            {run.flow_key === "forecasting" ? (
-              <GenericFlowWorkspace run={run} workspaceId={workspaceId} />
-            ) : (
-              <>
-                {run.status === "completed" && run.headline && (
-                  <div className="flex gap-1.5">
-                    {(["dashboard", "analysis"] as const).map((v) => (
-                      <button key={v} onClick={() => setViewPick(v)}
-                        className={cn("px-4 py-1.5 rounded-full text-xs font-semibold border transition-colors",
-                          (viewPick ?? "dashboard") === v ? "bg-brand text-brand-foreground border-brand" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted")}>
-                        {v === "dashboard" ? "Dashboard" : "Analysis"}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {run.status === "completed" && run.headline && (viewPick ?? "dashboard") === "dashboard"
-                  ? <ChurnDashboard run={run} workspaceId={workspaceId} onAnalysis={() => setViewPick("analysis")} />
-                  : <FlowWorkspace run={run} workspaceId={workspaceId} />}
-              </>
-            )}
+            {(() => {
+              const isForecast = run.flow_key === "forecasting";
+              const Dashboard = isForecast ? ForecastDashboard : ChurnDashboard;
+              const Analysis = isForecast ? GenericFlowWorkspace : FlowWorkspace;
+              const hasDashboard = run.status === "completed" && !!run.headline;
+              return (
+                <>
+                  {hasDashboard && (
+                    <div className="flex gap-1.5">
+                      {(["dashboard", "analysis"] as const).map((v) => (
+                        <button key={v} onClick={() => setViewPick(v)}
+                          className={cn("px-4 py-1.5 rounded-full text-xs font-semibold border transition-colors",
+                            (viewPick ?? "dashboard") === v ? "bg-brand text-brand-foreground border-brand" : "border-border text-muted-foreground hover:text-foreground hover:bg-muted")}>
+                          {v === "dashboard" ? "Dashboard" : "Analysis"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {hasDashboard && (viewPick ?? "dashboard") === "dashboard"
+                    ? <Dashboard run={run} workspaceId={workspaceId} onAnalysis={() => setViewPick("analysis")} />
+                    : <Analysis run={run} workspaceId={workspaceId} />}
+                </>
+              );
+            })()}
           </>
         )}
       </div>

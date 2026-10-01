@@ -231,7 +231,7 @@ function DownloadsBlock({ b, run, workspaceId }: { b: any; run: FlowRunFull; wor
 }
 
 // ─── Generic page renderer ───────────────────────────────────────────────────
-function PageRenderer({ page, run, workspaceId }: { page: any; run: FlowRunFull; workspaceId: string }) {
+export function PageRenderer({ page, run, workspaceId }: { page: any; run: FlowRunFull; workspaceId: string }) {
   if (!page?.blocks?.length) return <p className="text-sm text-muted-foreground">No output for this stage.</p>;
   return (
     <div className="space-y-4">
