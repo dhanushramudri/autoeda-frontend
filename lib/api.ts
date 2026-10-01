@@ -95,6 +95,8 @@ export const workspacesApi = {
 export const datasetsApi = {
   list: (workspaceId: string) =>
     api.get(`/workspaces/${workspaceId}/datasets`),
+  rename: (workspaceId: string, datasetId: string, name: string) =>
+    api.patch(`/workspaces/${workspaceId}/datasets/${datasetId}`, { name }),
   importToWorkspace: (datasetId: number, workspaceId: string | number) =>
     api.post(`/datasets/${datasetId}/import`, { workspace_id: Number(workspaceId) }),
   create: (workspaceId: string, formData: FormData) =>

@@ -557,6 +557,8 @@ const STATUS_ICON: Record<string, React.ReactNode> = {
 
 // ── DatasetCard ───────────────────────────────────────────────────────────────
 
+import { InlineRename } from "@/components/shared/InlineRename";
+
 function DatasetCard({ dataset, workspaceId }: { dataset: Dataset; workspaceId: string }) {
   const router = useRouter();
   const qc = useQueryClient();
@@ -597,7 +599,9 @@ function DatasetCard({ dataset, workspaceId }: { dataset: Dataset; workspaceId: 
         </div>
       </div>
 
-      <h3 className="font-semibold text-foreground mb-0.5 truncate">{dataset.name}</h3>
+      <h3 className="font-semibold text-foreground mb-0.5 truncate">
+        <InlineRename value={dataset.name} onSave={(n) => datasetsApi.rename(workspaceId, String(dataset.id), n).then(() => qc.invalidateQueries({ queryKey: queryKeys.datasets.list(workspaceId) }))} />
+      </h3>
       {dataset.description && (
         <p className="text-xs text-muted-foreground mb-3 line-clamp-1">{dataset.description}</p>
       )}

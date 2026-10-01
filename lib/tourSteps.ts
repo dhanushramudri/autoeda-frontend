@@ -16,6 +16,14 @@ export const tourSteps: TourStep[] = [
     position: "center",
   },
   {
+    id: "solutions",
+    target: "[data-tour='solutions-link']",
+    title: "Solutions — start here",
+    description:
+      "Pick a solution and click Run analysis. Data checks, exploration, models, validation and the report all run automatically, in one place.",
+    position: "right",
+  },
+  {
     id: "workspace-selector",
     target: "[data-tour='workspace-selector']",
     title: "Workspace Switcher",
@@ -62,5 +70,30 @@ export const tourSteps: TourStep[] = [
     description:
       "That's the core flow: connect a source, explore your datasets, investigate with Scout, and validate hypotheses.",
     position: "center",
+  },
+];
+
+// Short tour shown once, right after login, on the Solutions page
+export const solutionsTour: TourStep[] = [
+  {
+    id: "welcome-solutions",
+    target: "body",
+    title: "Welcome",
+    description: "Everything starts in Solutions. It analyses your data automatically and gives you the findings, charts and files in one place.",
+    position: "center",
+  },
+  {
+    id: "solutions-link",
+    target: "[data-tour='solutions-link']",
+    title: "Solutions",
+    description: "This is your home. Come back here any time to run an analysis or reopen a previous one.",
+    position: "right",
+  },
+  {
+    id: "run-analysis",
+    target: "[data-tour='run-analysis']",
+    title: "Run analysis",
+    description: "One click runs the whole analysis on the datasets in this workspace — nothing to set up or select.",
+    position: "left",
   },
 ];

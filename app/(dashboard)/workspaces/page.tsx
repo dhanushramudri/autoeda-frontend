@@ -8,6 +8,7 @@ import { useWorkspaceStore } from "@/store/workspaceStore";
 import { useAuthStore } from "@/store/authStore";
 import { PageSpinner } from "@/components/shared/LoadingBar";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { InlineRename } from "@/components/shared/InlineRename";
 import { Plus, FolderOpen, Users, Database, Clock, ChevronRight, X, Plug, Warehouse, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -125,7 +126,9 @@ function WorkspaceCard({ workspace }: { workspace: Workspace }) {
             <ChevronRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-brand transition mt-1" />
           </div>
 
-          <h3 className="font-semibold text-foreground mb-0.5 truncate">{workspace.name}</h3>
+          <h3 className="font-semibold text-foreground mb-0.5 truncate">
+            <InlineRename value={workspace.name} onSave={(n) => workspacesApi.update(String(wid), { name: n }).then(() => qc.invalidateQueries({ queryKey: queryKeys.workspaces.list() }))} />
+          </h3>
           {workspace.description && (
             <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{workspace.description}</p>
           )}

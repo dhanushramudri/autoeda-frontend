@@ -5,6 +5,9 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, History, Loader2, Lock, Play, Trash2, TrendingDown, Workflow } from "lucide-react";
 import { dsFlowsApi } from "@/lib/api";
+import { useTour } from "@/hooks/useTourContext";
+import { solutionsTour } from "@/lib/tourSteps";
+import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/lib/utils";
 import { FlowWorkspace, type FlowRunFull } from "@/components/ds-flows/FlowWorkspace";
 
@@ -45,6 +48,22 @@ export default function DsFlowsPage() {
   const runParam = searchParams.get("run");
   const activeRunId = runParam ? Number(runParam) : null;
   const [startError, setStartError] = useState<string | null>(null);
+  const { startTour } = useTour();
+  const userId = useAuthStore((s) => s.user?.id);
+
+  // ?welcome=1 is set by the login redirect: clean the URL and show the short tour once per user per browser
+  useEffect(() => {
+    if (searchParams.get("welcome") !== "1") return;
+    router.replace(`/workspaces/${workspaceId}/ds-flows`);
+    const key = `autoeda_solutions_tour_${userId ?? "user"}`;
+    let seen = false;
+    try { seen = !!localStorage.getItem(key); } catch { /* storage unavailable */ }
+    if (!seen) {
+      try { localStorage.setItem(key, "1"); } catch { /* storage unavailable */ }
+      const t = setTimeout(() => startTour(solutionsTour), 800);
+      return () => clearTimeout(t);
+    }
+  }, [searchParams, router, workspaceId, userId, startTour]);
 
   // the server analyses every dataset in the workspace automatically — nothing to select
   const { data: plan, isLoading: planLoading, error: planError } = useQuery({
@@ -135,7 +154,7 @@ export default function DsFlowsPage() {
         <div className="flex items-center gap-2"><Workflow className="w-5 h-5 text-brand" /><h1 className="text-xl font-bold text-foreground">Solutions</h1></div>
         <div className="flex items-center gap-3">
           {startError && <span className="text-xs text-red-600">{startError}</span>}
-          <button disabled={!plan?.runnable || startMutation.isPending} onClick={() => startMutation.mutate()}
+          <button data-tour="run-analysis" disabled={!plan?.runnable || startMutation.isPending} onClick={() => startMutation.mutate()}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-brand text-brand-foreground disabled:opacity-50 hover:opacity-90">
             {startMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
             Run analysis

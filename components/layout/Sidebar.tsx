@@ -381,7 +381,9 @@ export function Sidebar({ datasets = [], workspaceId }: SidebarProps) {
                   const isActive = workspaceId ? pathname.includes(link.href) : false;
                   const Icon     = link.icon;
                   const tourAttr =
-                    link.href === "/warehouse"
+                    link.href === "/ds-flows"
+                      ? "solutions-link"
+                      : link.href === "/warehouse"
                       ? "warehouse-link"
                       : link.href === "/join-builder"
                       ? "join-builder-link"

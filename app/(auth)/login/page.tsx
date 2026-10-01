@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { authApi } from "@/lib/api";
+import { authApi, workspacesApi } from "@/lib/api";
+import { useWorkspaceStore } from "@/store/workspaceStore";
 import type { AxiosError } from "axios";
 import type { ApiError } from "@/types";
 import { useAuthStore } from "@/store/authStore";
@@ -34,7 +35,20 @@ export default function LoginPage() {
 
       queryClient.clear();
       setAuth(data.user, data.access_token);
-      router.push("/workspaces");
+      // everyone lands on Solutions: the last-used workspace if it still exists, else the first one;
+      // no workspace yet -> the Workspaces page, where they can create one
+      let dest = "/workspaces";
+      try {
+        const { data: list } = await workspacesApi.list();
+        if (Array.isArray(list) && list.length > 0) {
+          const saved = useWorkspaceStore.getState().currentWorkspaceId;
+          const ws = list.find((w: { id: string | number }) => String(w.id) === String(saved)) ?? list[0];
+          dest = `/workspaces/${ws.id}/ds-flows?welcome=1`;
+        }
+      } catch {
+        // fall back to the Workspaces page
+      }
+      router.push(dest);
     } catch (err) {
       const axiosErr = err as AxiosError<ApiError>;
       setError(axiosErr.response?.data?.detail ?? "Login failed");
