@@ -18,13 +18,13 @@ import { GenericFlowWorkspace } from "@/components/ds-flows/GenericFlowWorkspace
 // Pre-run labels are deliberately hedged — these are surface-level data-structure signals, not proven results.
 const SIGNAL_LABEL: Record<string, string> = { strong: "Strong signals", possible: "Signals found", weak: "Weak signals", not_detected: "Not detected" };
 
-type FlowConfig = { icon: LucideIcon; gradient: string; iconGradient: string; glow: string; watermarkColor: string };
+type FlowConfig = { icon: LucideIcon; iconGradient: string; watermarkColor: string };
 const FLOW_CONFIG: Record<string, FlowConfig> = {
-  churn:           { icon: TrendingDown, gradient: "from-rose-50 via-pink-50 to-fuchsia-50 border-rose-200",     iconGradient: "from-rose-500 to-pink-600",     glow: "shadow-rose-200",    watermarkColor: "text-rose-300" },
-  revenue_growth:  { icon: TrendingUp,   gradient: "from-emerald-50 via-green-50 to-teal-50 border-emerald-200", iconGradient: "from-emerald-500 to-teal-600",  glow: "shadow-emerald-200", watermarkColor: "text-emerald-300" },
-  forecasting:     { icon: BarChart3,    gradient: "from-blue-50 via-sky-50 to-indigo-50 border-blue-200",       iconGradient: "from-blue-500 to-indigo-600",   glow: "shadow-blue-200",    watermarkColor: "text-blue-300" },
-  pricing:         { icon: DollarSign,   gradient: "from-amber-50 via-yellow-50 to-orange-50 border-amber-200",  iconGradient: "from-amber-400 to-orange-500",  glow: "shadow-amber-200",   watermarkColor: "text-amber-300" },
-  efficiency_cost: { icon: Zap,          gradient: "from-violet-50 via-purple-50 to-indigo-50 border-violet-200",iconGradient: "from-violet-500 to-purple-600", glow: "shadow-violet-200",  watermarkColor: "text-violet-300" },
+  churn:           { icon: TrendingDown, iconGradient: "from-rose-500 to-pink-600",     watermarkColor: "text-rose-200" },
+  revenue_growth:  { icon: TrendingUp,   iconGradient: "from-emerald-500 to-teal-600",  watermarkColor: "text-emerald-200" },
+  forecasting:     { icon: BarChart3,    iconGradient: "from-blue-500 to-indigo-600",   watermarkColor: "text-blue-200" },
+  pricing:         { icon: DollarSign,   iconGradient: "from-amber-400 to-orange-500",  watermarkColor: "text-amber-200" },
+  efficiency_cost: { icon: Zap,          iconGradient: "from-violet-500 to-purple-600", watermarkColor: "text-violet-200" },
 };
 
 // FastAPI returns `detail` as a string for our errors but as an array of {type, loc, msg, input} for validation
@@ -350,11 +350,11 @@ export default function DsFlowsPage() {
             );
 
             const sharedClass = cn(
-              "relative overflow-hidden rounded-2xl border p-5 flex flex-col gap-3",
+              "relative overflow-hidden rounded-2xl border border-border bg-white dark:bg-card p-5 flex flex-col gap-3",
               "transition-all duration-300 hover:-translate-y-1",
               available
-                ? `bg-gradient-to-br ${cfg.gradient} shadow-md hover:shadow-lg ${cfg.glow}`
-                : "bg-card border-border opacity-50 grayscale",
+                ? "shadow-[0_2px_12px_0_rgba(0,0,0,0.07)] hover:shadow-[0_6px_20px_0_rgba(0,0,0,0.11)]"
+                : "opacity-50 grayscale shadow-sm",
               isSelected && "ring-2 ring-brand ring-offset-1"
             );
 
