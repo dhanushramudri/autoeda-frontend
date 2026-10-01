@@ -191,8 +191,10 @@ export default function DsFlowsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
           {plan.flows.map((f: any, i: number) => {
-            const available = f.status === "available";
             const verdict: string = f.feasibility?.verdict ?? "";
+            // Show as available when the data scan finds a strong or possible fit —
+            // regardless of whether the flow's run pipeline is built yet.
+            const available = verdict === "strong" || verdict === "possible";
             const cfg: FlowConfig = FLOW_CONFIG[f.key] ?? FLOW_CONFIG.churn;
             const Icon = cfg.icon;
 
