@@ -45,40 +45,72 @@ function KpiBlock({ items }: { items: { title: string; value: string; sub?: stri
 const AX_STYLE = { fontSize: 11, fill: C.muted };
 const TT_STYLE = { contentStyle: { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 } };
 
+const SHARED_AXES = (x: string) => (
+  <>
+    <CartesianGrid stroke="rgba(120,120,150,0.15)" vertical={false} />
+    <XAxis dataKey={x} tick={AX_STYLE} tickLine={false} axisLine={false} />
+    <YAxis tick={AX_STYLE} tickLine={false} axisLine={false} width={48} />
+    <Tooltip {...TT_STYLE} />
+  </>
+);
+
 function ChartBlock({ b }: { b: any }) {
   const { kind, title, subtitle, data, x, series, height = 260, band } = b;
   if (!data?.length || !series?.length) return <p className="text-sm text-muted-foreground">No chart data.</p>;
 
-  const Chart = kind === "bar" ? BarChart : kind === "area" ? AreaChart : LineChart;
-  const SeriesEl = kind === "bar" ? Bar : kind === "area" ? Area : Line;
-
-  return (
-    <div className="bg-card border border-border rounded-xl p-4">
+  const header = (
+    <>
       <div className="text-sm font-semibold text-foreground mb-0.5">{title}</div>
       {subtitle && <div className="text-xs text-muted-foreground mb-2">{subtitle}</div>}
+    </>
+  );
+
+  if (kind === "bar") {
+    return (
+      <div className="bg-card border border-border rounded-xl p-4">
+        {header}
+        <ResponsiveContainer width="100%" height={height}>
+          <BarChart data={data} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+            {SHARED_AXES(x)}
+            {series.map((s: any) => (
+              <Bar key={s.key} dataKey={s.key} name={s.name} fill={color(s.color)} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
+  if (kind === "area") {
+    return (
+      <div className="bg-card border border-border rounded-xl p-4">
+        {header}
+        <ResponsiveContainer width="100%" height={height}>
+          <AreaChart data={data} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+            {SHARED_AXES(x)}
+            {series.map((s: any) => (
+              <Area key={s.key} dataKey={s.key} name={s.name} stroke={color(s.color)} fill={color(s.color)} fillOpacity={0.15} strokeWidth={2} type="monotone" dot={false} />
+            ))}
+            {band && series.map((s: any) => (
+              <Area key={`${s.key}_band`} dataKey="band" stroke="none" fill={color(s.color)} fillOpacity={0.1} type="monotone" />
+            ))}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  }
+
+  // default: line
+  return (
+    <div className="bg-card border border-border rounded-xl p-4">
+      {header}
       <ResponsiveContainer width="100%" height={height}>
-        <Chart data={data} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-          <CartesianGrid stroke="rgba(120,120,150,0.15)" vertical={false} />
-          <XAxis dataKey={x} tick={AX_STYLE} tickLine={false} axisLine={false} />
-          <YAxis tick={AX_STYLE} tickLine={false} axisLine={false} width={48} />
-          <Tooltip {...TT_STYLE} />
+        <LineChart data={data} margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+          {SHARED_AXES(x)}
           {series.map((s: any) => (
-            <SeriesEl
-              key={s.key}
-              dataKey={s.key}
-              name={s.name}
-              stroke={color(s.color)}
-              fill={color(s.color)}
-              fillOpacity={kind === "area" ? 0.15 : 1}
-              dot={false}
-              strokeWidth={2}
-              type="monotone"
-            />
+            <Line key={s.key} dataKey={s.key} name={s.name} stroke={color(s.color)} strokeWidth={2} type="monotone" dot={false} />
           ))}
-          {band && series.map((s: any) => (
-            <Area key={`${s.key}_band`} dataKey="band" stroke="none" fill={color(s.color)} fillOpacity={0.1} type="monotone" />
-          ))}
-        </Chart>
+        </LineChart>
       </ResponsiveContainer>
     </div>
   );
