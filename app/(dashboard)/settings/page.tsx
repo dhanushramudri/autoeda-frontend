@@ -6,6 +6,7 @@ import { useThemeStore } from "@/store/themeStore";
 import { authApi } from "@/lib/api";
 import { useMutation } from "@tanstack/react-query";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { MembersSection } from "@/components/settings/MembersPanel";
 import { CheckCircle, Sun, Moon, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -225,6 +226,9 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* Members live here now (admins only) */}
+      {user?.is_admin && <MembersSection />}
     </div>
   );
 }

@@ -24,7 +24,6 @@ const WORKSPACE_LINKS = [
   // { label: "AutoML",       href: "/automl",     icon: Cpu }, // hidden — not ready for users yet
   { label: "Warehouse",    href: "/warehouse",  icon: Warehouse },
   { label: "Data Sources", href: "/sources",    icon: Plug },
-  { label: "Members",      href: "/members",    icon: Users },
   { label: "Solutions",     href: "/ds-flows",   icon: Workflow },
 ];
 
