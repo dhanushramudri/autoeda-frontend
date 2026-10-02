@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { FlowWorkspace, type FlowRunFull } from "@/components/ds-flows/FlowWorkspace";
 import { ChurnDashboard } from "@/components/ds-flows/ChurnDashboard";
 import { ForecastDashboard } from "@/components/ds-flows/ForecastDashboard";
+import { GrowthDashboard } from "@/components/ds-flows/GrowthDashboard";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Pre-run labels are deliberately hedged — these are surface-level data-structure signals, not proven results.
@@ -241,7 +242,9 @@ export default function DsFlowsPage() {
               // Dashboard is domain-specific (scored accounts vs. a time series), so it still branches by flow.
               // Analysis is the same FlowWorkspace for every flow — it dynamically adapts to whatever stages
               // that flow's pipeline produced (see pickPhases in FlowWorkspace.tsx).
-              const Dashboard = run.flow_key === "forecasting" ? ForecastDashboard : ChurnDashboard;
+              const Dashboard = run.flow_key === "forecasting" ? ForecastDashboard
+                : run.flow_key === "revenue_growth" ? GrowthDashboard
+                : ChurnDashboard;
               const hasDashboard = run.status === "completed" && !!run.headline;
               return (
                 <>
@@ -343,7 +346,7 @@ export default function DsFlowsPage() {
             })
             .map((f: any, i: number) => {
             const verdict: string = f.feasibility?.verdict ?? "";
-            const available = verdict === "strong" || verdict === "possible";
+            const available = f.status === "available" && (verdict === "strong" || verdict === "possible");
             const cfg: FlowConfig = FLOW_CONFIG[f.key] ?? FLOW_CONFIG.churn;
             const Icon = cfg.icon;
             const rankColors = ["bg-amber-400 text-white", "bg-slate-400 text-white", "bg-orange-400 text-white"];
